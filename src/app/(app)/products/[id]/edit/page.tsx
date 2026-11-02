@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   IconArrowLeft,
   IconDeviceFloppy,
+  IconRefresh,
   IconUpload,
   IconAlertTriangle,
 } from "@tabler/icons-react";
@@ -57,9 +58,11 @@ export default function EditProductPage() {
   const [stock, setStock] = useState(product ? String(product.stock) : "");
   const [status, setStatus] = useState(product?.status ?? "In Stock");
   const [trackQty, setTrackQty] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsSubmitting(true);
     toast.success("Changes saved", {
       description: `${name || "Product"} has been updated.`,
     });
@@ -116,8 +119,17 @@ export default function EditProductPage() {
           <Button variant="outline" asChild>
             <Link href={`/products/${id}`}>Cancel</Link>
           </Button>
-          <Button type="submit" className="gap-2">
-            <IconDeviceFloppy className="size-4" /> Save changes
+          <Button type="submit" disabled={isSubmitting} className="gap-2">
+            {isSubmitting ? (
+              <>
+                <IconRefresh className="size-4 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <IconDeviceFloppy className="size-4" /> Save changes
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -333,8 +345,17 @@ export default function EditProductPage() {
         <Button variant="outline" asChild>
           <Link href={`/products/${id}`}>Cancel</Link>
         </Button>
-        <Button type="submit" className="gap-2">
-          <IconDeviceFloppy className="size-4" /> Save changes
+        <Button type="submit" disabled={isSubmitting} className="gap-2">
+          {isSubmitting ? (
+            <>
+              <IconRefresh className="size-4 animate-spin" />
+              Saving Changes...
+            </>
+          ) : (
+            <>
+              <IconDeviceFloppy className="size-4" /> Save changes
+            </>
+          )}
         </Button>
       </div>
     </form>

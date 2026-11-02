@@ -28,6 +28,7 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Card,
   CardContent,
@@ -122,9 +123,14 @@ export default function TeamManagementPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Add Dialog & Form State
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [addForm, setAddForm] = useState<StaffCreatePayload>({
     full_name: "",
     phone: "",
@@ -197,6 +203,10 @@ export default function TeamManagementPage() {
       return matchSearch && matchRole && matchStatus;
     });
   }, [data?.items, search, roleFilter, statusFilter]);
+
+  const paginatedMembers = useMemo(() => {
+    return filteredMembers.slice((page - 1) * pageSize, page * pageSize);
+  }, [filteredMembers, page, pageSize]);
 
   // Validation Logic for Add Form
   const validateAddForm = () => {
@@ -358,12 +368,15 @@ export default function TeamManagementPage() {
   const handleDeleteStaff = async () => {
     if (!deletingStaff) return;
     try {
+      setIsDeleting(true);
       await teamService.deleteStaff(deletingStaff.id);
       toast.success(`${deletingStaff.full_name} removed from your team.`);
       setDeletingStaff(null);
       loadTeamData();
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to delete staff member");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -541,69 +554,85 @@ export default function TeamManagementPage() {
       </div>
 
       {/* Main Content Area */}
-      <Card>
-        <CardHeader className="border-b pb-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search Input */}
-            <div className="relative flex-1 max-w-sm">
-              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+      <Card className="border border-border/70 overflow-hidden shadow-sm">
+        <div className="p-3.5 border-b bg-card/60 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative w-72 md:w-80">
+              <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search staff by name, phone, or email..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-8 h-9 text-xs"
               />
             </div>
 
-            {/* Filter and View Controls */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="h-9 w-[140px] text-xs">
-                  <SelectValue placeholder="Filter Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  {roles.map((r) => (
-                    <SelectItem key={r.id} value={r.id.toString()}>
-                      {r.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select
+              value={roleFilter}
+              onValueChange={(val) => {
+                setRoleFilter(val);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-36 text-xs">
+                <SelectValue placeholder="Filter Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="owner">Owner</SelectItem>
+                {roles.map((r) => (
+                  <SelectItem key={r.id} value={r.id.toString()}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-9 w-[130px] text-xs">
-                  <SelectValue placeholder="Filter Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="inactive">Inactive Only</SelectItem>
-                </SelectContent>
-              </Select>
+            <Select
+              value={statusFilter}
+              onValueChange={(val) => {
+                setStatusFilter(val);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-36 text-xs">
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active Only</SelectItem>
+                <SelectItem value="inactive">Inactive Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="flex items-center rounded-md border bg-muted/30 p-0.5">
-                <Button
-                  variant={viewMode === "table" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="size-7"
-                  onClick={() => setViewMode("table")}
-                >
-                  <IconLayoutList className="size-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "grid" ? "secondary" : "ghost"}
-                  size="icon"
-                  className="size-7"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <IconLayoutGrid className="size-4" />
-                </Button>
-              </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground font-medium">
+              {filteredMembers.length} Members Found
+            </span>
+            <div className="flex items-center rounded-md border bg-muted/30 p-0.5">
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"}
+                size="icon"
+                className="size-7"
+                onClick={() => setViewMode("table")}
+              >
+                <IconLayoutList className="size-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                className="size-7"
+                onClick={() => setViewMode("grid")}
+              >
+                <IconLayoutGrid className="size-4" />
+              </Button>
             </div>
           </div>
-        </CardHeader>
+        </div>
 
         <CardContent className="p-0">
           {loading ? (
@@ -652,7 +681,7 @@ export default function TeamManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMembers.map((member) => (
+                {paginatedMembers.map((member) => (
                   <TableRow key={member.id} className="group">
                     {/* Member Identity */}
                     <TableCell>
@@ -795,7 +824,7 @@ export default function TeamManagementPage() {
           ) : (
             /* Grid View */
             <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredMembers.map((member) => (
+              {paginatedMembers.map((member) => (
                 <Card key={member.id} className="relative overflow-hidden group border shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between">
@@ -911,6 +940,16 @@ export default function TeamManagementPage() {
             </div>
           )}
         </CardContent>
+        <DataTablePagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredMembers.length}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(1);
+          }}
+        />
       </Card>
 
       {/* ========================================================================= */}
@@ -1336,7 +1375,7 @@ export default function TeamManagementPage() {
                   {isSubmitting ? (
                     <>
                       <IconRefresh className="size-4 animate-spin" />
-                      Saving...
+                      Saving Changes...
                     </>
                   ) : (
                     <>
@@ -1371,10 +1410,15 @@ export default function TeamManagementPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteStaff}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteStaff();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-1.5"
             >
-              Remove User
+              {isDeleting && <IconRefresh className="size-4 animate-spin" />}
+              {isDeleting ? "Removing..." : "Remove User"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

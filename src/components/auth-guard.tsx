@@ -48,20 +48,84 @@ const ROUTE_PERMISSIONS: Record<
     requiredPermissions: ["branches:view"],
     allowedRoles: ["Admin", "Owner"],
   },
+  "/categories": {
+    name: "Category Management & Taxonomy",
+    requiredPermissions: ["categories:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/brands": {
+    name: "Brands & Principals Directory",
+    requiredPermissions: ["brands:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/products": {
+    name: "Products & Catalogue Master",
+    requiredPermissions: ["products:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/customers": {
+    name: "Customer Accounts & Khata",
+    requiredPermissions: ["customers:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/suppliers": {
+    name: "Suppliers & Vendor Accounts",
+    requiredPermissions: ["suppliers:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/routes": {
+    name: "Delivery Areas & Sectors",
+    requiredPermissions: ["delivery_areas:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/purchases": {
+    name: "Purchases & Goods Received (GRN)",
+    requiredPermissions: ["purchases:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/inventory": {
+    name: "Live Multi-Branch Inventory",
+    requiredPermissions: ["inventory:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/pos": {
+    name: "Point of Sale (POS) Counter",
+    requiredPermissions: [],
+    allowedRoles: ["Admin", "Owner", "Cashier"],
+  },
+  "/invoices": {
+    name: "Sales Invoices & FBR Fiscal Records",
+    requiredPermissions: [],
+    allowedRoles: ["Admin", "Owner", "Salesman"],
+  },
 };
+
+
+
+
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, tenant, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [mounted, isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
+  // Prevent SSR / hydration mismatch until client has mounted and hydrated auth state from localStorage
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  if (isLoading || (isAuthenticated && !user)) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-background">
         <div className="flex aspect-square size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md animate-pulse">

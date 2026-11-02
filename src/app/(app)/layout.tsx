@@ -4,6 +4,7 @@ import { ThemeCustomizer } from "@/components/theme-customizer";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthGuard } from "@/components/auth-guard";
+import { PageTitleSync } from "@/components/page-title-sync";
 
 export default function AppLayout({
   children,
@@ -12,6 +13,7 @@ export default function AppLayout({
     <AuthGuard>
       <TooltipProvider delayDuration={0}>
         <SidebarProvider>
+          <PageTitleSync />
           <AppSidebar />
           <SidebarInset className="min-w-0">
             <AppNavbar />

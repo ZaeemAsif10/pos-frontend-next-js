@@ -1732,9 +1732,16 @@ export default function AdminPlansPage() {
                 type="submit"
                 size="sm"
                 disabled={isPending}
-                className="bg-primary text-primary-foreground shadow-sm"
+                className="bg-primary text-primary-foreground shadow-sm gap-2"
               >
-                {isPending ? "Saving..." : editingPlan ? "Save Changes" : "Create Plan"}
+                {isPending && <IconRefresh className="h-4 w-4 animate-spin" />}
+                {isPending
+                  ? editingPlan
+                    ? "Saving Changes..."
+                    : "Creating Plan..."
+                  : editingPlan
+                  ? "Save Changes"
+                  : "Create Plan"}
               </Button>
             </DialogFooter>
           </form>
@@ -1796,7 +1803,9 @@ export default function AdminPlansPage() {
               size="sm"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
+              className="gap-1.5"
             >
+              {isDeleting && <IconRefresh className="size-4 animate-spin" />}
               {isDeleting
                 ? "Processing..."
                 : deleteTarget && deleteTarget.subscriber_count > 0

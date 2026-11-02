@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
+import { emitAppEvent } from "@/lib/events";
 
 export type BranchType = "retail_shop" | "warehouse_godown" | "wholesale_depot";
 
@@ -98,37 +99,45 @@ export const branchService = {
    * Create a new shop or warehouse location (enforces plan quota).
    */
   async createBranch(payload: BranchCreatePayload): Promise<BranchItem> {
-    return apiClient<BranchItem>(API_ENDPOINTS.TENANT.BRANCHES, {
+    const res = await apiClient<BranchItem>(API_ENDPOINTS.TENANT.BRANCHES, {
       method: "POST",
       body: JSON.stringify(payload),
     });
+    emitAppEvent("branches:changed", "created", res);
+    return res;
   },
 
   /**
    * Update an existing branch.
    */
   async updateBranch(branchId: number, payload: BranchUpdatePayload): Promise<BranchItem> {
-    return apiClient<BranchItem>(API_ENDPOINTS.TENANT.BRANCH_DETAIL(branchId), {
+    const res = await apiClient<BranchItem>(API_ENDPOINTS.TENANT.BRANCH_DETAIL(branchId), {
       method: "PUT",
       body: JSON.stringify(payload),
     });
+    emitAppEvent("branches:changed", "updated", res);
+    return res;
   },
 
   /**
    * Mark this branch as the primary headquarters.
    */
   async setMainBranch(branchId: number): Promise<BranchItem> {
-    return apiClient<BranchItem>(API_ENDPOINTS.TENANT.BRANCH_SET_MAIN(branchId), {
+    const res = await apiClient<BranchItem>(API_ENDPOINTS.TENANT.BRANCH_SET_MAIN(branchId), {
       method: "POST",
     });
+    emitAppEvent("branches:changed", "updated", res);
+    return res;
   },
 
   /**
    * Permanently delete a branch.
    */
   async deleteBranch(branchId: number): Promise<{ message: string }> {
-    return apiClient<{ message: string }>(API_ENDPOINTS.TENANT.BRANCH_DETAIL(branchId), {
+    const res = await apiClient<{ message: string }>(API_ENDPOINTS.TENANT.BRANCH_DETAIL(branchId), {
       method: "DELETE",
     });
+    emitAppEvent("branches:changed", "deleted", { id: branchId });
+    return res;
   },
 };

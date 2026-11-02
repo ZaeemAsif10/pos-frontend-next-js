@@ -29,6 +29,7 @@ import {
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Card,
   CardContent,
@@ -83,6 +84,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useAppEventListener } from "@/lib/events";
 import {
   branchService,
   type BranchItem,
@@ -146,9 +148,14 @@ export default function BranchesPage() {
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Add Dialog
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [addForm, setAddForm] = useState<BranchCreatePayload>({
     name: "",
     code: "",
@@ -204,6 +211,11 @@ export default function BranchesPage() {
     loadBranches();
   }, []);
 
+  // Reactive UI: auto-refresh branch cards/table when branches change anywhere
+  useAppEventListener("branches:changed", () => {
+    loadBranches();
+  });
+
   // Filtered branches
   const filteredBranches = useMemo(() => {
     return branches.filter((b) => {
@@ -226,6 +238,10 @@ export default function BranchesPage() {
       return matchSearch && matchType && matchCity && matchStatus;
     });
   }, [branches, search, typeFilter, cityFilter, statusFilter]);
+
+  const paginatedBranches = useMemo(() => {
+    return filteredBranches.slice((page - 1) * pageSize, page * pageSize);
+  }, [filteredBranches, page, pageSize]);
 
   // Handle open add branch
   const handleOpenAdd = () => {
@@ -372,12 +388,15 @@ export default function BranchesPage() {
   const handleDeleteConfirm = async () => {
     if (!deletingBranch) return;
     try {
+      setIsDeleting(true);
       await branchService.deleteBranch(deletingBranch.id);
       toast.success(`Branch '${deletingBranch.name}' removed successfully!`);
       setDeletingBranch(null);
       await loadBranches();
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to delete branch");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -502,69 +521,6 @@ export default function BranchesPage() {
         </CardContent>
       </Card>
 
-      {/* Filter and View Controls Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-wrap items-center gap-2">
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search branch, code, city..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9"
-            />
-          </div>
-
-          {/* Type Filter */}
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[160px] h-9 text-xs">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Shop Types</SelectItem>
-              <SelectItem value="retail_shop">Retail Shop</SelectItem>
-              <SelectItem value="warehouse_godown">Warehouse / Godown</SelectItem>
-              <SelectItem value="wholesale_depot">Wholesale Depot</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Status Filter */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] h-9 text-xs">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active Only</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* View mode toggle */}
-        <div className="flex items-center gap-1 border rounded-md p-0.5 bg-muted/30">
-          <Button
-            variant={viewMode === "table" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("table")}
-            className="h-7 px-2.5"
-            title="Table View"
-          >
-            <IconLayoutList className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className="h-7 px-2.5"
-            title="Grid Card View"
-          >
-            <IconLayoutGrid className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
       {/* Main Content Area */}
       {loading ? (
         <Card className="p-12 text-center">
@@ -573,41 +529,90 @@ export default function BranchesPage() {
             <p className="text-sm text-muted-foreground">Loading branch network...</p>
           </div>
         </Card>
-      ) : filteredBranches.length === 0 ? (
-        <Card className="p-12 text-center border-dashed">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <IconBuildingStore className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="font-semibold text-lg">No Branches Found</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              {search || typeFilter !== "all" || statusFilter !== "all"
-                ? "No branches match your active filters. Try resetting the search terms."
-                : "You don't have any branches registered yet. Add your first shop location to get started."}
-            </p>
-            {search || typeFilter !== "all" || statusFilter !== "all" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSearch("");
-                  setTypeFilter("all");
-                  setStatusFilter("all");
-                }}
-              >
-                Reset Filters
-              </Button>
-            ) : (
-              <Button size="sm" onClick={handleOpenAdd}>
-                <IconPlus className="h-4 w-4 mr-1.5" />
-                Add First Branch
-              </Button>
-            )}
-          </div>
-        </Card>
       ) : viewMode === "table" ? (
         /* TABLE VIEW */
         <Card className="shadow-sm border-border/70 overflow-hidden">
+          {/* Unified Toolbar inside Card */}
+          <div className="p-3.5 border-b bg-card/60 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative w-72 md:w-80">
+                <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search branch, code, city..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-8 h-9 text-xs"
+                />
+              </div>
+
+              {/* Type Filter */}
+              <Select
+                value={typeFilter}
+                onValueChange={(val) => {
+                  setTypeFilter(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40 h-9 text-xs">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Shop Types</SelectItem>
+                  <SelectItem value="retail_shop">Retail Shop</SelectItem>
+                  <SelectItem value="warehouse_godown">Warehouse / Godown</SelectItem>
+                  <SelectItem value="wholesale_depot">Wholesale Depot</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Status Filter */}
+              <Select
+                value={statusFilter}
+                onValueChange={(val) => {
+                  setStatusFilter(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-36 h-9 text-xs">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active Only</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground font-medium">
+                {filteredBranches.length} Branches Found
+              </span>
+              <div className="flex items-center gap-1 border rounded-md p-0.5 bg-muted/30">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="h-7 px-2.5"
+                  title="Table View"
+                >
+                  <IconLayoutList className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="h-7 px-2.5"
+                  title="Grid Card View"
+                >
+                  <IconLayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
@@ -621,7 +626,46 @@ export default function BranchesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBranches.map((branch) => {
+              {filteredBranches.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-center space-y-3">
+                      <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground">
+                        <IconBuildingStore className="h-6 w-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-base text-foreground">No Branches Found</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {search || typeFilter !== "all" || statusFilter !== "all"
+                            ? "No branches match your active filters. Try clearing your filters."
+                            : "You don't have any branches registered yet. Add your first shop location to get started."}
+                        </p>
+                      </div>
+                      {search || typeFilter !== "all" || statusFilter !== "all" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSearch("");
+                            setTypeFilter("all");
+                            setStatusFilter("all");
+                            setPage(1);
+                          }}
+                          className="h-8 text-xs mt-2"
+                        >
+                          Clear Filters
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={handleOpenAdd} className="h-8 text-xs mt-2">
+                          <IconPlus className="h-3.5 w-3.5 mr-1" />
+                          Add Branch
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedBranches.map((branch) => {
                 const typeInfo = branchTypeConfig[branch.type] || branchTypeConfig.retail_shop;
                 const TypeIcon = typeInfo.icon;
 
@@ -770,16 +814,141 @@ export default function BranchesPage() {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              }))}
             </TableBody>
           </Table>
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={filteredBranches.length}
+            onPageChange={setPage}
+            onPageSizeChange={(newSize) => {
+              setPageSize(newSize);
+              setPage(1);
+            }}
+          />
         </Card>
       ) : (
         /* GRID CARD VIEW */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredBranches.map((branch) => {
-            const typeInfo = branchTypeConfig[branch.type] || branchTypeConfig.retail_shop;
-            const TypeIcon = typeInfo.icon;
+        <div className="space-y-4">
+          <Card className="border border-border/70 overflow-hidden shadow-sm">
+            <div className="p-3.5 bg-card/60 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="relative w-72 md:w-80">
+                  <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search branch, code, city..."
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(1);
+                    }}
+                    className="pl-8 h-9 text-xs"
+                  />
+                </div>
+
+                <Select
+                  value={typeFilter}
+                  onValueChange={(val) => {
+                    setTypeFilter(val);
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-40 h-9 text-xs">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Shop Types</SelectItem>
+                    <SelectItem value="retail_shop">Retail Shop</SelectItem>
+                    <SelectItem value="warehouse_godown">Warehouse / Godown</SelectItem>
+                    <SelectItem value="wholesale_depot">Wholesale Depot</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={statusFilter}
+                  onValueChange={(val) => {
+                    setStatusFilter(val);
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-36 h-9 text-xs">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active Only</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground font-medium">
+                  {filteredBranches.length} Branches Found
+                </span>
+                <div className="flex items-center gap-1 border rounded-md p-0.5 bg-muted/30">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode("table")}
+                    className="h-7 px-2.5"
+                    title="Table View"
+                  >
+                    <IconLayoutList className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="h-7 px-2.5"
+                    title="Grid Card View"
+                  >
+                    <IconLayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {filteredBranches.length === 0 ? (
+            <Card className="p-12 text-center border-dashed">
+              <div className="flex flex-col items-center justify-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                  <IconBuildingStore className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-lg">No Branches Found</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  {search || typeFilter !== "all" || statusFilter !== "all"
+                    ? "No branches match your active filters. Try clearing your filters."
+                    : "You don't have any branches registered yet. Add your first shop location to get started."}
+                </p>
+                {search || typeFilter !== "all" || statusFilter !== "all" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearch("");
+                      setTypeFilter("all");
+                      setStatusFilter("all");
+                      setPage(1);
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={handleOpenAdd}>
+                    <IconPlus className="h-4 w-4 mr-1.5" />
+                    Add First Branch
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedBranches.map((branch) => {
+              const typeInfo = branchTypeConfig[branch.type] || branchTypeConfig.retail_shop;
+              const TypeIcon = typeInfo.icon;
 
             return (
               <Card
@@ -913,6 +1082,20 @@ export default function BranchesPage() {
           })}
         </div>
       )}
+        <Card className="border border-border/70 overflow-hidden shadow-sm">
+          <DataTablePagination
+            page={page}
+            pageSize={pageSize}
+            total={filteredBranches.length}
+            onPageChange={setPage}
+            onPageSizeChange={(newSize) => {
+              setPageSize(newSize);
+              setPage(1);
+            }}
+          />
+        </Card>
+      </div>
+    )}
 
       {/* CREATE NEW BRANCH DIALOG */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -1090,7 +1273,7 @@ export default function BranchesPage() {
               </Button>
               <Button type="submit" disabled={isSubmitting} className="gap-2">
                 {isSubmitting && <IconRefresh className="h-4 w-4 animate-spin" />}
-                Create Branch
+                {isSubmitting ? "Creating..." : "Create Branch"}
               </Button>
             </DialogFooter>
           </form>
@@ -1262,7 +1445,7 @@ export default function BranchesPage() {
               </Button>
               <Button type="submit" disabled={isSubmitting} className="gap-2">
                 {isSubmitting && <IconRefresh className="h-4 w-4 animate-spin" />}
-                Save Changes
+                {isSubmitting ? "Saving Changes..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>
@@ -1280,24 +1463,31 @@ export default function BranchesPage() {
               <IconAlertCircle className="h-5 w-5" />
               Delete Branch Location?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>
-                Are you sure you want to permanently delete the branch{" "}
-                <strong className="text-foreground">{deletingBranch?.name}</strong>{" "}
-                (<code>{deletingBranch?.code}</code>)?
-              </p>
-              <p className="text-xs text-muted-foreground">
-                This action cannot be undone. Ensure inventory, staff assignments, and POS registers are migrated beforehand.
-              </p>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  Are you sure you want to permanently delete the branch{" "}
+                  <strong className="text-foreground">{deletingBranch?.name}</strong>{" "}
+                  (<code>{deletingBranch?.code}</code>)?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be undone. Ensure inventory, staff assignments, and POS registers are migrated beforehand.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteConfirm();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-1.5"
             >
-              Confirm Deletion
+              {isDeleting && <IconRefresh className="h-4 w-4 animate-spin" />}
+              {isDeleting ? "Deleting..." : "Confirm Deletion"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

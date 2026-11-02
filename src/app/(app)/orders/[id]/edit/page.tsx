@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   IconArrowLeft,
   IconDeviceFloppy,
+  IconRefresh,
   IconPlus,
   IconTrash,
   IconShoppingBag,
@@ -68,6 +69,7 @@ export default function EditOrderPage() {
   }, [matchedCustomer]);
 
   const nextKey = useRef(2);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [customer, setCustomer] = useState(matchedCustomer?.id ?? "");
   const [status, setStatus] = useState(order?.status ?? "Paid");
   const [method, setMethod] = useState(order?.method ?? "Visa");
@@ -123,6 +125,7 @@ export default function EditOrderPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsSubmitting(true);
     toast.success("Order updated", {
       description: `${order!.id} was saved with a total of ${usd(total)}.`,
     });
@@ -156,8 +159,17 @@ export default function EditOrderPage() {
           <Button variant="outline" asChild>
             <Link href={backHref}>Cancel</Link>
           </Button>
-          <Button type="submit" className="gap-2">
-            <IconDeviceFloppy className="size-4" /> Save changes
+          <Button type="submit" disabled={isSubmitting} className="gap-2">
+            {isSubmitting ? (
+              <>
+                <IconRefresh className="size-4 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <IconDeviceFloppy className="size-4" /> Save changes
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -340,8 +352,17 @@ export default function EditOrderPage() {
                   {usd(total)}
                 </span>
               </div>
-              <Button type="submit" className="mt-2 w-full gap-2">
-                <IconDeviceFloppy className="size-4" /> Save changes
+              <Button type="submit" disabled={isSubmitting} className="mt-2 w-full gap-2">
+                {isSubmitting ? (
+                  <>
+                    <IconRefresh className="size-4 animate-spin" />
+                    Saving Changes...
+                  </>
+                ) : (
+                  <>
+                    <IconDeviceFloppy className="size-4" /> Save changes
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>

@@ -36,7 +36,7 @@ function parseJwtPayload(token: string): Record<string, any> | null {
   }
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Retrieve auth token from cookies

@@ -848,7 +848,8 @@ You can log in right away to start managing your Sales, Purchases, and Inventory
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground">
+              <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground gap-1.5">
+                {isPending && <IconRefresh className="size-4 animate-spin" />}
                 {isPending ? "Provisioning..." : "Provision Business"}
               </Button>
             </DialogFooter>

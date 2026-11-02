@@ -36,6 +36,13 @@ const CRUMB_LABELS: Record<string, string> = {
   faq: "FAQ",
   fbr: "FBR",
   pos: "POS",
+  routes: "Delivery Areas",
+  branches: "Shops & Branches",
+  team: "Users",
+  roles: "Roles & Permissions",
+  invoices: "Sales Invoices",
+  purchases: "Purchases & GRN",
+  inventory: "Live Inventory",
 };
 
 function useBreadcrumb() {

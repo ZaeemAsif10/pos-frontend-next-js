@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   IconArrowLeft,
   IconDeviceFloppy,
+  IconRefresh,
   IconUpload,
 } from "@tabler/icons-react";
 
@@ -121,8 +122,17 @@ export default function EditCustomerPage() {
           <Button variant="outline" asChild>
             <Link href={`/customers/${customer.id}`}>Cancel</Link>
           </Button>
-          <Button type="submit" disabled={saving}>
-            <IconDeviceFloppy className="size-4" /> Save changes
+          <Button type="submit" disabled={saving} className="gap-2">
+            {saving ? (
+              <>
+                <IconRefresh className="size-4 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <IconDeviceFloppy className="size-4" /> Save changes
+              </>
+            )}
           </Button>
         </PageHeader>
 
@@ -312,8 +322,17 @@ export default function EditCustomerPage() {
           <Button variant="outline" asChild>
             <Link href={`/customers/${customer.id}`}>Cancel</Link>
           </Button>
-          <Button type="submit" disabled={saving}>
-            <IconDeviceFloppy className="size-4" /> Save changes
+          <Button type="submit" disabled={saving} className="gap-2">
+            {saving ? (
+              <>
+                <IconRefresh className="size-4 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <IconDeviceFloppy className="size-4" /> Save changes
+              </>
+            )}
           </Button>
         </div>
       </form>

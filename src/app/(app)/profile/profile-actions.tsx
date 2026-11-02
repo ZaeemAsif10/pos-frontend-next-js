@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { IconEdit, IconMessage, IconDeviceFloppy } from "@tabler/icons-react";
+import { IconEdit, IconMessage, IconDeviceFloppy, IconRefresh } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { currentUser } from "@/data";
 
 export function ProfileActions() {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState(currentUser.name);
   const [role, setRole] = useState("Product & Growth");
   const [bio, setBio] = useState(
@@ -28,7 +29,9 @@ export function ProfileActions() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setOpen(false);
+    setIsSubmitting(false);
     toast.success("Profile updated", {
       description: "Your changes have been saved.",
     });
@@ -94,8 +97,17 @@ export function ProfileActions() {
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                <IconDeviceFloppy className="size-4" /> Save changes
+              <Button type="submit" disabled={isSubmitting} className="gap-2">
+                {isSubmitting ? (
+                  <>
+                    <IconRefresh className="size-4 animate-spin" />
+                    Saving Changes...
+                  </>
+                ) : (
+                  <>
+                    <IconDeviceFloppy className="size-4" /> Save changes
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>

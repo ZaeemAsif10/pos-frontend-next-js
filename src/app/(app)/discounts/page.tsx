@@ -13,6 +13,7 @@ import {
   IconReceipt,
   IconCurrencyDollar,
   IconDiscount2,
+  IconRefresh,
 } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -131,6 +132,7 @@ export default function DiscountsPage() {
   const [rows, setRows] = useState<Coupon[]>(initialCoupons);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Coupon | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const deleting = rows.find((c) => c.id === deleteId) ?? null;
@@ -163,6 +165,7 @@ export default function DiscountsPage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setIsSubmitting(true);
     const fd = new FormData(e.currentTarget);
     const code = ((fd.get("code") as string) || "").trim().toUpperCase();
     const type = (fd.get("type") as Coupon["type"]) || "percentage";
@@ -198,6 +201,7 @@ export default function DiscountsPage() {
     }
     setFormOpen(false);
     setEditing(null);
+    setIsSubmitting(false);
   }
 
   return (
@@ -463,8 +467,9 @@ export default function DiscountsPage() {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                {editing ? "Save changes" : "Create discount"}
+              <Button type="submit" disabled={isSubmitting} className="gap-2">
+                {isSubmitting && <IconRefresh className="size-4 animate-spin" />}
+                {isSubmitting ? "Saving Changes..." : editing ? "Save Changes" : "Create Discount"}
               </Button>
             </DialogFooter>
           </form>

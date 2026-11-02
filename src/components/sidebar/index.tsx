@@ -134,7 +134,10 @@ export function AppSidebar() {
   );
 }
 
-function badgeClass(badge: string) {
+function badgeClass(badge: string, active?: boolean) {
+  if (active) {
+    return "bg-white/20 text-white font-semibold";
+  }
   return /^\d+$/.test(badge)
     ? "bg-sidebar-accent text-sidebar-accent-foreground"
     : "bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground peer-hover/menu-button:text-primary-foreground peer-data-active/menu-button:text-primary-foreground";
@@ -146,7 +149,9 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
 
   // Collapsible parent with children.
   if (item.items?.length) {
-    const childActive = item.items.some((c) => pathname === c.url);
+    const childActive = item.items.some(
+      (c) => pathname === c.url || (c.url !== "/" && pathname.startsWith(c.url + "/"))
+    );
     return (
       <Collapsible
         asChild
@@ -155,14 +160,21 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
       >
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={item.title} isActive={childActive}>
+            <SidebarMenuButton
+              tooltip={item.title}
+              isActive={childActive}
+              className={cn(
+                childActive &&
+                  "bg-zinc-950! text-white! font-semibold shadow-xs hover:bg-zinc-950! hover:text-white! [&_svg]:text-white! dark:bg-zinc-100! dark:text-zinc-950! dark:hover:bg-zinc-100! dark:hover:text-zinc-950! dark:[&_svg]:text-zinc-950!"
+              )}
+            >
               {item.icon && <item.icon className="size-4" />}
               <span>{item.title}</span>
               {item.badge && (
                 <SidebarMenuBadge
                   className={cn(
                     "group-data-[state=open]/collapsible:hidden",
-                    badgeClass(item.badge)
+                    badgeClass(item.badge, childActive)
                   )}
                 >
                   {item.badge}
@@ -174,10 +186,19 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
           <CollapsibleContent>
             <SidebarMenuSub>
               {item.items.map((sub) => {
-                const active = pathname === sub.url;
+                const active =
+                  pathname === sub.url ||
+                  (sub.url !== "/" && pathname.startsWith(sub.url + "/"));
                 return (
                   <SidebarMenuSubItem key={sub.title}>
-                    <SidebarMenuSubButton asChild isActive={active}>
+                    <SidebarMenuSubButton
+                      asChild
+                      isActive={active}
+                      className={cn(
+                        active &&
+                          "bg-zinc-950! text-white! font-semibold shadow-xs hover:bg-zinc-950! hover:text-white! [&_svg]:text-white! dark:bg-zinc-100! dark:text-zinc-950! dark:hover:bg-zinc-100! dark:hover:text-zinc-950! dark:[&_svg]:text-zinc-950!"
+                      )}
+                    >
                       <Link href={sub.url} onClick={closeMobile}>
                         <span>{sub.title}</span>
                       </Link>
@@ -193,15 +214,25 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
   }
 
   // Single direct link item
-  const active = item.url ? pathname === item.url : false;
+  const active = item.url
+    ? pathname === item.url || (item.url !== "/" && pathname.startsWith(item.url + "/"))
+    : false;
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
+      <SidebarMenuButton
+        asChild
+        tooltip={item.title}
+        isActive={active}
+        className={cn(
+          active &&
+            "bg-zinc-950! text-white! font-semibold shadow-xs hover:bg-zinc-950! hover:text-white! [&_svg]:text-white! dark:bg-zinc-100! dark:text-zinc-950! dark:hover:bg-zinc-100! dark:hover:text-zinc-950! dark:[&_svg]:text-zinc-950!"
+        )}
+      >
         <Link href={item.url ?? "#"} onClick={closeMobile}>
           {item.icon && <item.icon className="size-4" />}
           <span>{item.title}</span>
           {item.badge && (
-            <SidebarMenuBadge className={badgeClass(item.badge)}>
+            <SidebarMenuBadge className={badgeClass(item.badge, active)}>
               {item.badge}
             </SidebarMenuBadge>
           )}

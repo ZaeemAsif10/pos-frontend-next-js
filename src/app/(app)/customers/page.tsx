@@ -1,31 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useLookupData } from "@/hooks/use-lookup-data";
 import {
-  IconSearch,
+  IconUserHeart,
   IconPlus,
-  IconChevronLeft,
-  IconChevronRight,
+  IconSearch,
   IconDotsVertical,
-  IconEye,
-  IconPencil,
+  IconEdit,
   IconTrash,
-  IconUsers,
-  IconDownload,
-  IconMail,
-  IconX,
+  IconRefresh,
+  IconAlertTriangle,
+  IconPhone,
+  IconBrandWhatsapp,
+  IconBuildingStore,
+  IconMapPin,
+  IconWallet,
+  IconLock,
+  IconRoute,
+  IconCreditCard,
+  IconReceipt2,
 } from "@tabler/icons-react";
 
-import { PageHeader } from "@/components/page-header";
-import { DeleteDialog } from "@/components/delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -48,382 +56,1025 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { customers, type Customer } from "@/data";
-
-const PAGE_SIZE = 10;
-
-const statusStyles: Record<Customer["status"], string> = {
-  Active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  Inactive: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-  Pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-};
-
-const planStyles: Record<Customer["plan"], string> = {
-  Free: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-  Pro: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  Enterprise: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-};
-
-function SummaryTile({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <p className="text-3xl font-semibold tracking-tight tabular-nums">
-          {value}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/context/auth-context";
+import {
+  partyService,
+  type CustomerItem,
+  type CustomerStats,
+  type DeliveryAreaItem,
+} from "@/services/party.service";
+import { branchService, type BranchItem } from "@/services/branch.service";
 
 export default function CustomersPage() {
+  const { user, tenant } = useAuth();
+  const userPerms = tenant?.permissions || [];
+  const userRole = tenant?.role_name || "";
+  const isOwnerOrAdmin =
+    user?.is_superadmin ||
+    userRole.toLowerCase() === "admin" ||
+    userRole.toLowerCase() === "owner" ||
+    userPerms.includes("*");
+
+  const canCreate = isOwnerOrAdmin || userPerms.includes("customers:create");
+  const canEdit = isOwnerOrAdmin || userPerms.includes("customers:edit");
+  const canDelete = isOwnerOrAdmin || userPerms.includes("customers:delete");
+
+  const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState<CustomerItem[]>([]);
+  const [stats, setStats] = useState<CustomerStats>({
+    total_customers: 0,
+    total_receivables: 0,
+    overdue_accounts: 0,
+    credit_blocked_count: 0,
+  });
+  const { data: routes } = useLookupData("routes");
+  const { data: branches } = useLookupData("branches");
+
+  // Filter States
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [selectedRoute, setSelectedRoute] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+
+  // Create / Edit Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerItem | null>(null);
+
+  // Form Fields
+  const [code, setCode] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [cnic, setCnic] = useState("");
+  const [ntn, setNtn] = useState("");
+  const [strn, setStrn] = useState("");
+  const [customerType, setCustomerType] = useState("retailer");
+
+  const [creditLimit, setCreditLimit] = useState<number>(0);
+  const [creditDays, setCreditDays] = useState<number>(15);
+  const [openingBalance, setOpeningBalance] = useState<number>(0);
+  const [isCreditBlocked, setIsCreditBlocked] = useState<boolean>(false);
+
+  const [areaId, setAreaId] = useState<number | 0>(0);
+  const [branchId, setBranchId] = useState<number | 0>(0);
+  const [city, setCity] = useState("Lahore");
+  const [address, setAddress] = useState("");
+  const [kycStatus, setKycStatus] = useState("verified");
+  const [isActive, setIsActive] = useState(true);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Delete State
+  const [deletingCustomer, setDeletingCustomer] = useState<CustomerItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<Customer[]>(customers);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
-  const deleting = rows.find((c) => c.id === deleteId) ?? null;
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedRoute, selectedType, statusFilter]);
 
-  function toggleRow(id: string) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  }
+  const loadAuxiliaryData = async () => {
+    try {
+      const statsData = await partyService.getCustomerStats().catch(() => ({
+        total_customers: 0,
+        total_receivables: 0,
+        overdue_accounts: 0,
+        credit_blocked_count: 0,
+      }));
+      setStats(statsData);
+    } catch (err: any) {
+      // stats fallback
+    }
+  };
 
-  const stats = useMemo(() => {
-    const total = rows.length;
-    const active = rows.filter((c) => c.status === "Active").length;
-    const newThisMonth = rows.filter((c) => {
-      const d = new Date(c.joined);
-      return d.getMonth() === 5; // June cohort — illustrative "new this month"
-    }).length;
-    const avgSpend =
-      rows.reduce((sum, c) => sum + c.spent, 0) / (total || 1);
-    return { total, active, newThisMonth, avgSpend };
-  }, [rows]);
+  const loadCustomers = useCallback(
+    async (isInitial = false) => {
+      try {
+        if (isInitial) setInitialLoading(true);
+        else setIsFetching(true);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return rows.filter((c) => {
-      const matchesSearch =
-        !q ||
-        c.name.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q);
-      const matchesStatus = status === "all" || c.status === status;
-      return matchesSearch && matchesStatus;
-    });
-  }, [rows, search, status]);
+        const res = await partyService.listCustomers({
+          search: search.trim() || undefined,
+          area_id: selectedRoute !== "all" ? Number(selectedRoute) : undefined,
+          customer_type: selectedType !== "all" ? selectedType : undefined,
+          is_active: statusFilter === "all" ? undefined : statusFilter === "active",
+          page,
+          size: pageSize,
+        });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageRows = filtered.slice(start, start + PAGE_SIZE);
-  const showingFrom = filtered.length === 0 ? 0 : start + 1;
-  const showingTo = Math.min(start + PAGE_SIZE, filtered.length);
+        if (res && res.items) {
+          setCustomers(res.items);
+          setTotalCustomers(res.total);
+        } else if (Array.isArray(res)) {
+          setCustomers(res);
+          setTotalCustomers(res.length);
+        }
+      } catch (err: any) {
+        toast.error(err?.detail || err?.message || "Failed to load customers data");
+      } finally {
+        setInitialLoading(false);
+        setIsFetching(false);
+        setLoading(false);
+      }
+    },
+    [page, pageSize, search, selectedRoute, selectedType, statusFilter]
+  );
 
-  const pageIds = pageRows.map((c) => c.id);
-  const allSelected =
-    pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
-  const someSelected = pageIds.some((id) => selected.includes(id));
-  const headerChecked: boolean | "indeterminate" = allSelected
-    ? true
-    : someSelected
-      ? "indeterminate"
-      : false;
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    loadAuxiliaryData();
+    loadCustomers(true);
+  }, []);
 
-  function toggleAllOnPage(checked: boolean) {
-    setSelected((prev) =>
-      checked
-        ? Array.from(new Set([...prev, ...pageIds]))
-        : prev.filter((id) => !pageIds.includes(id))
-    );
-  }
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      loadCustomers(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [loadCustomers]);
+
+  const openCreateModal = () => {
+    setEditingCustomer(null);
+    setCode(`CUST-${String(customers.length + 1).padStart(3, "0")}`);
+    setBusinessName("");
+    setOwnerName("");
+    setPhone("");
+    setWhatsappNumber("");
+    setEmail("");
+    setCnic("");
+    setNtn("");
+    setStrn("");
+    setCustomerType("retailer");
+    setCreditLimit(50000);
+    setCreditDays(15);
+    setOpeningBalance(0);
+    setIsCreditBlocked(false);
+    setAreaId(routes.length > 0 ? routes[0].id : 0);
+    setBranchId(branches.length > 0 ? branches[0].id : 0);
+    setCity("Lahore");
+    setAddress("");
+    setKycStatus("verified");
+    setIsActive(true);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (c: CustomerItem) => {
+    setEditingCustomer(c);
+    setCode(c.code);
+    setBusinessName(c.business_name);
+    setOwnerName(c.owner_name || "");
+    setPhone(c.phone);
+    setWhatsappNumber(c.whatsapp_number || "");
+    setEmail(c.email || "");
+    setCnic(c.cnic || "");
+    setNtn(c.ntn || "");
+    setStrn(c.strn || "");
+    setCustomerType(c.customer_type);
+    setCreditLimit(Number(c.credit_limit) || 0);
+    setCreditDays(Number(c.credit_days) || 0);
+    setOpeningBalance(Number(c.opening_balance) || 0);
+    setIsCreditBlocked(c.is_credit_blocked);
+    setAreaId(c.area_id || 0);
+    setBranchId(c.branch_id || 0);
+    setCity(c.city);
+    setAddress(c.address || "");
+    setKycStatus(c.kyc_status);
+    setIsActive(c.is_active);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!businessName.trim()) {
+      toast.error("Please enter a shop or business name");
+      return;
+    }
+    if (!phone.trim()) {
+      toast.error("Please enter a primary phone number");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        code: code.trim().toUpperCase(),
+        business_name: businessName.trim(),
+        owner_name: ownerName.trim() || null,
+        phone: phone.trim(),
+        whatsapp_number: whatsappNumber.trim() || null,
+        email: email.trim() || null,
+        cnic: cnic.trim() || null,
+        ntn: ntn.trim() || null,
+        strn: strn.trim() || null,
+        customer_type: customerType,
+        credit_limit: Number(creditLimit) || 0,
+        credit_days: Number(creditDays) || 0,
+        opening_balance: Number(openingBalance) || 0,
+        area_id: areaId > 0 ? areaId : null,
+        branch_id: branchId > 0 ? branchId : null,
+        city: city.trim(),
+        address: address.trim() || null,
+        kyc_status: kycStatus,
+        is_active: isActive,
+      };
+
+      if (editingCustomer) {
+        await partyService.updateCustomer(editingCustomer.id, {
+          ...payload,
+          is_credit_blocked: isCreditBlocked,
+        });
+        toast.success(`Customer '${businessName}' updated successfully`);
+      } else {
+        await partyService.createCustomer(payload);
+        toast.success(`Customer '${businessName}' registered successfully`);
+      }
+      setIsModalOpen(false);
+      loadCustomers();
+      loadAuxiliaryData();
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || "Failed to save customer");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCustomer) return;
+    try {
+      setIsDeleting(true);
+      const res = await partyService.deleteCustomer(deletingCustomer.id);
+      toast.success(res.message || "Customer deleted successfully");
+      setDeletingCustomer(null);
+      loadCustomers();
+      loadAuxiliaryData();
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || "Failed to delete customer");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleFilterChange = () => {
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Customers"
-        description="Manage your customer directory, plans and activity."
-      >
-        <Button size="sm" asChild>
-          <Link href="/customers/new">
-            <IconPlus className="size-4" /> Add customer
-          </Link>
-        </Button>
-      </PageHeader>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryTile label="Total customers" value={stats.total.toLocaleString()} />
-        <SummaryTile label="Active" value={stats.active.toLocaleString()} />
-        <SummaryTile label="New this month" value={stats.newThisMonth.toLocaleString()} />
-        <SummaryTile
-          label="Avg. spend"
-          value={`$${Math.round(stats.avgSpend).toLocaleString()}`}
-        />
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">Customer Accounts & Khata</h1>
+            <Badge variant="outline" className="text-xs">
+              {customers.length} Accounts
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Manage retail shops, wholesale accounts, credit limits, and udhaar balances.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              loadCustomers();
+              loadAuxiliaryData();
+            }}
+            disabled={loading}
+            className="h-9 gap-1.5"
+          >
+            <IconRefresh className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          {canCreate && (
+            <Button size="sm" onClick={openCreateModal} className="h-9 gap-1.5">
+              <IconPlus className="h-4 w-4" />
+              Add Customer
+            </Button>
+          )}
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="space-y-4 px-0">
-          <div className="flex flex-col gap-3 px-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative w-full sm:max-w-xs">
-                <IconSearch className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Search by name or email…"
-                  className="pl-9"
-                />
-              </div>
-              <Select
-                value={status}
-                onValueChange={(v) => {
-                  setStatus(v);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* KPI Stats Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <IconUserHeart className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total_customers}</div>
+            <p className="text-xs text-muted-foreground">Active commercial accounts</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Receivables (Udhaar)</CardTitle>
+            <IconWallet className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              PKR {stats.total_receivables.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {filtered.length} customer{filtered.length === 1 ? "" : "s"}
-            </p>
-          </div>
-
-          {selected.length > 0 && (
-            <div className="flex flex-col gap-3 border-y bg-muted/40 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                  onClick={() => setSelected([])}
-                >
-                  <IconX className="size-4" />
-                  <span className="sr-only">Clear selection</span>
-                </Button>
-                {selected.length} selected
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast.success(
-                      `Exported ${selected.length} customer${selected.length === 1 ? "" : "s"} to CSV`
-                    )
-                  }
-                >
-                  <IconDownload className="size-4" /> Export
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast.success("Email queued", {
-                      description: `A message will be sent to ${selected.length} customer${selected.length === 1 ? "" : "s"}.`,
-                    })
-                  }
-                >
-                  <IconMail className="size-4" /> Email
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => setBulkDeleteOpen(true)}
-                >
-                  <IconTrash className="size-4" /> Delete
-                </Button>
-              </div>
+            <p className="text-xs text-muted-foreground">Pending market collection</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Overdue Accounts</CardTitle>
+            <IconAlertTriangle className="h-4 w-4 text-rose-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+              {stats.overdue_accounts}
             </div>
-          )}
+            <p className="text-xs text-muted-foreground">Exceeding credit limits</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Credit Blocked</CardTitle>
+            <IconLock className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {stats.credit_blocked_count}
+            </div>
+            <p className="text-xs text-muted-foreground">Orders suspended</p>
+          </CardContent>
+        </Card>
+      </div>
 
-          <div className="overflow-x-auto">
-            <Table className="min-w-[900px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10 pl-6">
-                    <Checkbox
-                      aria-label="Select all"
-                      checked={headerChecked}
-                      onCheckedChange={(v) => toggleAllOnPage(v === true)}
-                    />
-                  </TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Spent</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="w-10 pr-6" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pageRows.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="pl-6">
-                      <Checkbox
-                        aria-label={`Select ${c.name}`}
-                        checked={selected.includes(c.id)}
-                        onCheckedChange={() => toggleRow(c.id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-9">
-                          <AvatarImage src={c.avatar} alt={c.name} />
-                          <AvatarFallback>{c.name.slice(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/customers/${c.id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {c.name}
-                          </Link>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {c.email}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {c.company}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={planStyles[c.plan]}>
-                        {c.plan}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={statusStyles[c.status]}
-                      >
-                        {c.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      ${c.spent.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {c.location}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      {c.joined}
-                    </TableCell>
-                    <TableCell className="pr-6">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <IconDotsVertical className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/customers/${c.id}`}>
-                              <IconEye className="size-4" /> View
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/customers/${c.id}/edit`}>
-                              <IconPencil className="size-4" /> Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={() => setDeleteId(c.id)}
-                          >
-                            <IconTrash className="size-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {pageRows.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={9}
-                      className="py-12 text-center text-muted-foreground"
-                    >
-                      <IconUsers className="mx-auto mb-2 size-6 opacity-50" />
-                      No customers match your filters.
-                    </TableCell>
-                  </TableRow>
+      {/* Main Global Table */}
+      <DataTable<CustomerItem>
+        data={customers}
+        columns={[
+          {
+            header: "Code",
+            className: "w-[110px] font-mono font-semibold",
+            cell: (c) => c.code,
+          },
+          {
+            header: "Business & Owner",
+            cell: (c) => (
+              <div>
+                <div className="font-medium text-foreground">{c.business_name}</div>
+                {c.owner_name && (
+                  <p className="text-xs text-muted-foreground">
+                    Prop: {c.owner_name}
+                  </p>
                 )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex flex-col gap-3 px-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing {showingFrom}–{showingTo} of {filtered.length}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                <IconChevronLeft className="size-4" /> Prev
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              >
-                Next <IconChevronRight className="size-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <DeleteDialog
-        open={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
-        name={deleting?.name ?? "customer"}
-        onConfirm={() => {
-          setRows((prev) => prev.filter((c) => c.id !== deleteId));
-          setSelected((prev) => prev.filter((id) => id !== deleteId));
+              </div>
+            ),
+          },
+          {
+            header: "Contact",
+            cell: (c) => (
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 text-xs">
+                  <IconPhone className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{c.phone}</span>
+                </div>
+                {c.whatsapp_number && (
+                  <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                    <IconBrandWhatsapp className="h-3.5 w-3.5" />
+                    <span>{c.whatsapp_number}</span>
+                  </div>
+                )}
+              </div>
+            ),
+          },
+          {
+            header: "Delivery Route",
+            cell: (c) =>
+              c.area_name ? (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <IconRoute className="h-3.5 w-3.5 text-blue-500" />
+                  <span>{c.area_name}</span>
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground italic">No Route</span>
+              ),
+          },
+          {
+            header: "Type",
+            cell: (c) => (
+              <Badge variant="outline" className="text-xs capitalize">
+                {c.customer_type}
+              </Badge>
+            ),
+          },
+          {
+            header: "Credit Limit",
+            className: "text-right",
+            headerClassName: "text-right",
+            cell: (c) =>
+              Number(c.credit_limit) > 0 ? (
+                <div>
+                  <span className="font-semibold">
+                    PKR {Number(c.credit_limit).toLocaleString()}
+                  </span>
+                  <p className="text-[10px] text-muted-foreground">
+                    {c.credit_days} Days
+                  </p>
+                </div>
+              ) : (
+                <span className="text-muted-foreground italic">Cash Only</span>
+              ),
+          },
+          {
+            header: "Current Udhaar",
+            className: "text-right",
+            headerClassName: "text-right",
+            cell: (c) => {
+              const isOverdue =
+                Number(c.credit_limit) > 0 &&
+                Number(c.current_balance) > Number(c.credit_limit);
+              return (
+                <div>
+                  <div
+                    className={`text-xs font-bold ${
+                      Number(c.current_balance) > 0
+                        ? isOverdue
+                          ? "text-rose-600 dark:text-rose-400"
+                          : "text-amber-600 dark:text-amber-400"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    PKR {Number(c.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                  {isOverdue && (
+                    <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4">
+                      Limit Exceeded
+                    </Badge>
+                  )}
+                </div>
+              );
+            },
+          },
+          {
+            header: "Status",
+            cell: (c) =>
+              c.is_credit_blocked ? (
+                <Badge variant="destructive" className="gap-1 text-[10px]">
+                  <IconLock className="h-2.5 w-2.5" /> Blocked
+                </Badge>
+              ) : (
+                <Badge
+                  variant={c.is_active ? "default" : "secondary"}
+                  className={
+                    c.is_active
+                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border-0 text-[10px]"
+                      : "text-[10px]"
+                  }
+                >
+                  {c.is_active ? "Active" : "Inactive"}
+                </Badge>
+              ),
+          },
+          {
+            header: "Actions",
+            className: "text-right",
+            headerClassName: "text-right",
+            cell: (c) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <IconDotsVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {canEdit && (
+                    <DropdownMenuItem onClick={() => openEditModal(c)}>
+                      <IconEdit className="mr-2 h-4 w-4" />
+                      Edit Customer
+                    </DropdownMenuItem>
+                  )}
+                  {canDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setDeletingCustomer(c)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <IconTrash className="mr-2 h-4 w-4" />
+                        Delete Customer
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ),
+          },
+        ]}
+        keyExtractor={(c) => c.id}
+        initialLoading={initialLoading}
+        isFetching={isFetching}
+        searchValue={search}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
         }}
+        searchPlaceholder="Search customer, phone, code..."
+        filterControls={
+          <>
+            {/* Route Filter */}
+            <Select
+              value={selectedRoute}
+              onValueChange={(val) => {
+                setSelectedRoute(val);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 h-9 text-xs">
+                <SelectValue placeholder="All Routes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Routes</SelectItem>
+                {routes.map((r) => (
+                  <SelectItem key={r.id} value={String(r.id)}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Type Filter */}
+            <Select
+              value={selectedType}
+              onValueChange={(val) => {
+                setSelectedType(val);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-36 h-9 text-xs">
+                <SelectValue placeholder="Account Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="retailer">Retailer</SelectItem>
+                <SelectItem value="wholesaler">Wholesaler</SelectItem>
+                <SelectItem value="corporate">Corporate</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Status Filter */}
+            <Select
+              value={statusFilter}
+              onValueChange={(val: any) => {
+                setStatusFilter(val);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-36 h-9 text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        }
+        recordLabel="Customers"
+        totalRecords={totalCustomers}
+        pagination={{
+          page,
+          pageSize,
+          total: totalCustomers,
+          onPageChange: setPage,
+          onPageSizeChange: (newSize) => {
+            setPageSize(newSize);
+            setPage(1);
+          },
+        }}
+        emptyTitle="No customers found"
+        emptyDescription={
+          search || selectedRoute !== "all" || selectedType !== "all" || statusFilter !== "all"
+            ? "No customers match your active search filters. Try clearing your filters."
+            : "Add retail stores and wholesale clients to manage sales"
+        }
+        emptyIcon={<IconUserHeart className="h-6 w-6 text-muted-foreground/60" />}
+        onClearFilters={
+          search || selectedRoute !== "all" || selectedType !== "all" || statusFilter !== "all"
+            ? () => {
+                setSearch("");
+                setSelectedRoute("all");
+                setSelectedType("all");
+                setStatusFilter("all");
+                setPage(1);
+              }
+            : undefined
+        }
       />
 
-      <DeleteDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        name={`${selected.length} customer${selected.length === 1 ? "" : "s"}`}
-        description={`This will permanently remove ${selected.length} selected customer${selected.length === 1 ? "" : "s"}. This action cannot be undone.`}
-        onConfirm={() => {
-          setRows((prev) => prev.filter((c) => !selected.includes(c.id)));
-          setSelected([]);
-          setBulkDeleteOpen(false);
-        }}
-      />
+      {/* Create / Edit Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+          <form onSubmit={handleSubmit}>
+            <DialogHeader>
+              <DialogTitle>
+                {editingCustomer ? "Edit Customer Account" : "Register New Customer"}
+              </DialogTitle>
+              <DialogDescription>
+                Fill in commercial profile, contact numbers, and udhaar credit limits.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Tabs defaultValue="basic" className="py-4">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="basic">Business & Profile</TabsTrigger>
+                <TabsTrigger value="credit">Credit & Location</TabsTrigger>
+              </TabsList>
+
+              {/* Tab 1: Basic Information */}
+              <TabsContent value="basic" className="space-y-4 pt-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="custCode" className="text-xs font-semibold">
+                      Account Code <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="custCode"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      placeholder="e.g. CUST-001"
+                      className="font-mono uppercase"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="custType" className="text-xs font-semibold">
+                      Customer Type
+                    </Label>
+                    <Select value={customerType} onValueChange={setCustomerType}>
+                      <SelectTrigger id="custType" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="retailer">Retailer (Kirana / Mart)</SelectItem>
+                        <SelectItem value="wholesaler">Wholesaler / Distributor</SelectItem>
+                        <SelectItem value="corporate">Corporate / Institution</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="businessName" className="text-xs font-semibold">
+                    Shop / Business Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="businessName"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="e.g. Al-Madina Cash & Carry"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ownerName" className="text-xs font-semibold">
+                      Proprietor / Owner Name
+                    </Label>
+                    <Input
+                      id="ownerName"
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      placeholder="e.g. Haji Muhammad Aslam"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-xs font-semibold">
+                      Primary Phone <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="0300-1234567"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="whatsapp" className="text-xs font-semibold">
+                      WhatsApp Number
+                    </Label>
+                    <Input
+                      id="whatsapp"
+                      value={whatsappNumber}
+                      onChange={(e) => setWhatsappNumber(e.target.value)}
+                      placeholder="0300-1234567"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-xs font-semibold">
+                      Email Address
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="shop@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cnic" className="text-xs font-semibold">
+                      CNIC Number
+                    </Label>
+                    <Input
+                      id="cnic"
+                      value={cnic}
+                      onChange={(e) => setCnic(e.target.value)}
+                      placeholder="35201-xxxxxxx-x"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ntn" className="text-xs font-semibold">
+                      NTN
+                    </Label>
+                    <Input
+                      id="ntn"
+                      value={ntn}
+                      onChange={(e) => setNtn(e.target.value)}
+                      placeholder="NTN-XXXX"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="strn" className="text-xs font-semibold">
+                      STRN
+                    </Label>
+                    <Input
+                      id="strn"
+                      value={strn}
+                      onChange={(e) => setStrn(e.target.value)}
+                      placeholder="Sales Tax Reg #"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Tab 2: Credit & Location */}
+              <TabsContent value="credit" className="space-y-4 pt-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="creditLimit" className="text-xs font-semibold">
+                      Credit Limit (PKR)
+                    </Label>
+                    <Input
+                      id="creditLimit"
+                      type="number"
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(Number(e.target.value))}
+                      min="0"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="creditDays" className="text-xs font-semibold">
+                      Credit Days
+                    </Label>
+                    <Input
+                      id="creditDays"
+                      type="number"
+                      value={creditDays}
+                      onChange={(e) => setCreditDays(Number(e.target.value))}
+                      min="0"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="openingBal" className="text-xs font-semibold">
+                      Opening Balance (PKR)
+                    </Label>
+                    <Input
+                      id="openingBal"
+                      type="number"
+                      value={openingBalance}
+                      onChange={(e) => setOpeningBalance(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="routeSelect" className="text-xs font-semibold">
+                      Delivery Route / Beat
+                    </Label>
+                    <Select
+                      value={String(areaId)}
+                      onValueChange={(val) => setAreaId(Number(val))}
+                    >
+                      <SelectTrigger id="routeSelect" className="w-full">
+                        <SelectValue placeholder="Select Route" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Unassigned</SelectItem>
+                        {routes.map((r) => (
+                          <SelectItem key={r.id} value={String(r.id)}>
+                            {r.name} ({r.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="branchSelect" className="text-xs font-semibold">
+                      Assigned Branch / Warehouse
+                    </Label>
+                    <Select
+                      value={String(branchId)}
+                      onValueChange={(val) => setBranchId(Number(val))}
+                    >
+                      <SelectTrigger id="branchSelect" className="w-full">
+                        <SelectValue placeholder="Select Branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Default Main Store</SelectItem>
+                        {branches.map((b) => (
+                          <SelectItem key={b.id} value={String(b.id)}>
+                            {b.name} ({b.city})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="custCity" className="text-xs font-semibold">
+                      City
+                    </Label>
+                    <Input
+                      id="custCity"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Lahore"
+                    />
+                  </div>
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="kyc" className="text-xs font-semibold">
+                      KYC Status
+                    </Label>
+                    <Select value={kycStatus} onValueChange={setKycStatus}>
+                      <SelectTrigger id="kyc" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="verified">Verified Account</SelectItem>
+                        <SelectItem value="pending">Pending Verification</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="address" className="text-xs font-semibold">
+                    Complete Address
+                  </Label>
+                  <Textarea
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Shop #, Market, Landmark, Road"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-medium">Account Active</Label>
+                      <p className="text-[11px] text-muted-foreground">Accept new orders</p>
+                    </div>
+                    <Switch checked={isActive} onCheckedChange={setIsActive} />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-destructive/30 p-3 bg-destructive/5">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-medium text-destructive">Credit Blocked</Label>
+                      <p className="text-[11px] text-muted-foreground">Halt udhaar sales</p>
+                    </div>
+                    <Switch checked={isCreditBlocked} onCheckedChange={setIsCreditBlocked} />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? editingCustomer
+                    ? "Saving Changes..."
+                    : "Registering..."
+                  : editingCustomer
+                  ? "Save Changes"
+                  : "Register Customer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog
+        open={Boolean(deletingCustomer)}
+        onOpenChange={(open) => !open && setDeletingCustomer(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <IconAlertTriangle className="h-5 w-5" />
+              Delete Customer Account
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  Are you sure you want to delete customer{" "}
+                  <strong className="text-foreground">
+                    &quot;{deletingCustomer?.business_name}&quot;
+                  </strong>{" "}
+                  ({deletingCustomer?.code})?
+                </p>
+                {deletingCustomer?.current_balance && Number(deletingCustomer.current_balance) !== 0 ? (
+                  <p className="text-destructive font-medium">
+                    Warning: This account has an outstanding balance of PKR{" "}
+                    {Number(deletingCustomer.current_balance).toLocaleString()}. The system will
+                    block deletion until all dues are settled.
+                  </p>
+                ) : (
+                  <p>This action cannot be undone and will remove the customer profile.</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {isDeleting ? "Deleting..." : "Delete Customer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

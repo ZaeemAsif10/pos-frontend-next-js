@@ -179,6 +179,7 @@ export default function RolesMatrixPage() {
 
   // Delete Role State
   const [deletingRole, setDeletingRole] = useState<RoleMatrixItem | null>(null);
+  const [isDeletingRole, setIsDeletingRole] = useState(false);
 
   // Permission CRUD State
   const [isAddPermOpen, setIsAddPermOpen] = useState(false);
@@ -426,12 +427,15 @@ export default function RolesMatrixPage() {
     if (!deletingRole) return;
 
     try {
+      setIsDeletingRole(true);
       await rolesService.deleteRole(deletingRole.id);
       toast.success(`Role '${deletingRole.name}' deleted.`);
       setDeletingRole(null);
       loadData();
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to delete role");
+    } finally {
+      setIsDeletingRole(false);
     }
   };
 
@@ -654,7 +658,15 @@ export default function RolesMatrixPage() {
       </PageHeader>
 
       {/* Main 2-Column Layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      {loading ? (
+        <Card className="p-16 text-center border-border/70">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <IconRefresh className="size-8 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">Loading roles & permissions matrix...</p>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Left Column: Roles Selector Cards */}
         <div className="space-y-3 lg:col-span-4">
           <div className="flex items-center justify-between px-1">
@@ -971,6 +983,7 @@ export default function RolesMatrixPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* ========================================================================= */}
       {/* CREATE CUSTOM ROLE DIALOG (WITH RED INLINE VALIDATION)                     */}
@@ -1173,13 +1186,17 @@ export default function RolesMatrixPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingRole}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteRole}
-              disabled={Boolean(deletingRole && deletingRole.user_count > 0)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteRole();
+              }}
+              disabled={Boolean(deletingRole && deletingRole.user_count > 0) || isDeletingRole}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-1.5"
             >
-              Delete Role
+              {isDeletingRole && <IconRefresh className="size-4 animate-spin" />}
+              {isDeletingRole ? "Deleting..." : "Delete Role"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
