@@ -98,6 +98,67 @@ const ROUTE_PERMISSIONS: Record<
     requiredPermissions: [],
     allowedRoles: ["Admin", "Owner", "Salesman"],
   },
+  "/daybook": {
+    name: "Day Book & Roznamcha (Cash & Bank Book)",
+    requiredPermissions: ["daybook:view"],
+    allowedRoles: ["Admin", "Owner", "Cashier", "Accountant"],
+  },
+  "/accounting/mappings": {
+    name: "Accounting Settings & Account Mappings",
+    requiredPermissions: ["accounting:mappings:view", "accounting:mappings:save"],
+    allowedRoles: ["Admin", "Owner"],
+  },
+  "/accounting/accounts": {
+    name: "Chart of Accounts (COA)",
+    requiredPermissions: ["accounting:accounts:view", "accounting:accounts:create", "accounting:accounts:edit"],
+    allowedRoles: ["Admin", "Owner", "Accountant"],
+  },
+  "/accounting/journal": {
+    name: "General Journal Vouchers (JV)",
+    requiredPermissions: ["accounting:journal:view", "accounting:journal:create"],
+    allowedRoles: ["Admin", "Owner", "Accountant"],
+  },
+  "/accounting/expenses": {
+    name: "Expense Vouchers & Operational Kharchay",
+    requiredPermissions: ["accounting:expenses:view"],
+    allowedRoles: ["Admin", "Owner", "Accountant", "Cashier"],
+  },
+  "/accounting/ledger": {
+    name: "General Ledger & Trial Balance",
+    requiredPermissions: ["accounting:trial_balance:view", "accounting:ledger:view", "accounting:reports:print"],
+    allowedRoles: ["Admin", "Owner", "Accountant"],
+  },
+  "/accounting/financial-statements": {
+    name: "Financial Statements (Profit & Loss / Balance Sheet)",
+    requiredPermissions: [
+      "accounting:financial_statements:view",
+      "accounting:trial_balance:view",
+      "accounting:reports:print",
+    ],
+    allowedRoles: ["Admin", "Owner", "Accountant"],
+  },
+  "/accounting/reconciliation": {
+    name: "Bank Reconciliation Statement (BRS)",
+    requiredPermissions: [
+      "accounting:reconciliation:view",
+      "accounting:reconciliation:create",
+      "accounting:reconciliation:match",
+      "accounting:reconciliation:complete",
+    ],
+    allowedRoles: ["Admin", "Owner", "Accountant"],
+  },
+  "/accounting/aging": {
+    name: "Customer & Supplier Khata Aging (AR / AP)",
+    requiredPermissions: [
+      "accounting:aging:view",
+      "accounting:aging:statement",
+      "accounting:aging:whatsapp",
+      "accounting:aging:credit_block",
+      "customers:view",
+      "accounting:ledger:view",
+    ],
+    allowedRoles: ["Admin", "Owner", "Accountant"],
+  },
 };
 
 

@@ -26,6 +26,7 @@ export const metadata: Metadata = {
 
 import { cookies } from "next/headers";
 import { AuthProvider } from "@/context/auth-context";
+import { LanguageProvider } from "@/context/language-context";
 import { PageTitleSync } from "@/components/page-title-sync";
 
 export default async function RootLayout({
@@ -52,9 +53,11 @@ export default async function RootLayout({
         >
           <ThemeConfigProvider>
             <AuthProvider initialIsAuthenticated={initialIsAuthenticated}>
-              <PageTitleSync />
-              {children}
-              <Toaster />
+              <LanguageProvider>
+                <PageTitleSync />
+                {children}
+                <Toaster />
+              </LanguageProvider>
             </AuthProvider>
           </ThemeConfigProvider>
         </ThemeProvider>

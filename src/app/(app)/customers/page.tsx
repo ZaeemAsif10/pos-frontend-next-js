@@ -22,6 +22,8 @@ import {
   IconRoute,
   IconCreditCard,
   IconReceipt2,
+  IconCash,
+  IconFileText,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -86,6 +88,8 @@ import {
   type DeliveryAreaItem,
 } from "@/services/party.service";
 import { branchService, type BranchItem } from "@/services/branch.service";
+import { CustomerPaymentModal } from "@/components/customers/customer-payment-modal";
+import { CustomerLedgerModal } from "@/components/customers/customer-ledger-modal";
 
 export default function CustomersPage() {
   const { user, tenant } = useAuth();
@@ -121,6 +125,12 @@ export default function CustomersPage() {
   // Create / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerItem | null>(null);
+
+  // Customer Khata Payment State
+  const [paymentCustomer, setPaymentCustomer] = useState<CustomerItem | null>(null);
+
+  // Customer Ledger Statement State
+  const [ledgerCustomer, setLedgerCustomer] = useState<CustomerItem | null>(null);
 
   // Form Fields
   const [code, setCode] = useState("");
@@ -525,9 +535,13 @@ export default function CustomersPage() {
                 Number(c.credit_limit) > 0 &&
                 Number(c.current_balance) > Number(c.credit_limit);
               return (
-                <div>
+                <div
+                  onClick={() => setLedgerCustomer(c)}
+                  className="cursor-pointer group transition-all"
+                  title="Click to view Customer Ledger Statement"
+                >
                   <div
-                    className={`text-xs font-bold ${
+                    className={`text-xs font-bold group-hover:underline ${
                       Number(c.current_balance) > 0
                         ? isOverdue
                           ? "text-rose-600 dark:text-rose-400"
@@ -538,7 +552,7 @@ export default function CustomersPage() {
                     PKR {Number(c.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </div>
                   {isOverdue && (
-                    <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4">
+                    <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4 mt-0.5">
                       Limit Exceeded
                     </Badge>
                   )}
@@ -571,33 +585,64 @@ export default function CustomersPage() {
             className: "text-right",
             headerClassName: "text-right",
             cell: (c) => (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <IconDotsVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {canEdit && (
-                    <DropdownMenuItem onClick={() => openEditModal(c)}>
-                      <IconEdit className="mr-2 h-4 w-4" />
-                      Edit Customer
+              <div className="flex items-center justify-end gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaymentCustomer(c)}
+                  className="h-8 px-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border-emerald-500/30 hover:bg-emerald-500/15 hover:border-emerald-500/50 transition-all gap-1.5 shadow-2xs"
+                  title="Receive Payment"
+                >
+                  <IconCash className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Receive
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLedgerCustomer(c)}
+                  className="h-8 px-2.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/5 border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-500/50 transition-all gap-1.5 shadow-2xs"
+                  title="Customer Ledger Statement"
+                >
+                  <IconFileText className="h-3.5 w-3.5 text-blue-500" />
+                  Ledger
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <IconDotsVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setLedgerCustomer(c)}>
+                      <IconFileText className="mr-2 h-4 w-4 text-primary" />
+                      View Ledger
                     </DropdownMenuItem>
-                  )}
-                  {canDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => setDeletingCustomer(c)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <IconTrash className="mr-2 h-4 w-4" />
-                        Delete Customer
+                    <DropdownMenuItem onClick={() => setPaymentCustomer(c)}>
+                      <IconCash className="mr-2 h-4 w-4 text-emerald-600" />
+                      Receive Payment
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {canEdit && (
+                      <DropdownMenuItem onClick={() => openEditModal(c)}>
+                        <IconEdit className="mr-2 h-4 w-4" />
+                        Edit Customer
                       </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    )}
+                    {canDelete && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setDeletingCustomer(c)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <IconTrash className="mr-2 h-4 w-4" />
+                          Delete Customer
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             ),
           },
         ]}
@@ -1075,6 +1120,25 @@ export default function CustomersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Customer Khata Payment Recovery Modal */}
+      <CustomerPaymentModal
+        customer={paymentCustomer}
+        isOpen={!!paymentCustomer}
+        onClose={() => setPaymentCustomer(null)}
+        onSuccess={() => {
+          loadCustomers();
+          loadAuxiliaryData();
+        }}
+      />
+
+      {/* Customer Ledger Statement Modal */}
+      <CustomerLedgerModal
+        customer={ledgerCustomer}
+        isOpen={!!ledgerCustomer}
+        onClose={() => setLedgerCustomer(null)}
+        onOpenReceivePayment={(cust) => setPaymentCustomer(cust)}
+      />
     </div>
   );
 }

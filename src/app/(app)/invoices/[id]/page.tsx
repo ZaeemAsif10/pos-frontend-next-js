@@ -52,9 +52,9 @@ export default async function InvoiceDetailPage({
   if (!invoice) notFound();
 
   return (
-    <div className="space-y-6">
-      {/* Toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6 print:p-0 print:m-0 print:space-y-0">
+      {/* Toolbar (Hidden in Print) */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" asChild>
             <Link href="/invoices" aria-label="Back to invoices">
@@ -85,8 +85,8 @@ export default async function InvoiceDetailPage({
       </div>
 
       {/* Printable paper */}
-      <Card className="mx-auto w-full max-w-3xl overflow-hidden shadow-sm">
-        <CardContent className="space-y-8 p-8 sm:p-12">
+      <Card className="mx-auto w-full max-w-3xl overflow-hidden shadow-sm print:max-w-none print:border-none print:shadow-none print:p-0">
+        <CardContent className="space-y-8 p-8 sm:p-12 print:p-0 print:space-y-6">
           {/* Header: issuer + invoice title */}
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3">

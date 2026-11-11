@@ -17,6 +17,7 @@ import {
   IconEye,
   IconPackage,
   IconX,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -157,6 +158,30 @@ export default function PurchasesPage() {
   // Delete State
   const [deletingPurchase, setDeletingPurchase] = useState<PurchaseItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Return / Debit Note State
+  const [returningPurchase, setReturningPurchase] = useState<PurchaseItem | null>(null);
+  const [returnReason, setReturnReason] = useState("Goods Returned to Supplier / Debit Note");
+  const [returnRefundMethod, setReturnRefundMethod] = useState("cash");
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+
+  const handleConfirmReturn = async () => {
+    if (!returningPurchase) return;
+    try {
+      setIsSubmittingReturn(true);
+      await inventoryService.returnPurchase(returningPurchase.id, {
+        reason: returnReason,
+        refund_payment_method: returnRefundMethod,
+      });
+      toast.success(`Purchase ${returningPurchase.invoice_number} returned and Debit Note posted successfully.`);
+      setReturningPurchase(null);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process purchase return");
+    } finally {
+      setIsSubmittingReturn(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -683,18 +708,25 @@ export default function PurchasesPage() {
                       PKR {Number(p.balance_due).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] capitalize ${
-                          p.payment_status === "paid"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                            : p.payment_status === "partial"
-                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                            : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                        }`}
-                      >
-                        {p.payment_status}
-                      </Badge>
+                      <div className="flex flex-col gap-1 items-start">
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] capitalize ${
+                            p.payment_status === "paid"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                              : p.payment_status === "partial"
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                              : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                          }`}
+                        >
+                          {p.payment_status}
+                        </Badge>
+                        {p.status === "returned" && (
+                          <Badge variant="outline" className="text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                            Returned (Debit Note)
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -708,7 +740,20 @@ export default function PurchasesPage() {
                             <IconEye className="mr-2 h-4 w-4" />
                             View Items & Bill
                           </DropdownMenuItem>
-                          {canDelete && (
+                          {p.status !== "returned" && p.status !== "cancelled" && canCreate && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setReturningPurchase(p);
+                                setReturnReason("Goods Returned to Supplier / Debit Note");
+                                setReturnRefundMethod("cash");
+                              }}
+                              className="text-amber-600 focus:text-amber-600 dark:text-amber-400"
+                            >
+                              <IconArrowBackUp className="mr-2 h-4 w-4" />
+                              Return / Debit Note
+                            </DropdownMenuItem>
+                          )}
+                          {canDelete && p.status !== "returned" && (
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -1143,6 +1188,92 @@ export default function PurchasesPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* PURCHASE RETURN & DEBIT NOTE MODAL */}
+      <Dialog open={Boolean(returningPurchase)} onOpenChange={(open) => !open && setReturningPurchase(null)}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Issue Debit Note & Return Goods</DialogTitle>
+            <DialogDescription>
+              Process a purchase return to supplier for bill <span className="font-mono font-semibold text-foreground">{returningPurchase?.invoice_number}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border bg-muted/40 p-3 space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Supplier:</span>
+                <span className="font-medium text-foreground">{returningPurchase?.supplier_name || "Supplier"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Original Total Amount:</span>
+                <span className="font-mono font-semibold text-foreground">
+                  PKR {Number(returningPurchase?.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              {Number(returningPurchase?.balance_due || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Unpaid Balance to Cancel:</span>
+                  <span className="font-mono font-semibold text-rose-600">
+                    PKR {Number(returningPurchase?.balance_due || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+              {Number(returningPurchase?.paid_amount || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Paid Amount to Refund:</span>
+                  <span className="font-mono font-semibold text-emerald-600">
+                    PKR {Number(returningPurchase?.paid_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {Number(returningPurchase?.paid_amount || 0) > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">Refund Treatment (for paid amount)</label>
+                <Select value={returnRefundMethod} onValueChange={setReturnRefundMethod}>
+                  <SelectTrigger className="text-xs h-9">
+                    <SelectValue placeholder="Select refund mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash" className="text-xs">Cash Refund (Returned to Counter / Drawer)</SelectItem>
+                    <SelectItem value="bank" className="text-xs">Bank Transfer (Deposited to Bank Account)</SelectItem>
+                    <SelectItem value="credit" className="text-xs">Credit to Supplier Khata (Advance Balance)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">Return Reason</label>
+              <Input
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                placeholder="e.g. Expired stock, damaged cartons, wrong delivery"
+                className="text-xs"
+              />
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              Stock will be deducted from your warehouse and a double-entry Debit Note Journal Voucher will be automatically posted to Accounts Payable.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReturningPurchase(null)} disabled={isSubmittingReturn}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmReturn}
+              disabled={isSubmittingReturn}
+              className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {isSubmittingReturn ? "Processing..." : "Confirm Return & Issue Debit Note"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

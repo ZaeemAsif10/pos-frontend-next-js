@@ -190,6 +190,21 @@ class InventoryService {
     return res;
   }
 
+  async returnPurchase(
+    id: number,
+    payload?: { reason?: string; refund_payment_method?: string }
+  ): Promise<PurchaseDetail> {
+    const res = await apiClient<PurchaseDetail>(API_ENDPOINTS.TENANT.PURCHASE_RETURN(id), {
+      method: "POST",
+      body: JSON.stringify(payload || {}),
+    });
+    emitAppEvent("purchases:changed", "updated", res);
+    emitAppEvent("inventory:changed", "updated");
+    emitAppEvent("products:changed", "updated");
+    emitAppEvent("suppliers:changed", "updated");
+    return res;
+  }
+
   // ----------------------------------------
   // Live Inventory
   // ----------------------------------------

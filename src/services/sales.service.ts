@@ -131,6 +131,53 @@ export interface PaginatedSalesInvoicesResponse {
   total_pages: number;
 }
 
+export interface DayBookEntryItem {
+  id: string;
+  entry_type: "sale" | "customer_payment" | "supplier_payment" | "expense";
+  timestamp: string;
+  voucher_no: string;
+  party_name: string;
+  payment_method: string;
+  cash_in: number;
+  cash_out: number;
+  running_balance: number;
+  user_name?: string | null;
+  branch_name?: string | null;
+  notes?: string | null;
+}
+
+export interface DayBookSummary {
+  opening_cash: number;
+  total_cash_in: number;
+  total_cash_out: number;
+  closing_cash: number;
+  cash_sales: number;
+  customer_wasooli: number;
+  supplier_payments: number;
+  cash_expenses?: number;
+  non_cash_inflow: number;
+  total_turnover: number;
+  total_entries_count: number;
+}
+
+export interface DayBookPaymentMethodsSummary {
+  cash: number;
+  bank_transfer: number;
+  card: number;
+  raast: number;
+  cheque: number;
+  other: number;
+}
+
+export interface DayBookResponse {
+  date: string;
+  branch_id?: number | null;
+  branch_name?: string | null;
+  summary: DayBookSummary;
+  payment_methods: DayBookPaymentMethodsSummary;
+  entries: DayBookEntryItem[];
+}
+
 // SALES SERVICE CLASS
 // ==========================================
 class SalesService {
@@ -152,6 +199,7 @@ class SalesService {
     branch_id?: number;
     fbr_status?: string;
     payment_status?: string;
+    status?: string;
     search?: string;
     page?: number;
     size?: number;
@@ -165,6 +213,20 @@ class SalesService {
 
   async getInvoiceDetail(id: number): Promise<SalesInvoiceDetail> {
     return apiClient<SalesInvoiceDetail>(API_ENDPOINTS.TENANT.SALES_INVOICE_DETAIL(id));
+  }
+
+  async refundInvoice(id: number, reason?: string): Promise<SalesInvoiceDetail> {
+    const res = await apiClient<SalesInvoiceDetail>(API_ENDPOINTS.TENANT.SALES_INVOICE_REFUND(id), {
+      method: "POST",
+      body: JSON.stringify({ reason: reason || "Customer Return / Refund" }),
+    });
+    emitAppEvent("invoices:changed", "updated", res);
+    emitAppEvent("inventory:changed", "updated");
+    emitAppEvent("products:changed", "updated");
+    if (res.customer_id) {
+      emitAppEvent("customers:changed", "updated");
+    }
+    return res;
   }
 
   async getSalesSummary(branch_id?: number): Promise<SalesSummaryStats> {
@@ -192,6 +254,17 @@ class SalesService {
     return apiClient<POSShiftDetail>(API_ENDPOINTS.TENANT.POS_SHIFTS_CLOSE(shiftId), {
       method: "POST",
       body: JSON.stringify(payload),
+    });
+  }
+
+  // Day Book / Roznamcha
+  async getDayBook(params?: {
+    date?: string;
+    branch_id?: number;
+    payment_method?: string;
+  }): Promise<DayBookResponse> {
+    return apiClient<DayBookResponse>(API_ENDPOINTS.TENANT.DAYBOOK, {
+      params,
     });
   }
 }

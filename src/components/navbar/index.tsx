@@ -9,6 +9,7 @@ import { useIsMac } from "@/hooks/use-platform";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -85,7 +86,7 @@ export function AppNavbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
       <SidebarTrigger className="-ml-1" />
       <div className="mr-1 h-5 w-px shrink-0 self-center bg-border" />
       <Breadcrumb className="hidden sm:block">
@@ -131,6 +132,7 @@ export function AppNavbar() {
         </Button>
 
         <NotificationsMenu />
+        <LanguageToggle />
         <ThemeToggle />
         <div className="mx-1 h-6 w-px shrink-0 self-center bg-border" />
         <UserMenu />

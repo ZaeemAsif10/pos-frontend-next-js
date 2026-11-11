@@ -1099,7 +1099,7 @@ export default function BranchesPage() {
 
       {/* CREATE NEW BRANCH DIALOG */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconBuildingStore className="h-5 w-5 text-primary" />
@@ -1111,7 +1111,7 @@ export default function BranchesPage() {
           </DialogHeader>
 
           <form onSubmit={handleAddSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Branch Name */}
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="branch_name">
@@ -1205,7 +1205,7 @@ export default function BranchesPage() {
               </div>
 
               {/* Email */}
-              <div className="space-y-1.5 sm:col-span-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="branch_email">Branch Email (Optional)</Label>
                 <Input
                   id="branch_email"
@@ -1213,6 +1213,19 @@ export default function BranchesPage() {
                   placeholder="branch@mybusiness.com"
                   value={addForm.email || ""}
                   onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                />
+              </div>
+
+              {/* FBR POS Machine ID */}
+              <div className="space-y-1.5">
+                <Label htmlFor="branch_fbr">
+                  FBR POS Machine ID (Optional)
+                </Label>
+                <Input
+                  id="branch_fbr"
+                  placeholder="e.g. POS-98214"
+                  value={addForm.fbr_pos_id || ""}
+                  onChange={(e) => setAddForm({ ...addForm, fbr_pos_id: e.target.value })}
                 />
               </div>
 
@@ -1226,22 +1239,6 @@ export default function BranchesPage() {
                   onChange={(e) => setAddForm({ ...addForm, address: e.target.value })}
                   rows={2}
                 />
-              </div>
-
-              {/* FBR POS Machine ID */}
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="branch_fbr">
-                  FBR POS Machine ID (Optional)
-                </Label>
-                <Input
-                  id="branch_fbr"
-                  placeholder="e.g. POS-98214"
-                  value={addForm.fbr_pos_id || ""}
-                  onChange={(e) => setAddForm({ ...addForm, fbr_pos_id: e.target.value })}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Provided by Federal Board of Revenue for fiscal invoicing compliance.
-                </p>
               </div>
 
               {/* Set as Main Branch */}
@@ -1282,7 +1279,7 @@ export default function BranchesPage() {
 
       {/* EDIT BRANCH DIALOG */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconEdit className="h-5 w-5 text-primary" />
@@ -1294,7 +1291,7 @@ export default function BranchesPage() {
           </DialogHeader>
 
           <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Branch Name */}
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="edit_branch_name">
@@ -1385,13 +1382,23 @@ export default function BranchesPage() {
               </div>
 
               {/* Email */}
-              <div className="space-y-1.5 sm:col-span-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="edit_branch_email">Branch Email</Label>
                 <Input
                   id="edit_branch_email"
                   type="email"
                   value={editForm.email || ""}
                   onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+
+              {/* FBR POS Machine ID */}
+              <div className="space-y-1.5">
+                <Label htmlFor="edit_branch_fbr">FBR POS Machine ID</Label>
+                <Input
+                  id="edit_branch_fbr"
+                  value={editForm.fbr_pos_id || ""}
+                  onChange={(e) => setEditForm({ ...editForm, fbr_pos_id: e.target.value })}
                 />
               </div>
 
@@ -1403,16 +1410,6 @@ export default function BranchesPage() {
                   value={editForm.address || ""}
                   onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                   rows={2}
-                />
-              </div>
-
-              {/* FBR POS Machine ID */}
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit_branch_fbr">FBR POS Machine ID</Label>
-                <Input
-                  id="edit_branch_fbr"
-                  value={editForm.fbr_pos_id || ""}
-                  onChange={(e) => setEditForm({ ...editForm, fbr_pos_id: e.target.value })}
                 />
               </div>
 

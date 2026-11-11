@@ -46,6 +46,7 @@ interface ThermalReceiptModalProps {
   branchAddress?: string;
   tenantNtn?: string;
   tenantStrn?: string;
+  defaultLanguage?: ReceiptLanguage;
 }
 
 export function ThermalReceiptModal({
@@ -59,9 +60,10 @@ export function ThermalReceiptModal({
   branchAddress = "Commercial Market, Pakistan",
   tenantNtn = "8923412-1",
   tenantStrn = "3277876123456",
+  defaultLanguage = "en",
 }: ThermalReceiptModalProps) {
   const [paperWidth, setPaperWidth] = useState<PaperWidth>("80mm");
-  const [language, setLanguage] = useState<ReceiptLanguage>("bilingual");
+  const [language, setLanguage] = useState<ReceiptLanguage>(defaultLanguage);
   const [customPhone, setCustomPhone] = useState<string>(() => {
     return (
       customer?.whatsapp_number ||
@@ -73,7 +75,7 @@ export function ThermalReceiptModal({
 
   if (!invoice) return null;
 
-  // Dedicated iframe printing engine to guarantee sharp thermal slip without blank page
+  // Dedicated iframe printing engine to guarantee sharp thermal slip without blank page or cut-off edges
   const handlePrint = () => {
     const printableEl = document.getElementById("thermal-receipt-printable");
     if (!printableEl) {
@@ -87,7 +89,6 @@ export function ThermalReceiptModal({
     const is80 = paperWidth === "80mm";
     const iframe = document.createElement("iframe");
     iframe.id = "thermal-print-iframe";
-    // Non-zero dimensions and proper off-screen positioning so Chromium calculates non-empty print layouts
     iframe.style.position = "fixed";
     iframe.style.top = "0";
     iframe.style.left = "0";
@@ -112,7 +113,13 @@ export function ThermalReceiptModal({
       .map((el) => el.outerHTML)
       .join("\n");
 
-    const receiptContent = printableEl.outerHTML;
+    // Dynamically calculate slip height in mm (+ 12mm buffer) to avoid tall empty A4 blank pages
+    const measuredHeightMm = Math.max(
+      110,
+      Math.ceil((printableEl.scrollHeight / 96) * 25.4) + 12
+    );
+
+    const receiptInnerHtml = printableEl.innerHTML;
 
     doc.open();
     doc.write(`
@@ -125,27 +132,51 @@ export function ThermalReceiptModal({
           ${headStyles}
           <style>
             @page {
-              size: ${is80 ? "80mm 297mm" : "58mm 210mm"};
-              margin: 0;
+              size: ${is80 ? `80mm ${measuredHeightMm}mm` : `58mm ${measuredHeightMm}mm`};
+              margin: 0mm;
+            }
+            *, *:before, *:after {
+              box-sizing: border-box !important;
             }
             html, body {
               margin: 0 !important;
               padding: 0 !important;
+              width: ${is80 ? "76mm" : "52mm"} !important;
+              max-width: ${is80 ? "76mm" : "52mm"} !important;
               background: #ffffff !important;
               color: #000000 !important;
-              font-family: 'Courier New', Courier, monospace, system-ui, sans-serif !important;
+              font-family: 'Courier New', Courier, monospace, monospace !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
-            .printable-wrapper {
-              width: ${is80 ? "76mm" : "54mm"};
-              margin: 0 auto;
-              padding: 2mm 1mm;
+            .thermal-print-container {
+              width: ${is80 ? "74mm" : "50mm"} !important;
+              max-width: ${is80 ? "74mm" : "50mm"} !important;
+              margin: 0 auto !important;
+              padding: 2mm 1.5mm !important;
+              box-sizing: border-box !important;
+              font-family: 'Courier New', Courier, monospace, monospace !important;
+              font-size: ${is80 ? "10px" : "9px"} !important;
+              line-height: 1.25 !important;
+              color: #000000 !important;
               background: #ffffff !important;
             }
-            * {
-              box-sizing: border-box;
+            .thermal-print-container * {
               color: #000000 !important;
+              box-sizing: border-box !important;
+            }
+            /* Neutralize fixed Tailwind width and padding classes for print */
+            .thermal-print-container [class*="w-\\["] {
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+            .thermal-print-container .p-4 {
+              padding: 0 !important;
+            }
+            .thermal-print-container .shadow-md,
+            .thermal-print-container .border {
+              box-shadow: none !important;
+              border: none !important;
             }
             svg {
               display: block;
@@ -156,8 +187,8 @@ export function ThermalReceiptModal({
           </style>
         </head>
         <body>
-          <div class="printable-wrapper">
-            ${receiptContent}
+          <div class="thermal-print-container">
+            ${receiptInnerHtml}
           </div>
         </body>
       </html>
@@ -176,7 +207,7 @@ export function ThermalReceiptModal({
           iframe.remove();
         }, 3000);
       }
-    }, 300);
+    }, 250);
   };
 
   // WhatsApp formatted receipt text
@@ -294,11 +325,11 @@ export function ThermalReceiptModal({
 
               {/* Invoice Meta */}
               <div className="py-2 text-[10px] space-y-0.5 border-b border-dashed border-zinc-400">
-                <div className="flex justify-between">
-                  <span>
+                <div className="flex justify-between items-baseline gap-1">
+                  <span className="truncate max-w-[65%]">
                     Inv #: <b>{invoice.invoice_number}</b>
                   </span>
-                  <span>
+                  <span className="shrink-0 text-[9.5px]">
                     {new Date(
                       invoice.created_at || Date.now()
                     ).toLocaleDateString("en-PK")}
@@ -306,7 +337,7 @@ export function ThermalReceiptModal({
                 </div>
                 <div className="flex justify-between text-zinc-600">
                   <span>Cashier: {invoice.cashier_name || "Admin"}</span>
-                  <span>
+                  <span className="shrink-0">
                     {new Date(
                       invoice.created_at || Date.now()
                     ).toLocaleTimeString("en-PK", {
@@ -316,9 +347,9 @@ export function ThermalReceiptModal({
                   </span>
                 </div>
                 {invoice.customer_name && (
-                  <div className="pt-1 flex justify-between">
-                    <span>Customer:</span>
-                    <span className="font-bold text-right truncate max-w-[170px]">
+                  <div className="pt-0.5 flex justify-between gap-1">
+                    <span className="shrink-0">Customer:</span>
+                    <span className="font-bold text-right truncate">
                       {invoice.customer_name}
                     </span>
                   </div>
@@ -334,7 +365,7 @@ export function ThermalReceiptModal({
               {/* Items Table */}
               <div className="py-2 border-b border-dashed border-zinc-400">
                 <div className="grid grid-cols-12 font-bold text-[10px] pb-1 border-b border-zinc-300">
-                  <span className="col-span-6">
+                  <span className="col-span-5">
                     {language === "ur" ? "آئٹم" : "Item"}
                   </span>
                   <span className="col-span-2 text-center">
@@ -343,19 +374,19 @@ export function ThermalReceiptModal({
                   <span className="col-span-2 text-right">
                     {language === "ur" ? "قیمت" : "Rate"}
                   </span>
-                  <span className="col-span-2 text-right">
+                  <span className="col-span-3 text-right">
                     {language === "ur" ? "کل" : "Total"}
                   </span>
                 </div>
 
                 <div className="divide-y divide-zinc-100">
                   {invoice.items.map((item, idx) => (
-                    <div key={idx} className="py-1 text-[10.5px]">
+                    <div key={idx} className="py-1 text-[10px]">
                       <div className="font-semibold text-zinc-900 truncate">
                         {item.product_name}
                       </div>
                       <div className="grid grid-cols-12 text-[10px] text-zinc-600 pt-0.5">
-                        <span className="col-span-6 text-[9px] text-zinc-400 font-mono">
+                        <span className="col-span-5 text-[9px] text-zinc-400 font-mono truncate">
                           {item.sku || ""}
                         </span>
                         <span className="col-span-2 text-center font-bold text-zinc-800">
@@ -364,7 +395,7 @@ export function ThermalReceiptModal({
                         <span className="col-span-2 text-right">
                           {Math.round(item.unit_price)}
                         </span>
-                        <span className="col-span-2 text-right font-bold text-zinc-950 font-mono">
+                        <span className="col-span-3 text-right font-bold text-zinc-950 font-mono">
                           {Math.round(item.total_amount).toLocaleString()}
                         </span>
                       </div>

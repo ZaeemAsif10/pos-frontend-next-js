@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import {
   IconSearch,
@@ -17,8 +16,11 @@ import {
   IconAlertCircle,
   IconBuildingStore,
   IconReceiptTax,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 
+import { useAuth } from "@/context/auth-context";
+import { ThermalReceiptModal } from "@/components/pos/thermal-receipt";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +47,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { salesService, type SalesInvoiceDetail, type SalesSummaryStats } from "@/services/sales.service";
 import { useAppEventListener } from "@/lib/events";
@@ -65,6 +69,7 @@ function SummaryTile({ label, value, subtext }: { label: string; value: string; 
 }
 
 export default function InvoicesPage() {
+  const { tenant } = useAuth();
   const [invoices, setInvoices] = useState<SalesInvoiceDetail[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<SalesSummaryStats | null>(null);
@@ -81,6 +86,11 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoiceDetail | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
+  // Refund Modal State
+  const [refundTarget, setRefundTarget] = useState<SalesInvoiceDetail | null>(null);
+  const [refundReason, setRefundReason] = useState("Customer Return / Refund");
+  const [isRefunding, setIsRefunding] = useState(false);
+
   const loadInvoices = useCallback(
     async (isInitial = false) => {
       if (isInitial) {
@@ -91,11 +101,13 @@ export default function InvoicesPage() {
       try {
         let fbr_status: string | undefined = undefined;
         let payment_status: string | undefined = undefined;
+        let status: string | undefined = undefined;
 
         if (activeTab === "Paid") payment_status = "paid";
         else if (activeTab === "Unpaid") payment_status = "unpaid";
         else if (activeTab === "Partial") payment_status = "partial";
         else if (activeTab === "FBR Synced") fbr_status = "synced";
+        else if (activeTab === "Refunded") status = "refunded";
 
         const res = await salesService.listInvoices({
           page,
@@ -103,6 +115,7 @@ export default function InvoicesPage() {
           search: searchQuery.trim() || undefined,
           fbr_status,
           payment_status,
+          status,
         });
 
         setInvoices(res.items);
@@ -156,6 +169,27 @@ export default function InvoicesPage() {
   const viewReceipt = (inv: SalesInvoiceDetail) => {
     setSelectedInvoice(inv);
     setIsReceiptModalOpen(true);
+  };
+
+  const openRefundDialog = (inv: SalesInvoiceDetail) => {
+    setRefundTarget(inv);
+    setRefundReason("Customer Return / Refund");
+  };
+
+  const handleConfirmRefund = async () => {
+    if (!refundTarget) return;
+    try {
+      setIsRefunding(true);
+      await salesService.refundInvoice(refundTarget.id, refundReason);
+      toast.success(`Invoice ${refundTarget.invoice_number} returned and refunded successfully.`);
+      setRefundTarget(null);
+      loadInvoices(false);
+      salesService.getSalesSummary().then(setStats).catch(() => {});
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process sales return");
+    } finally {
+      setIsRefunding(false);
+    }
   };
 
   return (
@@ -255,6 +289,39 @@ export default function InvoicesPage() {
             cell: (inv) => `Rs ${inv.total_amount.toLocaleString()}`,
           },
           {
+            header: "Status",
+            cell: (inv) => {
+              if (inv.status === "refunded") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-semibold uppercase px-1.5 py-0.5 bg-rose-500/10 text-rose-600 border-rose-500/20"
+                  >
+                    Refunded
+                  </Badge>
+                );
+              }
+              if (inv.sale_type === "return_credit_note") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-semibold uppercase px-1.5 py-0.5 bg-purple-500/10 text-purple-600 border-purple-500/20"
+                  >
+                    Credit Note
+                  </Badge>
+                );
+              }
+              return (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-semibold uppercase px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                >
+                  Completed
+                </Badge>
+              );
+            },
+          },
+          {
             header: "FBR Status",
             cell: (inv) => (
               <Badge
@@ -282,15 +349,28 @@ export default function InvoicesPage() {
             className: "text-right",
             headerClassName: "text-right",
             cell: (inv) => (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 gap-1 text-xs"
-                onClick={() => viewReceipt(inv)}
-              >
-                <IconPrinter className="h-3.5 w-3.5" />
-                Receipt
-              </Button>
+              <div className="flex items-center justify-end gap-1.5">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-1 text-xs"
+                  onClick={() => viewReceipt(inv)}
+                >
+                  <IconPrinter className="h-3.5 w-3.5" />
+                  Receipt
+                </Button>
+                {inv.status !== "refunded" && inv.status !== "cancelled" && inv.sale_type !== "return_credit_note" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 dark:border-rose-900/50"
+                    onClick={() => openRefundDialog(inv)}
+                  >
+                    <IconArrowBackUp className="h-3.5 w-3.5" />
+                    Refund
+                  </Button>
+                )}
+              </div>
             ),
           },
         ]}
@@ -308,6 +388,7 @@ export default function InvoicesPage() {
               <TabsTrigger value="Partial" className="text-xs">Partial</TabsTrigger>
               <TabsTrigger value="Unpaid" className="text-xs">Unpaid</TabsTrigger>
               <TabsTrigger value="FBR Synced" className="text-xs">FBR Synced</TabsTrigger>
+              <TabsTrigger value="Refunded" className="text-xs">Refunded</TabsTrigger>
             </TabsList>
           </Tabs>
         }
@@ -338,148 +419,79 @@ export default function InvoicesPage() {
         }
       />
 
-      {/* THERMAL / A4 RECEIPT MODAL */}
-      <Dialog open={isReceiptModalOpen} onOpenChange={setIsReceiptModalOpen}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      {/* SALES RETURN & REFUND CONFIRMATION MODAL */}
+      <Dialog open={!!refundTarget} onOpenChange={(open) => !open && setRefundTarget(null)}>
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <IconPrinter className="h-5 w-5 text-primary" />
-              Receipt & FBR Verification
-            </DialogTitle>
+            <DialogTitle>Process Sales Return & Refund</DialogTitle>
+            <DialogDescription>
+              Process a return for invoice <span className="font-mono font-semibold text-foreground">{refundTarget?.invoice_number}</span>.
+            </DialogDescription>
           </DialogHeader>
 
-          {selectedInvoice && (
-            <div className="space-y-4 py-2 text-foreground font-mono text-xs">
-              <div
-                id="thermal-receipt"
-                className="bg-card border p-4 rounded-lg space-y-3 font-mono text-[11px] leading-tight"
-              >
-                <div className="text-center space-y-1 pb-2 border-b">
-                  <h3 className="font-bold text-sm tracking-wider uppercase">
-                    Paperless ERP Store
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {selectedInvoice.branch_name || "Main Branch"}
-                  </p>
-                  <p className="text-muted-foreground">
-                    STRN: 3277876123456 | NTN: 8941230-1
-                  </p>
-                </div>
-
-                <div className="space-y-1 text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Invoice #:</span>
-                    <span className="font-semibold text-foreground">
-                      {selectedInvoice.invoice_number}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Date:</span>
-                    <span>
-                      {new Date(selectedInvoice.invoice_date).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Customer:</span>
-                    <span>{selectedInvoice.customer_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cashier:</span>
-                    <span>{selectedInvoice.cashier_name || "Admin"}</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-b py-2 space-y-1.5">
-                  <div className="flex justify-between font-bold text-foreground">
-                    <span className="w-1/2">Item</span>
-                    <span className="w-1/4 text-center">Qty</span>
-                    <span className="w-1/4 text-right">Price</span>
-                  </div>
-                  {selectedInvoice.items.map((it) => (
-                    <div key={it.id} className="flex justify-between">
-                      <span className="w-1/2 truncate">{it.product_name}</span>
-                      <span className="w-1/4 text-center">
-                        {it.quantity} {it.uom_name}
-                      </span>
-                      <span className="w-1/4 text-right">
-                        {it.total_amount.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>Rs {selectedInvoice.subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sales Tax (FBR):</span>
-                    <span>Rs {selectedInvoice.tax_amount.toLocaleString()}</span>
-                  </div>
-                  {selectedInvoice.discount_amount > 0 && (
-                    <div className="flex justify-between text-emerald-600">
-                      <span>Discount:</span>
-                      <span>-Rs {selectedInvoice.discount_amount.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold text-xs pt-1 border-t text-foreground">
-                    <span>Total Amount:</span>
-                    <span>Rs {selectedInvoice.total_amount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Paid ({selectedInvoice.payment_method}):</span>
-                    <span>Rs {selectedInvoice.paid_amount.toLocaleString()}</span>
-                  </div>
-                  {selectedInvoice.change_amount > 0 && (
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Change:</span>
-                      <span>Rs {selectedInvoice.change_amount.toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* FBR OFFICIAL FISCAL SECTION */}
-                <div className="border-2 border-dashed border-primary/40 rounded-lg p-3 text-center space-y-2 bg-primary/5 mt-3">
-                  <div className="flex items-center justify-center gap-1.5 text-primary font-bold text-xs">
-                    <IconShieldCheck className="h-4 w-4" />
-                    <span>FBR INVOICE FISCALIZATION</span>
-                  </div>
-
-                  <p className="text-[10px] text-muted-foreground">
-                    FBR Invoice No:
-                  </p>
-                  <p className="font-bold text-xs font-mono tracking-wider text-foreground">
-                    {selectedInvoice.fbr_invoice_number || "FBR-MOCK-10101"}
-                  </p>
-
-                  <div className="flex justify-center p-2 bg-white rounded border inline-block mx-auto">
-                    <QRCode
-                      value={selectedInvoice.fbr_qr_code || `FBR:${selectedInvoice.fbr_invoice_number}`}
-                      size={110}
-                      level="M"
-                    />
-                  </div>
-
-                  <p className="text-[10px] text-muted-foreground">
-                    Scan via <b>Tax Asaan App</b> to verify your invoice.
-                  </p>
-                </div>
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border bg-muted/40 p-3 space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Customer:</span>
+                <span className="font-medium text-foreground">{refundTarget?.customer_name || "Walk-in Retail Buyer"}</span>
               </div>
-
-              <div className="flex gap-2">
-                <Button className="flex-1 gap-1.5" onClick={() => window.print()}>
-                  <IconPrinter className="h-4 w-4" />
-                  Print Receipt
-                </Button>
-                <Button variant="outline" onClick={() => setIsReceiptModalOpen(false)}>
-                  Close
-                </Button>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Original Invoice Total:</span>
+                <span className="font-mono font-semibold text-foreground">Rs {Number(refundTarget?.total_amount || 0).toLocaleString()}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Paid Amount to Refund:</span>
+                <span className="font-mono font-semibold text-rose-600">Rs {Number(refundTarget?.paid_amount || 0).toLocaleString()} ({refundTarget?.payment_method?.toUpperCase()})</span>
+              </div>
+              {Number(refundTarget?.balance_due || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Credit Balance to Cancel:</span>
+                  <span className="font-mono font-semibold text-amber-600">Rs {Number(refundTarget?.balance_due || 0).toLocaleString()}</span>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">Return Reason</label>
+              <Input
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                placeholder="e.g. Customer returned goods, damaged packaging, wrong size"
+                className="text-xs"
+              />
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              Inventory items will be returned to branch stock and a double-entry Credit Note Journal Voucher will be automatically posted.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundTarget(null)} disabled={isRefunding}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmRefund}
+              disabled={isRefunding}
+              className="gap-1.5"
+            >
+              {isRefunding ? "Processing..." : "Confirm Return & Refund"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ENTERPRISE DUAL-MODE THERMAL RECEIPT STUDIO (80mm & 58mm, English + Urdu, FBR & WhatsApp) */}
+      <ThermalReceiptModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        invoice={selectedInvoice}
+        shopName={tenant?.name || "Paperless Enterprise"}
+        branchName={selectedInvoice?.branch_name || "Main Branch"}
+        branchAddress="Commercial Area, Pakistan"
+        branchPhone="+92 300 1234567"
+      />
     </div>
   );
 }

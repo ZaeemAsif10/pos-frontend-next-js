@@ -24,6 +24,9 @@ import {
   IconLock,
   IconInfoCircle,
   IconKey,
+  IconTag,
+  IconBuildingFactory2,
+  IconBox,
 } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -88,6 +91,9 @@ import {
 const moduleIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   roles: IconShieldLock,
   users: IconUserCog,
+  categories: IconTag,
+  brands: IconBuildingFactory2,
+  products: IconBox,
   pos: IconDeviceDesktop,
   sales: IconReceipt2,
   purchase: IconTruckDelivery,
@@ -129,6 +135,8 @@ const roleTones: Record<string, { bg: string; text: string; border: string }> = 
 const KNOWN_MODULE_LABELS: Record<string, string> = {
   roles: "Roles & Permissions",
   users: "Users & Staff",
+  categories: "Category Management",
+  brands: "Brands & Manufacturers",
   products: "Products & Catalog",
   pos: "POS Counter Billing",
   sales: "Sales & Delivery Challans",
@@ -516,8 +524,8 @@ export default function RolesMatrixPage() {
     const cleanCode = permForm.code?.trim().toLowerCase();
     if (!cleanCode || cleanCode.length < 3) {
       errs.code = "Unique permission code is required.";
-    } else if (!/^[a-z0-9_]+:[a-z0-9_]+$/.test(cleanCode)) {
-      errs.code = "Code must follow 'module:action' format (e.g. sales:bulk_discount).";
+    } else if (!/^[a-z0-9_]+(?::[a-z0-9_]+)+$/.test(cleanCode)) {
+      errs.code = "Code must follow 'module:action' format (e.g. sales:bulk_discount or accounting:mappings:view).";
     }
     setPermErrors(errs);
     return Object.keys(errs).length === 0;
@@ -571,8 +579,8 @@ export default function RolesMatrixPage() {
     const cleanCode = editPermForm.code?.trim().toLowerCase();
     if (!cleanCode || cleanCode.length < 3) {
       errs.code = "Permission code is required.";
-    } else if (!/^[a-z0-9_]+:[a-z0-9_]+$/.test(cleanCode)) {
-      errs.code = "Code must follow 'module:action' format (e.g. sales:bulk_discount).";
+    } else if (!/^[a-z0-9_]+(?::[a-z0-9_]+)+$/.test(cleanCode)) {
+      errs.code = "Code must follow 'module:action' format (e.g. sales:bulk_discount or accounting:mappings:view).";
     }
     setEditPermErrors(errs);
     return Object.keys(errs).length === 0;

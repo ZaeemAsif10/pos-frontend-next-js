@@ -19,6 +19,8 @@ import {
   IconBuildingBank,
   IconReceipt2,
   IconCheck,
+  IconFileText,
+  IconCreditCard,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -83,6 +85,8 @@ import {
   type SupplierItem,
   type SupplierStats,
 } from "@/services/party.service";
+import { SupplierPaymentModal } from "@/components/suppliers/supplier-payment-modal";
+import { SupplierLedgerModal } from "@/components/suppliers/supplier-ledger-modal";
 
 export default function SuppliersPage() {
   const { user, tenant } = useAuth();
@@ -118,6 +122,10 @@ export default function SuppliersPage() {
   // Create / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<SupplierItem | null>(null);
+
+  // Payment & Ledger Modals State
+  const [paymentSupplier, setPaymentSupplier] = useState<SupplierItem | null>(null);
+  const [ledgerSupplier, setLedgerSupplier] = useState<SupplierItem | null>(null);
 
   // Form Fields
   const [code, setCode] = useState("");
@@ -486,13 +494,19 @@ export default function SuppliersPage() {
             headerClassName: "text-right",
             cell: (s) => (
               <div
-                className={`text-xs font-bold ${
-                  Number(s.current_balance) > 0
-                    ? "text-rose-600 dark:text-rose-400"
-                    : "text-muted-foreground"
-                }`}
+                onClick={() => setLedgerSupplier(s)}
+                className="cursor-pointer group transition-all"
+                title="Click to view Supplier Ledger Statement"
               >
-                PKR {Number(s.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <div
+                  className={`text-xs font-bold group-hover:underline ${
+                    Number(s.current_balance) > 0
+                      ? "text-rose-600 dark:text-rose-400"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  PKR {Number(s.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
               </div>
             ),
           },
@@ -516,33 +530,64 @@ export default function SuppliersPage() {
             className: "text-right",
             headerClassName: "text-right",
             cell: (s) => (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <IconDotsVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {canEdit && (
-                    <DropdownMenuItem onClick={() => openEditModal(s)}>
-                      <IconEdit className="mr-2 h-4 w-4" />
-                      Edit Supplier
+              <div className="flex items-center justify-end gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaymentSupplier(s)}
+                  className="h-8 px-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/5 border-rose-500/30 hover:bg-rose-500/15 hover:border-rose-500/50 transition-all gap-1.5 shadow-2xs"
+                  title="Pay Supplier"
+                >
+                  <IconCreditCard className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
+                  Pay
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLedgerSupplier(s)}
+                  className="h-8 px-2.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 border-indigo-500/30 hover:bg-indigo-500/15 hover:border-indigo-500/50 transition-all gap-1.5 shadow-2xs"
+                  title="Supplier Ledger Statement"
+                >
+                  <IconFileText className="h-3.5 w-3.5 text-indigo-500" />
+                  Ledger
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <IconDotsVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setLedgerSupplier(s)}>
+                      <IconFileText className="mr-2 h-4 w-4 text-indigo-500" />
+                      View Ledger
                     </DropdownMenuItem>
-                  )}
-                  {canDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => setDeletingSupplier(s)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <IconTrash className="mr-2 h-4 w-4" />
-                        Delete Supplier
+                    <DropdownMenuItem onClick={() => setPaymentSupplier(s)}>
+                      <IconCreditCard className="mr-2 h-4 w-4 text-rose-500" />
+                      Pay Supplier
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {canEdit && (
+                      <DropdownMenuItem onClick={() => openEditModal(s)}>
+                        <IconEdit className="mr-2 h-4 w-4" />
+                        Edit Supplier
                       </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    )}
+                    {canDelete && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setDeletingSupplier(s)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <IconTrash className="mr-2 h-4 w-4" />
+                          Delete Supplier
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             ),
           },
         ]}
@@ -904,6 +949,25 @@ export default function SuppliersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Supplier Payment (CPV) Modal */}
+      <SupplierPaymentModal
+        supplier={paymentSupplier}
+        isOpen={!!paymentSupplier}
+        onClose={() => setPaymentSupplier(null)}
+        onSuccess={() => {
+          loadSuppliers();
+          loadSupplierStats();
+        }}
+      />
+
+      {/* Supplier Ledger Statement Modal */}
+      <SupplierLedgerModal
+        supplier={ledgerSupplier}
+        isOpen={!!ledgerSupplier}
+        onClose={() => setLedgerSupplier(null)}
+        onOpenPaySupplier={(s) => setPaymentSupplier(s)}
+      />
     </div>
   );
 }

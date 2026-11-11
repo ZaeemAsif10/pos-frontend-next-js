@@ -127,6 +127,45 @@
   html {
     @apply font-sans;
   }
+
+  /* 1. Universal cursor pointer for all interactive and clickable elements */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="tab"],
+  [role="switch"],
+  [role="menuitem"],
+  [role="option"],
+  [role="combobox"],
+  [role="checkbox"],
+  summary,
+  label[for],
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Disabled state: keep not-allowed cursor */
+  button:disabled,
+  [role="button"]:disabled,
+  [type="button"]:disabled,
+  [type="submit"]:disabled,
+  input:disabled,
+  select:disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed !important;
+  }
+
+  /* 2. Prevent blinking text caret cursor on non-editable text when clicked */
+  *:not(input):not(textarea):not([contenteditable="true"]):not([contenteditable=""]) {
+    caret-color: transparent !important;
+  }
 }
 
 /* Theme customizer: centered content layout */
@@ -171,5 +210,100 @@
   select,
   [contenteditable]:not([contenteditable="false"]) {
     font-size: 16px !important;
+  }
+}
+
+/* =========================================================================
+   Universal Print Engine for Official Documents & Vouchers
+   ========================================================================= */
+@media print {
+  @page {
+    size: auto;
+    margin: 10mm 12mm 12mm 12mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 1. Hide application shell, navbar, sidebar, buttons, overlays, and floating UI */
+  header,
+  nav,
+  aside,
+  [data-slot="sidebar"],
+  [data-slot="dialog-overlay"],
+  [data-slot="dialog-close"],
+  [data-sonner-toaster],
+  .print\:hidden,
+  button:not(.print\:inline-block):not(.print\:block),
+  input[type="button"],
+  input[type="submit"],
+  [data-slot="theme-customizer"],
+  .theme-customizer {
+    display: none !important;
+  }
+
+  /* 2. When a modal dialog is open during print, hide the underlying page completely */
+  body:has([data-slot="dialog-content"]) [data-slot="sidebar-inset"],
+  body:has([data-slot="dialog-content"]) .app-main,
+  body:has([data-slot="dialog-content"]) [data-slot="sidebar-wrapper"] {
+    display: none !important;
+  }
+
+  /* When printing page content without modal, ensure clean full-bleed layout */
+  body:not(:has([data-slot="dialog-content"])) [data-slot="sidebar-inset"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  body:not(:has([data-slot="dialog-content"])) .app-main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 3. Format any open dialog as a clean, full-width A4 document without overlays or shadows */
+  [data-slot="dialog-content"] {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    ring: 0 !important;
+  }
+
+  /* 4. Table printing: avoid awkward page breaks across rows and ensure high contrast */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  th, td {
+    color: #000000 !important;
   }
 }
