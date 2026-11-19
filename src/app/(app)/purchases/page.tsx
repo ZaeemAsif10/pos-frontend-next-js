@@ -95,6 +95,9 @@ interface FormItemRow {
   quantity: number;
   conversion_factor: number;
   unit_cost: number;
+  retail_price: number;
+  tax_rate: number;
+  tax_amount: number;
   total_cost: number;
   batch_number: string;
   expiry_date: string;
@@ -224,6 +227,21 @@ export default function PurchasesPage() {
   );
 
 
+  const computeRowTotals = (qty: number, unitCost: number, taxRate: number) => {
+    const baseTotal = qty * unitCost;
+    const taxAmt = Math.round(baseTotal * ((taxRate || 0) / 100) * 100) / 100;
+    return {
+      tax_amount: taxAmt,
+      total_cost: Math.round((baseTotal + taxAmt) * 100) / 100,
+    };
+  };
+
+  const syncRowsAndTax = (rows: FormItemRow[]) => {
+    setItemRows(rows);
+    const totalRowTax = rows.reduce((sum, r) => sum + (Number(r.tax_amount) || 0), 0);
+    setTaxAmount(Math.round(totalRowTax * 100) / 100);
+  };
+
   const openCreateModal = () => {
     setBranchId(branches.length > 0 ? branches[0].id : 0);
     setSupplierId(suppliers.length > 0 ? suppliers[0].id : 0);
@@ -238,7 +256,11 @@ export default function PurchasesPage() {
     // Initial empty row if products exist
     if (products.length > 0) {
       const p = products[0];
-      setItemRows([
+      const cost = Number(p.cost_price) || 0;
+      const sale = Number(p.retail_price) || 0;
+      const tRate = Number(p.tax_rate) || 0;
+      const { tax_amount, total_cost } = computeRowTotals(10, cost, tRate);
+      const initialRows: FormItemRow[] = [
         {
           product_id: p.id,
           product_name: p.name,
@@ -247,12 +269,16 @@ export default function PurchasesPage() {
           unit_name: p.base_unit || "Piece",
           quantity: 10,
           conversion_factor: 1,
-          unit_cost: Number(p.cost_price) || 0,
-          total_cost: (Number(p.cost_price) || 0) * 10,
+          unit_cost: cost,
+          retail_price: sale,
+          tax_rate: tRate,
+          tax_amount,
+          total_cost,
           batch_number: "",
           expiry_date: "",
         },
-      ]);
+      ];
+      syncRowsAndTax(initialRows);
     } else {
       setItemRows([]);
     }
@@ -265,8 +291,12 @@ export default function PurchasesPage() {
       return;
     }
     const p = products[0];
-    setItemRows((prev) => [
-      ...prev,
+    const cost = Number(p.cost_price) || 0;
+    const sale = Number(p.retail_price) || 0;
+    const tRate = Number(p.tax_rate) || 0;
+    const { tax_amount, total_cost } = computeRowTotals(1, cost, tRate);
+    const nextRows = [
+      ...itemRows,
       {
         product_id: p.id,
         product_name: p.name,
@@ -275,91 +305,126 @@ export default function PurchasesPage() {
         unit_name: p.base_unit || "Piece",
         quantity: 1,
         conversion_factor: 1,
-        unit_cost: Number(p.cost_price) || 0,
-        total_cost: Number(p.cost_price) || 0,
+        unit_cost: cost,
+        retail_price: sale,
+        tax_rate: tRate,
+        tax_amount,
+        total_cost,
         batch_number: "",
         expiry_date: "",
       },
-    ]);
+    ];
+    syncRowsAndTax(nextRows);
   };
 
   const removeItemRow = (index: number) => {
-    setItemRows((prev) => prev.filter((_, i) => i !== index));
+    const nextRows = itemRows.filter((_, i) => i !== index);
+    syncRowsAndTax(nextRows);
   };
 
   const handleProductSelect = (index: number, productId: number) => {
     const p = products.find((x) => x.id === productId);
     if (!p) return;
 
-    setItemRows((prev) => {
-      const copy = [...prev];
-      copy[index] = {
-        ...copy[index],
-        product_id: p.id,
-        product_name: p.name,
-        sku: p.sku,
-        uom_conversion_id: null,
-        unit_name: p.base_unit || "Piece",
-        conversion_factor: 1,
-        unit_cost: Number(p.cost_price) || 0,
-        total_cost: (Number(p.cost_price) || 0) * copy[index].quantity,
-      };
-      return copy;
-    });
+    const copy = [...itemRows];
+    const cost = Number(p.cost_price) || 0;
+    const sale = Number(p.retail_price) || 0;
+    const tRate = Number(p.tax_rate) || 0;
+    const qty = copy[index].quantity;
+    const { tax_amount, total_cost } = computeRowTotals(qty, cost, tRate);
+    copy[index] = {
+      ...copy[index],
+      product_id: p.id,
+      product_name: p.name,
+      sku: p.sku,
+      uom_conversion_id: null,
+      unit_name: p.base_unit || "Piece",
+      conversion_factor: 1,
+      unit_cost: cost,
+      retail_price: sale,
+      tax_rate: tRate,
+      tax_amount,
+      total_cost,
+    };
+    syncRowsAndTax(copy);
   };
 
   const handleUomSelect = (index: number, uomVal: string) => {
-    setItemRows((prev) => {
-      const copy = [...prev];
-      const row = copy[index];
-      const prod = products.find((x) => x.id === row.product_id);
-      const baseCost = Number(prod?.cost_price) || 0;
+    const copy = [...itemRows];
+    const row = { ...copy[index] };
+    const prod = products.find((x) => x.id === row.product_id);
+    const baseCost = Number(prod?.cost_price) || 0;
+    const baseSale = Number(prod?.retail_price) || 0;
 
-      if (uomVal === "carton") {
-        row.uom_conversion_id = null;
-        row.unit_name = "Carton";
-        row.conversion_factor = 24;
-        row.unit_cost = baseCost * 24;
-      } else if (uomVal === "box") {
-        row.uom_conversion_id = null;
-        row.unit_name = "Box";
-        row.conversion_factor = 12;
-        row.unit_cost = baseCost * 12;
-      } else if (uomVal === "pack") {
-        row.uom_conversion_id = null;
-        row.unit_name = "Pack";
-        row.conversion_factor = 6;
-        row.unit_cost = baseCost * 6;
-      } else {
-        row.uom_conversion_id = null;
-        row.unit_name = prod?.base_unit || "Piece";
-        row.conversion_factor = 1;
-        row.unit_cost = baseCost;
-      }
-      row.total_cost = row.quantity * row.unit_cost;
-      return copy;
-    });
+    if (uomVal === "carton") {
+      row.uom_conversion_id = null;
+      row.unit_name = "Carton";
+      row.conversion_factor = 24;
+      row.unit_cost = baseCost * 24;
+      row.retail_price = baseSale * 24;
+    } else if (uomVal === "box") {
+      row.uom_conversion_id = null;
+      row.unit_name = "Box";
+      row.conversion_factor = 12;
+      row.unit_cost = baseCost * 12;
+      row.retail_price = baseSale * 12;
+    } else if (uomVal === "pack") {
+      row.uom_conversion_id = null;
+      row.unit_name = "Pack";
+      row.conversion_factor = 6;
+      row.unit_cost = baseCost * 6;
+      row.retail_price = baseSale * 6;
+    } else {
+      row.uom_conversion_id = null;
+      row.unit_name = prod?.base_unit || "Piece";
+      row.conversion_factor = 1;
+      row.unit_cost = baseCost;
+      row.retail_price = baseSale;
+    }
+    const { tax_amount, total_cost } = computeRowTotals(row.quantity, row.unit_cost, row.tax_rate);
+    row.tax_amount = tax_amount;
+    row.total_cost = total_cost;
+    copy[index] = row;
+    syncRowsAndTax(copy);
   };
 
   const handleQuantityChange = (index: number, qty: number) => {
-    setItemRows((prev) => {
-      const copy = [...prev];
-      copy[index].quantity = qty;
-      copy[index].total_cost = qty * copy[index].unit_cost;
-      return copy;
-    });
+    const copy = [...itemRows];
+    const row = { ...copy[index], quantity: qty };
+    const { tax_amount, total_cost } = computeRowTotals(qty, row.unit_cost, row.tax_rate);
+    row.tax_amount = tax_amount;
+    row.total_cost = total_cost;
+    copy[index] = row;
+    syncRowsAndTax(copy);
   };
 
   const handleCostChange = (index: number, cost: number) => {
-    setItemRows((prev) => {
-      const copy = [...prev];
-      copy[index].unit_cost = cost;
-      copy[index].total_cost = copy[index].quantity * cost;
-      return copy;
-    });
+    const copy = [...itemRows];
+    const row = { ...copy[index], unit_cost: cost };
+    const { tax_amount, total_cost } = computeRowTotals(row.quantity, cost, row.tax_rate);
+    row.tax_amount = tax_amount;
+    row.total_cost = total_cost;
+    copy[index] = row;
+    syncRowsAndTax(copy);
   };
 
-  const subtotal = itemRows.reduce((sum, r) => sum + r.total_cost, 0);
+  const handleRetailPriceChange = (index: number, salePrice: number) => {
+    const copy = [...itemRows];
+    copy[index] = { ...copy[index], retail_price: salePrice };
+    setItemRows(copy);
+  };
+
+  const handleTaxRateChange = (index: number, taxRate: number) => {
+    const copy = [...itemRows];
+    const row = { ...copy[index], tax_rate: taxRate };
+    const { tax_amount, total_cost } = computeRowTotals(row.quantity, row.unit_cost, taxRate);
+    row.tax_amount = tax_amount;
+    row.total_cost = total_cost;
+    copy[index] = row;
+    syncRowsAndTax(copy);
+  };
+
+  const subtotal = itemRows.reduce((sum, r) => sum + r.quantity * r.unit_cost, 0);
   const netTotal = Math.max(0, subtotal - discountAmount + taxAmount + shippingCost);
   const balanceDue = Math.max(0, netTotal - paidAmount);
 
@@ -387,6 +452,9 @@ export default function PurchasesPage() {
         quantity: r.quantity,
         conversion_factor: r.conversion_factor,
         unit_cost: r.unit_cost,
+        retail_price: Number(r.retail_price) || 0,
+        tax_rate: Number(r.tax_rate) || 0,
+        tax_amount: Number(r.tax_amount) || 0,
         batch_number: r.batch_number.trim() || null,
         expiry_date: r.expiry_date.trim() || null,
       }));
@@ -788,7 +856,7 @@ export default function PurchasesPage() {
 
       {/* Create Purchase Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[850px] max-h-[92vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[1060px] max-h-[92vh] overflow-y-auto">
           <form onSubmit={handleCreateSubmit}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -796,7 +864,7 @@ export default function PurchasesPage() {
                 Post Purchase Bill / Goods Receipt (GRN)
               </DialogTitle>
               <DialogDescription>
-                Receive goods into warehouse inventory and automatically credit supplier khata balance.
+                Receive goods into warehouse inventory, update product sale price &amp; tax, and credit supplier khata balance.
               </DialogDescription>
             </DialogHeader>
 
@@ -840,7 +908,9 @@ export default function PurchasesPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Supplier Bill #</Label>
+                  <Label className="text-xs font-semibold">
+                    Supplier Bill # <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
                   <Input
                     value={supplierBillNo}
                     onChange={(e) => setSupplierBillNo(e.target.value)}
@@ -850,7 +920,9 @@ export default function PurchasesPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Purchase Date</Label>
+                  <Label className="text-xs font-semibold">
+                    Purchase Date <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     type="date"
                     value={purchaseDate}
@@ -873,118 +945,177 @@ export default function PurchasesPage() {
                   </Button>
                 </div>
 
-                <div className="border rounded-md divide-y max-h-[300px] overflow-y-auto">
-                  {itemRows.map((row, idx) => {
-                    const prod = products.find((x) => x.id === row.product_id);
+                <div className="border rounded-md divide-y overflow-x-auto">
+                  {/* Column Headers */}
+                  <div className="px-2.5 py-2 bg-muted/50 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground min-w-[900px]">
+                    <div className="flex-1 min-w-[200px]">
+                      Product / Item <span className="text-destructive">*</span>
+                    </div>
+                    <div className="w-[115px]">Unit (UOM)</div>
+                    <div className="w-[75px] text-right">
+                      Qty <span className="text-destructive">*</span>
+                    </div>
+                    <div className="w-[115px] text-right">
+                      Purchase Price <span className="text-destructive">*</span>
+                    </div>
+                    <div className="w-[115px] text-right">
+                      Sale Price <span className="text-destructive">*</span>
+                    </div>
+                    <div className="w-[85px] text-right">Tax (%)</div>
+                    <div className="w-[130px] text-right">Row Total</div>
+                    <div className="w-7" />
+                  </div>
 
-                    return (
-                      <div key={idx} className="p-2.5 flex flex-wrap items-center gap-2 hover:bg-muted/30">
-                        {/* Product Selector */}
-                        <div className="flex-1 min-w-[200px]">
-                          <Select
-                            value={String(row.product_id)}
-                            onValueChange={(val) => handleProductSelect(idx, Number(val))}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {products.map((p) => (
-                                <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                                  {p.name} ({p.sku})
+                  <div className="divide-y max-h-[300px] overflow-y-auto min-w-[900px]">
+                    {itemRows.map((row, idx) => {
+                      const prod = products.find((x) => x.id === row.product_id);
+
+                      return (
+                        <div key={idx} className="p-2.5 flex items-center gap-2 hover:bg-muted/30">
+                          {/* Product Selector */}
+                          <div className="flex-1 min-w-[200px]">
+                            <Select
+                              value={String(row.product_id)}
+                              onValueChange={(val) => handleProductSelect(idx, Number(val))}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {products.map((p) => (
+                                  <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                                    {p.name} ({p.sku})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* UOM Selector */}
+                          <div className="w-[115px]">
+                            <Select
+                              value={
+                                row.unit_name.toLowerCase() === "carton"
+                                  ? "carton"
+                                  : row.unit_name.toLowerCase() === "box"
+                                  ? "box"
+                                  : row.unit_name.toLowerCase() === "pack"
+                                  ? "pack"
+                                  : "base"
+                              }
+                              onValueChange={(val) => handleUomSelect(idx, val)}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="base" className="text-xs">
+                                  {prod?.base_unit || "Piece"} (Base)
                                 </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                                <SelectItem value="carton" className="text-xs">
+                                  Carton (×24)
+                                </SelectItem>
+                                <SelectItem value="box" className="text-xs">
+                                  Box (×12)
+                                </SelectItem>
+                                <SelectItem value="pack" className="text-xs">
+                                  Pack (×6)
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                        {/* UOM Selector */}
-                        <div className="w-[125px]">
-                          <Select
-                            value={
-                              row.unit_name.toLowerCase() === "carton"
-                                ? "carton"
-                                : row.unit_name.toLowerCase() === "box"
-                                ? "box"
-                                : row.unit_name.toLowerCase() === "pack"
-                                ? "pack"
-                                : "base"
-                            }
-                            onValueChange={(val) => handleUomSelect(idx, val)}
+                          {/* Quantity */}
+                          <div className="w-[75px]">
+                            <Input
+                              type="number"
+                              min="0.1"
+                              step="any"
+                              value={row.quantity}
+                              onChange={(e) => handleQuantityChange(idx, Number(e.target.value))}
+                              className="h-8 text-xs text-right"
+                              placeholder="Qty"
+                              required
+                            />
+                          </div>
+
+                          {/* Purchase Price (Unit Cost) */}
+                          <div className="w-[115px]">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={row.unit_cost}
+                              onChange={(e) => handleCostChange(idx, Number(e.target.value))}
+                              className="h-8 text-xs text-right font-mono"
+                              placeholder="Purchase Price"
+                              required
+                            />
+                          </div>
+
+                          {/* Sale Price (Retail Price) */}
+                          <div className="w-[115px]">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={row.retail_price}
+                              onChange={(e) => handleRetailPriceChange(idx, Number(e.target.value))}
+                              className="h-8 text-xs text-right font-mono border-primary/40"
+                              placeholder="Sale Price"
+                              required
+                            />
+                          </div>
+
+                          {/* Tax (%) */}
+                          <div className="w-[85px]">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="any"
+                              value={row.tax_rate}
+                              onChange={(e) => handleTaxRateChange(idx, Number(e.target.value))}
+                              className="h-8 text-xs text-right font-mono"
+                              placeholder="Tax %"
+                            />
+                          </div>
+
+                          {/* Total Cost (incl. row tax) */}
+                          <div className="w-[130px] text-right font-mono">
+                            <div className="text-xs font-bold text-foreground">
+                              PKR {row.total_cost.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                            </div>
+                            {row.tax_amount > 0 && (
+                              <div className="text-[10px] text-muted-foreground">
+                                Incl. PKR {row.tax_amount.toLocaleString()} tax
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Remove Row */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeItemRow(idx)}
+                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
                           >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="base" className="text-xs">
-                                {prod?.base_unit || "Piece"} (Base)
-                              </SelectItem>
-                              <SelectItem value="carton" className="text-xs">
-                                Carton (×24)
-                              </SelectItem>
-                              <SelectItem value="box" className="text-xs">
-                                Box (×12)
-                              </SelectItem>
-                              <SelectItem value="pack" className="text-xs">
-                                Pack (×6)
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <IconX className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
-
-                        {/* Quantity */}
-                        <div className="w-[80px]">
-                          <Input
-                            type="number"
-                            min="0.1"
-                            step="any"
-                            value={row.quantity}
-                            onChange={(e) => handleQuantityChange(idx, Number(e.target.value))}
-                            className="h-8 text-xs text-right"
-                            placeholder="Qty"
-                            required
-                          />
-                        </div>
-
-                        {/* Unit Cost */}
-                        <div className="w-[100px]">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="any"
-                            value={row.unit_cost}
-                            onChange={(e) => handleCostChange(idx, Number(e.target.value))}
-                            className="h-8 text-xs text-right font-mono"
-                            placeholder="Cost"
-                            required
-                          />
-                        </div>
-
-                        {/* Total Cost */}
-                        <div className="w-[110px] text-right font-mono text-xs font-bold text-foreground">
-                          PKR {row.total_cost.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                        </div>
-
-                        {/* Remove Row */}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItemRow(idx)}
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                        >
-                          <IconX className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               {/* Bill Totals & Settlement */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold">Delivery & Bill Notes</Label>
+                  <Label className="text-xs font-semibold">
+                    Delivery &amp; Bill Notes <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
                   <Textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -1130,7 +1261,9 @@ export default function PurchasesPage() {
                       <TableHead>Product</TableHead>
                       <TableHead>Unit</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Unit Cost</TableHead>
+                      <TableHead className="text-right">Purchase Price</TableHead>
+                      <TableHead className="text-right">Sale Price</TableHead>
+                      <TableHead className="text-right">Tax</TableHead>
                       <TableHead className="text-right">Total Cost</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1145,6 +1278,14 @@ export default function PurchasesPage() {
                         <TableCell className="text-right font-semibold">{item.quantity}</TableCell>
                         <TableCell className="text-right font-mono">
                           PKR {Number(item.unit_cost).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-primary">
+                          PKR {Number(item.retail_price || 0).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-muted-foreground">
+                          {Number(item.tax_rate || 0) > 0
+                            ? `${Number(item.tax_rate)}% (PKR ${Number(item.tax_amount || 0).toLocaleString()})`
+                            : "-"}
                         </TableCell>
                         <TableCell className="text-right font-mono font-bold">
                           PKR {Number(item.total_cost).toLocaleString()}

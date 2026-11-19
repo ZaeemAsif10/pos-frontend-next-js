@@ -12,6 +12,9 @@ export interface PurchaseItemPayload {
   quantity: number;
   conversion_factor?: number;
   unit_cost: number;
+  retail_price?: number;
+  tax_rate?: number;
+  tax_amount?: number;
   batch_number?: string | null;
   expiry_date?: string | null;
 }
@@ -27,6 +30,9 @@ export interface PurchaseItemDetail {
   conversion_factor: number;
   total_base_quantity: number;
   unit_cost: number;
+  retail_price?: number;
+  tax_rate?: number;
+  tax_amount?: number;
   total_cost: number;
   batch_number?: string | null;
   expiry_date?: string | null;
