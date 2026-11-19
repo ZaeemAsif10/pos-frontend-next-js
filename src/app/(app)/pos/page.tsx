@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { productService, type ProductListItem, type CategoryItem } from "@/services/product.service";
+import { inventoryService } from "@/services/inventory.service";
 import { branchService, type BranchItem } from "@/services/branch.service";
 import { partyService, type CustomerItem } from "@/services/party.service";
 import { salesService, type SalesInvoiceDetail, type POSShiftDetail } from "@/services/sales.service";
@@ -273,18 +274,60 @@ export default function POSPage() {
     setIsLoadingProducts(true);
     try {
       const targetBranchId = branchIdParam ?? selectedBranchId;
-      const pRes = await productService.listProducts({
+      // Load POS products directly from the Inventory table (branch_stocks via GET /tenant/inventory)
+      const invRes = await inventoryService.listLiveInventory({
         branch_id: targetBranchId || undefined,
-        is_active: true,
-        in_stock_only: true,
-        size: 200,
       });
-      const inStockItems = (pRes.items || []).filter(
-        (p) => p.is_active && Number(p.total_stock) > 0
-      );
+
+      // Aggregate/map live inventory records with current_stock > 0 into POS catalogue items
+      const byProductId = new Map<number, ProductListItem>();
+      for (const inv of invRes || []) {
+        const stockQty = Number(inv.current_stock) || 0;
+        if (stockQty <= 0) continue;
+
+        const existing = byProductId.get(inv.product_id);
+        if (existing) {
+          existing.total_stock = Number(existing.total_stock) + stockQty;
+        } else {
+          byProductId.set(inv.product_id, {
+            id: inv.product_id,
+            name: inv.product_name,
+            sku: inv.sku,
+            barcode: inv.barcode || null,
+            category_id: inv.category_id || 0,
+            category_name: inv.category_name || "",
+            brand_id: inv.brand_id || null,
+            brand_name: inv.brand_name || null,
+            base_unit: inv.base_unit || "Piece",
+            cost_price: Number(inv.cost_price) || 0,
+            retail_price: Number(inv.retail_price) || Number(inv.cost_price) || 0,
+            wholesale_price:
+              Number(inv.wholesale_price) ||
+              Number(inv.retail_price) ||
+              Number(inv.cost_price) ||
+              0,
+            tax_rate: Number(inv.tax_rate) || 0,
+            is_fbr_third_schedule: Boolean(inv.is_fbr_third_schedule),
+            has_batches: false,
+            reorder_level: Number(inv.reorder_point) || 5,
+            image_url: inv.image_url || null,
+            is_active: true,
+            total_stock: stockQty,
+            stock_status:
+              inv.stock_status === "Low Stock"
+                ? "low_stock"
+                : inv.stock_status === "Out of Stock"
+                ? "out_of_stock"
+                : "in_stock",
+            created_at: new Date().toISOString(),
+          });
+        }
+      }
+
+      const inStockItems = Array.from(byProductId.values());
       setProducts(inStockItems);
 
-      // Remove any cart items that have 0 stock in this branch
+      // Remove any cart items that have 0 stock in this branch and sync latest prices
       const inStockMap = new Map(inStockItems.map((p) => [p.id, p]));
       setCart((prev) =>
         prev
@@ -294,12 +337,14 @@ export default function POSPage() {
             return {
               ...item,
               product: freshProd,
+              unit_price:
+                item.unit_price > 0 ? item.unit_price : Number(freshProd.retail_price) || 0,
               quantity: Math.min(item.quantity, Number(freshProd.total_stock)),
             };
           })
       );
     } catch (err: any) {
-      toast.error("Failed to load products: " + err.message);
+      toast.error("Failed to load inventory products: " + err.message);
     } finally {
       setIsLoadingProducts(false);
     }

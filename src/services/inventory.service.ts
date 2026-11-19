@@ -95,7 +95,9 @@ export interface LiveInventoryItem {
   product_name: string;
   sku: string;
   barcode?: string | null;
+  category_id?: number | null;
   category_name?: string | null;
+  brand_id?: number | null;
   brand_name?: string | null;
   base_unit: string;
   branch_id: number;
@@ -104,6 +106,10 @@ export interface LiveInventoryItem {
   reorder_point: number;
   cost_price: number;
   retail_price: number;
+  wholesale_price?: number;
+  tax_rate?: number;
+  is_fbr_third_schedule?: boolean;
+  image_url?: string | null;
   stock_status: "In Stock" | "Low Stock" | "Out of Stock";
 }
 
