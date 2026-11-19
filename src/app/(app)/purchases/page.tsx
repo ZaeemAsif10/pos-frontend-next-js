@@ -18,6 +18,8 @@ import {
   IconPackage,
   IconX,
   IconArrowBackUp,
+  IconEdit,
+  IconSettings,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -81,6 +83,7 @@ import {
   type PurchaseDetail,
   type PurchaseStats,
   type PurchaseItemPayload,
+  type PaymentStatusOptionItem,
 } from "@/services/inventory.service";
 import { branchService, type BranchItem } from "@/services/branch.service";
 import { partyService, type SupplierItem } from "@/services/party.service";
@@ -114,10 +117,36 @@ export default function PurchasesPage() {
     userPerms.includes("*");
 
   const canCreate = isOwnerOrAdmin || userPerms.includes("purchases:create");
+  const canEdit =
+    isOwnerOrAdmin ||
+    userPerms.includes("purchases:edit") ||
+    userPerms.includes("purchases:create") ||
+    userPerms.includes("payment_statuses:edit");
   const canDelete = isOwnerOrAdmin || userPerms.includes("purchases:delete");
+
+  const canViewPaymentStatuses =
+    isOwnerOrAdmin ||
+    userPerms.includes("payment_statuses:view") ||
+    userPerms.includes("payment_statuses:create") ||
+    userPerms.includes("payment_statuses:edit") ||
+    userPerms.includes("purchases:view") ||
+    userPerms.includes("purchases:create");
+  const canCreatePaymentStatus =
+    isOwnerOrAdmin ||
+    userPerms.includes("payment_statuses:create") ||
+    userPerms.includes("purchases:create");
+  const canEditPaymentStatus =
+    isOwnerOrAdmin ||
+    userPerms.includes("payment_statuses:edit") ||
+    userPerms.includes("purchases:create");
+  const canDeletePaymentStatus =
+    isOwnerOrAdmin ||
+    userPerms.includes("payment_statuses:delete") ||
+    userPerms.includes("purchases:delete");
 
   const [loading, setLoading] = useState(true);
   const [purchases, setPurchases] = useState<PurchaseItem[]>([]);
+  const [paymentStatuses, setPaymentStatuses] = useState<PaymentStatusOptionItem[]>([]);
   const [stats, setStats] = useState<PurchaseStats>({
     total_purchases_count: 0,
     total_purchases_amount: 0,
@@ -145,11 +174,28 @@ export default function PurchasesPage() {
   const [supplierId, setSupplierId] = useState<number | 0>(0);
   const [supplierBillNo, setSupplierBillNo] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split("T")[0]);
+  const [purchasePaymentStatus, setPurchasePaymentStatus] = useState<string>("unpaid");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [taxAmount, setTaxAmount] = useState<number>(0);
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [notes, setNotes] = useState("");
+
+  // Edit Purchase Payment Status Modal State
+  const [editingPurchase, setEditingPurchase] = useState<PurchaseItem | null>(null);
+  const [editPaymentStatus, setEditPaymentStatus] = useState<string>("unpaid");
+  const [editSupplierBillNo, setEditSupplierBillNo] = useState<string>("");
+  const [editNotes, setEditNotes] = useState<string>("");
+  const [isUpdatingPurchase, setIsUpdatingPurchase] = useState(false);
+
+  // Payment Statuses Dynamic CRUD Modal State
+  const [isStatusCrudOpen, setIsStatusCrudOpen] = useState(false);
+  const [editingStatusOption, setEditingStatusOption] = useState<PaymentStatusOptionItem | null>(null);
+  const [statusName, setStatusName] = useState("");
+  const [statusAccountingType, setStatusAccountingType] = useState<"paid" | "unpaid" | "partial">("unpaid");
+  const [statusColor, setStatusColor] = useState("emerald");
+  const [statusDescription, setStatusDescription] = useState("");
+  const [isSavingStatusOption, setIsSavingStatusOption] = useState(false);
 
   const [itemRows, setItemRows] = useState<FormItemRow[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,7 +235,7 @@ export default function PurchasesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [purchasesData, statsData, branchesData, suppliersData, productsData] = await Promise.all([
+      const [purchasesData, statsData, branchesData, suppliersData, productsData, statusesData] = await Promise.all([
         inventoryService.listPurchases(),
         inventoryService.getPurchaseStats().catch(() => ({
           total_purchases_count: 0,
@@ -200,6 +246,7 @@ export default function PurchasesPage() {
         branchService.listBranches().catch(() => ({ branches: [] })),
         partyService.listSuppliers().catch(() => []),
         productService.listProducts().catch(() => ({ items: [] })),
+        inventoryService.listPaymentStatuses().catch(() => []),
       ]);
 
       setPurchases(purchasesData || []);
@@ -207,6 +254,7 @@ export default function PurchasesPage() {
       setBranches(branchesData?.branches || []);
       setSuppliers(suppliersData || []);
       setProducts(productsData?.items || []);
+      setPaymentStatuses(statusesData || []);
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to load purchases");
     } finally {
@@ -227,39 +275,21 @@ export default function PurchasesPage() {
   );
 
 
-  const computeRowTotals = (qty: number, unitCost: number, taxRate: number) => {
-    const baseTotal = qty * unitCost;
-    const taxAmt = Math.round(baseTotal * ((taxRate || 0) / 100) * 100) / 100;
-    return {
-      tax_amount: taxAmt,
-      total_cost: Math.round((baseTotal + taxAmt) * 100) / 100,
-    };
-  };
-
-  const syncRowsAndTax = (rows: FormItemRow[]) => {
-    setItemRows(rows);
-    const totalRowTax = rows.reduce((sum, r) => sum + (Number(r.tax_amount) || 0), 0);
-    setTaxAmount(Math.round(totalRowTax * 100) / 100);
-  };
-
   const openCreateModal = () => {
     setBranchId(branches.length > 0 ? branches[0].id : 0);
     setSupplierId(suppliers.length > 0 ? suppliers[0].id : 0);
     setSupplierBillNo("");
     setPurchaseDate(new Date().toISOString().split("T")[0]);
+    setPurchasePaymentStatus("unpaid");
     setDiscountAmount(0);
     setTaxAmount(0);
     setShippingCost(0);
     setPaidAmount(0);
     setNotes("");
 
-    // Initial empty row if products exist
+    // Default Purchase Price = 1 and Sale Price = 1 for all rows
     if (products.length > 0) {
       const p = products[0];
-      const cost = Number(p.cost_price) || 0;
-      const sale = Number(p.retail_price) || 0;
-      const tRate = Number(p.tax_rate) || 0;
-      const { tax_amount, total_cost } = computeRowTotals(10, cost, tRate);
       const initialRows: FormItemRow[] = [
         {
           product_id: p.id,
@@ -269,16 +299,16 @@ export default function PurchasesPage() {
           unit_name: p.base_unit || "Piece",
           quantity: 10,
           conversion_factor: 1,
-          unit_cost: cost,
-          retail_price: sale,
-          tax_rate: tRate,
-          tax_amount,
-          total_cost,
+          unit_cost: 1,
+          retail_price: 1,
+          tax_rate: 0,
+          tax_amount: 0,
+          total_cost: 10,
           batch_number: "",
           expiry_date: "",
         },
       ];
-      syncRowsAndTax(initialRows);
+      setItemRows(initialRows);
     } else {
       setItemRows([]);
     }
@@ -291,12 +321,8 @@ export default function PurchasesPage() {
       return;
     }
     const p = products[0];
-    const cost = Number(p.cost_price) || 0;
-    const sale = Number(p.retail_price) || 0;
-    const tRate = Number(p.tax_rate) || 0;
-    const { tax_amount, total_cost } = computeRowTotals(1, cost, tRate);
-    const nextRows = [
-      ...itemRows,
+    setItemRows((prev) => [
+      ...prev,
       {
         product_id: p.id,
         product_name: p.name,
@@ -305,21 +331,19 @@ export default function PurchasesPage() {
         unit_name: p.base_unit || "Piece",
         quantity: 1,
         conversion_factor: 1,
-        unit_cost: cost,
-        retail_price: sale,
-        tax_rate: tRate,
-        tax_amount,
-        total_cost,
+        unit_cost: 1,
+        retail_price: 1,
+        tax_rate: 0,
+        tax_amount: 0,
+        total_cost: 1,
         batch_number: "",
         expiry_date: "",
       },
-    ];
-    syncRowsAndTax(nextRows);
+    ]);
   };
 
   const removeItemRow = (index: number) => {
-    const nextRows = itemRows.filter((_, i) => i !== index);
-    syncRowsAndTax(nextRows);
+    setItemRows((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleProductSelect = (index: number, productId: number) => {
@@ -327,11 +351,7 @@ export default function PurchasesPage() {
     if (!p) return;
 
     const copy = [...itemRows];
-    const cost = Number(p.cost_price) || 0;
-    const sale = Number(p.retail_price) || 0;
-    const tRate = Number(p.tax_rate) || 0;
-    const qty = copy[index].quantity;
-    const { tax_amount, total_cost } = computeRowTotals(qty, cost, tRate);
+    const qty = copy[index].quantity || 1;
     copy[index] = {
       ...copy[index],
       product_id: p.id,
@@ -340,72 +360,56 @@ export default function PurchasesPage() {
       uom_conversion_id: null,
       unit_name: p.base_unit || "Piece",
       conversion_factor: 1,
-      unit_cost: cost,
-      retail_price: sale,
-      tax_rate: tRate,
-      tax_amount,
-      total_cost,
+      unit_cost: 1,
+      retail_price: 1,
+      tax_rate: 0,
+      tax_amount: 0,
+      total_cost: qty * 1,
     };
-    syncRowsAndTax(copy);
+    setItemRows(copy);
   };
 
   const handleUomSelect = (index: number, uomVal: string) => {
     const copy = [...itemRows];
     const row = { ...copy[index] };
     const prod = products.find((x) => x.id === row.product_id);
-    const baseCost = Number(prod?.cost_price) || 0;
-    const baseSale = Number(prod?.retail_price) || 0;
 
     if (uomVal === "carton") {
       row.uom_conversion_id = null;
       row.unit_name = "Carton";
       row.conversion_factor = 24;
-      row.unit_cost = baseCost * 24;
-      row.retail_price = baseSale * 24;
     } else if (uomVal === "box") {
       row.uom_conversion_id = null;
       row.unit_name = "Box";
       row.conversion_factor = 12;
-      row.unit_cost = baseCost * 12;
-      row.retail_price = baseSale * 12;
     } else if (uomVal === "pack") {
       row.uom_conversion_id = null;
       row.unit_name = "Pack";
       row.conversion_factor = 6;
-      row.unit_cost = baseCost * 6;
-      row.retail_price = baseSale * 6;
     } else {
       row.uom_conversion_id = null;
       row.unit_name = prod?.base_unit || "Piece";
       row.conversion_factor = 1;
-      row.unit_cost = baseCost;
-      row.retail_price = baseSale;
     }
-    const { tax_amount, total_cost } = computeRowTotals(row.quantity, row.unit_cost, row.tax_rate);
-    row.tax_amount = tax_amount;
-    row.total_cost = total_cost;
+    row.total_cost = Math.round(row.quantity * row.unit_cost * 100) / 100;
     copy[index] = row;
-    syncRowsAndTax(copy);
+    setItemRows(copy);
   };
 
   const handleQuantityChange = (index: number, qty: number) => {
     const copy = [...itemRows];
     const row = { ...copy[index], quantity: qty };
-    const { tax_amount, total_cost } = computeRowTotals(qty, row.unit_cost, row.tax_rate);
-    row.tax_amount = tax_amount;
-    row.total_cost = total_cost;
+    row.total_cost = Math.round(qty * row.unit_cost * 100) / 100;
     copy[index] = row;
-    syncRowsAndTax(copy);
+    setItemRows(copy);
   };
 
   const handleCostChange = (index: number, cost: number) => {
     const copy = [...itemRows];
     const row = { ...copy[index], unit_cost: cost };
-    const { tax_amount, total_cost } = computeRowTotals(row.quantity, cost, row.tax_rate);
-    row.tax_amount = tax_amount;
-    row.total_cost = total_cost;
+    row.total_cost = Math.round(row.quantity * cost * 100) / 100;
     copy[index] = row;
-    syncRowsAndTax(copy);
+    setItemRows(copy);
   };
 
   const handleRetailPriceChange = (index: number, salePrice: number) => {
@@ -414,19 +418,27 @@ export default function PurchasesPage() {
     setItemRows(copy);
   };
 
-  const handleTaxRateChange = (index: number, taxRate: number) => {
-    const copy = [...itemRows];
-    const row = { ...copy[index], tax_rate: taxRate };
-    const { tax_amount, total_cost } = computeRowTotals(row.quantity, row.unit_cost, taxRate);
-    row.tax_amount = tax_amount;
-    row.total_cost = total_cost;
-    copy[index] = row;
-    syncRowsAndTax(copy);
-  };
-
   const subtotal = itemRows.reduce((sum, r) => sum + r.quantity * r.unit_cost, 0);
-  const netTotal = Math.max(0, subtotal - discountAmount + taxAmount + shippingCost);
-  const balanceDue = Math.max(0, netTotal - paidAmount);
+  const netTotal = Math.max(0, subtotal);
+
+  const selectedStatusObj = paymentStatuses.find(
+    (s) => s.code.toLowerCase() === purchasePaymentStatus.toLowerCase()
+  );
+  const currentAccBehavior =
+    selectedStatusObj?.accounting_type ||
+    (purchasePaymentStatus.toLowerCase() === "paid"
+      ? "paid"
+      : purchasePaymentStatus.toLowerCase() === "partial"
+      ? "partial"
+      : "unpaid");
+
+  const effectivePaidAmount =
+    currentAccBehavior === "paid"
+      ? netTotal
+      : currentAccBehavior === "unpaid"
+      ? 0
+      : Math.min(paidAmount, netTotal);
+  const balanceDue = Math.max(0, netTotal - effectivePaidAmount);
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -451,10 +463,10 @@ export default function PurchasesPage() {
         unit_name: r.unit_name,
         quantity: r.quantity,
         conversion_factor: r.conversion_factor,
-        unit_cost: r.unit_cost,
-        retail_price: Number(r.retail_price) || 0,
-        tax_rate: Number(r.tax_rate) || 0,
-        tax_amount: Number(r.tax_amount) || 0,
+        unit_cost: Number(r.unit_cost) || 1,
+        retail_price: Number(r.retail_price) || 1,
+        tax_rate: 0,
+        tax_amount: 0,
         batch_number: r.batch_number.trim() || null,
         expiry_date: r.expiry_date.trim() || null,
       }));
@@ -464,21 +476,115 @@ export default function PurchasesPage() {
         supplier_id: supplierId,
         supplier_bill_no: supplierBillNo.trim() || null,
         purchase_date: purchaseDate,
-        discount_amount: Number(discountAmount) || 0,
-        tax_amount: Number(taxAmount) || 0,
-        shipping_cost: Number(shippingCost) || 0,
-        paid_amount: Number(paidAmount) || 0,
+        payment_status: purchasePaymentStatus,
+        discount_amount: 0,
+        tax_amount: 0,
+        shipping_cost: 0,
+        paid_amount: effectivePaidAmount,
         notes: notes.trim() || null,
         items: itemsPayload,
       });
 
-      toast.success("Purchase bill posted successfully! Stock updated.");
+      toast.success("Purchase bill posted! Stock & Double-Entry Accounting updated.");
       setIsCreateOpen(false);
       loadData();
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to create purchase bill");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const openEditPurchaseModal = (p: PurchaseItem) => {
+    setEditingPurchase(p);
+    setEditPaymentStatus(p.payment_status || "unpaid");
+    setEditSupplierBillNo(p.supplier_bill_no || "");
+    setEditNotes(p.notes || "");
+  };
+
+  const handleUpdatePurchaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPurchase) return;
+    try {
+      setIsUpdatingPurchase(true);
+      await inventoryService.updatePurchase(editingPurchase.id, {
+        payment_status: editPaymentStatus,
+        supplier_bill_no: editSupplierBillNo.trim() || null,
+        notes: editNotes.trim() || null,
+      });
+      toast.success(
+        `Purchase ${editingPurchase.invoice_number} updated to "${editPaymentStatus.toUpperCase()}"! Double-Entry Journal & Balance Sheet synced.`
+      );
+      setEditingPurchase(null);
+      loadData();
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || "Failed to update purchase payment status");
+    } finally {
+      setIsUpdatingPurchase(false);
+    }
+  };
+
+  const resetStatusOptionForm = () => {
+    setEditingStatusOption(null);
+    setStatusName("");
+    setStatusAccountingType("unpaid");
+    setStatusColor("rose");
+    setStatusDescription("");
+  };
+
+  const handleEditStatusOption = (opt: PaymentStatusOptionItem) => {
+    setEditingStatusOption(opt);
+    setStatusName(opt.name);
+    setStatusAccountingType(opt.accounting_type);
+    setStatusColor(opt.color || "emerald");
+    setStatusDescription(opt.description || "");
+  };
+
+  const handleSaveStatusOption = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!statusName.trim()) {
+      toast.error("Please enter a payment status name");
+      return;
+    }
+    try {
+      setIsSavingStatusOption(true);
+      if (editingStatusOption) {
+        await inventoryService.updatePaymentStatus(editingStatusOption.id, {
+          name: statusName.trim(),
+          accounting_type: statusAccountingType,
+          color: statusColor,
+          description: statusDescription.trim() || null,
+        });
+        toast.success(`Payment status "${statusName}" updated!`);
+      } else {
+        const created = await inventoryService.createPaymentStatus({
+          name: statusName.trim(),
+          accounting_type: statusAccountingType,
+          color: statusColor,
+          description: statusDescription.trim() || null,
+          is_active: true,
+        });
+        toast.success(`Payment status "${created.name}" created!`);
+        setPurchasePaymentStatus(created.code);
+      }
+      resetStatusOptionForm();
+      const fresh = await inventoryService.listPaymentStatuses();
+      setPaymentStatuses(fresh || []);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || "Failed to save payment status");
+    } finally {
+      setIsSavingStatusOption(false);
+    }
+  };
+
+  const handleDeleteStatusOption = async (opt: PaymentStatusOptionItem) => {
+    try {
+      await inventoryService.deletePaymentStatus(opt.id);
+      toast.success(`Payment status "${opt.name}" deleted.`);
+      const fresh = await inventoryService.listPaymentStatuses();
+      setPaymentStatuses(fresh || []);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || "Failed to delete payment status");
     }
   };
 
@@ -554,6 +660,20 @@ export default function PurchasesPage() {
             <IconRefresh className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+          {canViewPaymentStatuses && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                resetStatusOptionForm();
+                setIsStatusCrudOpen(true);
+              }}
+              className="h-9 gap-1.5"
+            >
+              <IconSettings className="h-4 w-4" />
+              Payment Statuses
+            </Button>
+          )}
           {canCreate && (
             <Button size="sm" onClick={openCreateModal} className="h-9 gap-1.5">
               <IconPlus className="h-4 w-4" />
@@ -687,9 +807,18 @@ export default function PurchasesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Payments</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
-                <SelectItem value="unpaid">Unpaid</SelectItem>
+                {paymentStatuses.length > 0 ? (
+                  paymentStatuses.map((st) => (
+                    <SelectItem key={st.id} value={st.code}>
+                      {st.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="unpaid">Unpaid</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -777,18 +906,33 @@ export default function PurchasesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1 items-start">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] capitalize ${
-                            p.payment_status === "paid"
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                              : p.payment_status === "partial"
-                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                              : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                          }`}
-                        >
-                          {p.payment_status}
-                        </Badge>
+                        {(() => {
+                          const stObj = paymentStatuses.find(
+                            (s) => s.code.toLowerCase() === (p.payment_status || "").toLowerCase()
+                          );
+                          const isPaidLike =
+                            stObj?.accounting_type === "paid" || p.payment_status === "paid";
+                          const isPartialLike =
+                            stObj?.accounting_type === "partial" || p.payment_status === "partial";
+                          return (
+                            <Badge
+                              variant="outline"
+                              onClick={() => canEdit && openEditPurchaseModal(p)}
+                              title={canEdit ? "Click to update Payment Status" : undefined}
+                              className={`text-[10px] capitalize ${
+                                canEdit ? "cursor-pointer hover:opacity-80" : ""
+                              } ${
+                                isPaidLike
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                  : isPartialLike
+                                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                  : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                              }`}
+                            >
+                              {stObj ? stObj.name : p.payment_status}
+                            </Badge>
+                          );
+                        })()}
                         {p.status === "returned" && (
                           <Badge variant="outline" className="text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
                             Returned (Debit Note)
@@ -806,8 +950,14 @@ export default function PurchasesPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openViewDetail(p)}>
                             <IconEye className="mr-2 h-4 w-4" />
-                            View Items & Bill
+                            View Items &amp; Bill
                           </DropdownMenuItem>
+                          {p.status !== "returned" && p.status !== "cancelled" && canEdit && (
+                            <DropdownMenuItem onClick={() => openEditPurchaseModal(p)}>
+                              <IconEdit className="mr-2 h-4 w-4 text-primary" />
+                              Update Payment Status
+                            </DropdownMenuItem>
+                          )}
                           {p.status !== "returned" && p.status !== "cancelled" && canCreate && (
                             <DropdownMenuItem
                               onClick={() => {
@@ -856,7 +1006,7 @@ export default function PurchasesPage() {
 
       {/* Create Purchase Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[1060px] max-h-[92vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[980px] max-h-[92vh] overflow-y-auto">
           <form onSubmit={handleCreateSubmit}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -864,7 +1014,7 @@ export default function PurchasesPage() {
                 Post Purchase Bill / Goods Receipt (GRN)
               </DialogTitle>
               <DialogDescription>
-                Receive goods into warehouse inventory, update product sale price &amp; tax, and credit supplier khata balance.
+                Receive goods into warehouse inventory, set purchase &amp; sale price, and post to Double-Entry Accounting.
               </DialogDescription>
             </DialogHeader>
 
@@ -945,172 +1095,149 @@ export default function PurchasesPage() {
                   </Button>
                 </div>
 
-                <div className="border rounded-md divide-y overflow-x-auto">
-                  {/* Column Headers */}
-                  <div className="px-2.5 py-2 bg-muted/50 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground min-w-[900px]">
-                    <div className="flex-1 min-w-[200px]">
-                      Product / Item <span className="text-destructive">*</span>
-                    </div>
-                    <div className="w-[115px]">Unit (UOM)</div>
-                    <div className="w-[75px] text-right">
-                      Qty <span className="text-destructive">*</span>
-                    </div>
-                    <div className="w-[115px] text-right">
-                      Purchase Price <span className="text-destructive">*</span>
-                    </div>
-                    <div className="w-[115px] text-right">
-                      Sale Price <span className="text-destructive">*</span>
-                    </div>
-                    <div className="w-[85px] text-right">Tax (%)</div>
-                    <div className="w-[130px] text-right">Row Total</div>
-                    <div className="w-7" />
-                  </div>
+                <div className="border rounded-md divide-y max-h-[340px] overflow-y-auto">
+                  {itemRows.map((row, idx) => {
+                    const prod = products.find((x) => x.id === row.product_id);
 
-                  <div className="divide-y max-h-[300px] overflow-y-auto min-w-[900px]">
-                    {itemRows.map((row, idx) => {
-                      const prod = products.find((x) => x.id === row.product_id);
-
-                      return (
-                        <div key={idx} className="p-2.5 flex items-center gap-2 hover:bg-muted/30">
-                          {/* Product Selector */}
-                          <div className="flex-1 min-w-[200px]">
-                            <Select
-                              value={String(row.product_id)}
-                              onValueChange={(val) => handleProductSelect(idx, Number(val))}
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {products.map((p) => (
-                                  <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                                    {p.name} ({p.sku})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* UOM Selector */}
-                          <div className="w-[115px]">
-                            <Select
-                              value={
-                                row.unit_name.toLowerCase() === "carton"
-                                  ? "carton"
-                                  : row.unit_name.toLowerCase() === "box"
-                                  ? "box"
-                                  : row.unit_name.toLowerCase() === "pack"
-                                  ? "pack"
-                                  : "base"
-                              }
-                              onValueChange={(val) => handleUomSelect(idx, val)}
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="base" className="text-xs">
-                                  {prod?.base_unit || "Piece"} (Base)
-                                </SelectItem>
-                                <SelectItem value="carton" className="text-xs">
-                                  Carton (×24)
-                                </SelectItem>
-                                <SelectItem value="box" className="text-xs">
-                                  Box (×12)
-                                </SelectItem>
-                                <SelectItem value="pack" className="text-xs">
-                                  Pack (×6)
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Quantity */}
-                          <div className="w-[75px]">
-                            <Input
-                              type="number"
-                              min="0.1"
-                              step="any"
-                              value={row.quantity}
-                              onChange={(e) => handleQuantityChange(idx, Number(e.target.value))}
-                              className="h-8 text-xs text-right"
-                              placeholder="Qty"
-                              required
-                            />
-                          </div>
-
-                          {/* Purchase Price (Unit Cost) */}
-                          <div className="w-[115px]">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="any"
-                              value={row.unit_cost}
-                              onChange={(e) => handleCostChange(idx, Number(e.target.value))}
-                              className="h-8 text-xs text-right font-mono"
-                              placeholder="Purchase Price"
-                              required
-                            />
-                          </div>
-
-                          {/* Sale Price (Retail Price) */}
-                          <div className="w-[115px]">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="any"
-                              value={row.retail_price}
-                              onChange={(e) => handleRetailPriceChange(idx, Number(e.target.value))}
-                              className="h-8 text-xs text-right font-mono border-primary/40"
-                              placeholder="Sale Price"
-                              required
-                            />
-                          </div>
-
-                          {/* Tax (%) */}
-                          <div className="w-[85px]">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="any"
-                              value={row.tax_rate}
-                              onChange={(e) => handleTaxRateChange(idx, Number(e.target.value))}
-                              className="h-8 text-xs text-right font-mono"
-                              placeholder="Tax %"
-                            />
-                          </div>
-
-                          {/* Total Cost (incl. row tax) */}
-                          <div className="w-[130px] text-right font-mono">
-                            <div className="text-xs font-bold text-foreground">
-                              PKR {row.total_cost.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                            </div>
-                            {row.tax_amount > 0 && (
-                              <div className="text-[10px] text-muted-foreground">
-                                Incl. PKR {row.tax_amount.toLocaleString()} tax
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Remove Row */}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeItemRow(idx)}
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                    return (
+                      <div key={idx} className="p-3 flex flex-wrap items-end gap-2.5 hover:bg-muted/30">
+                        {/* Product Selector */}
+                        <div className="flex-1 min-w-[200px] space-y-1">
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            Product / Item <span className="text-destructive">*</span>
+                          </Label>
+                          <Select
+                            value={String(row.product_id)}
+                            onValueChange={(val) => handleProductSelect(idx, Number(val))}
                           >
-                            <IconX className="h-3.5 w-3.5" />
-                          </Button>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {products.map((p) => (
+                                <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                                  {p.name} ({p.sku})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      );
-                    })}
-                  </div>
+
+                        {/* UOM Selector */}
+                        <div className="w-[125px] space-y-1">
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            Unit (UOM)
+                          </Label>
+                          <Select
+                            value={
+                              row.unit_name.toLowerCase() === "carton"
+                                ? "carton"
+                                : row.unit_name.toLowerCase() === "box"
+                                ? "box"
+                                : row.unit_name.toLowerCase() === "pack"
+                                ? "pack"
+                                : "base"
+                            }
+                            onValueChange={(val) => handleUomSelect(idx, val)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="base" className="text-xs">
+                                {prod?.base_unit || "Piece"} (Base)
+                              </SelectItem>
+                              <SelectItem value="carton" className="text-xs">
+                                Carton (×24)
+                              </SelectItem>
+                              <SelectItem value="box" className="text-xs">
+                                Box (×12)
+                              </SelectItem>
+                              <SelectItem value="pack" className="text-xs">
+                                Pack (×6)
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Quantity */}
+                        <div className="w-[85px] space-y-1">
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            Quantity <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            type="number"
+                            min="0.1"
+                            step="any"
+                            value={row.quantity}
+                            onChange={(e) => handleQuantityChange(idx, Number(e.target.value))}
+                            className="h-8 text-xs text-right"
+                            placeholder="1"
+                            required
+                          />
+                        </div>
+
+                        {/* Purchase Price (Default 1) */}
+                        <div className="w-[125px] space-y-1">
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            Purchase Price <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            step="any"
+                            value={row.unit_cost}
+                            onChange={(e) => handleCostChange(idx, Number(e.target.value))}
+                            className="h-8 text-xs text-right font-mono"
+                            placeholder="1"
+                            required
+                          />
+                        </div>
+
+                        {/* Sale Price (Default 1) */}
+                        <div className="w-[125px] space-y-1">
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            Sale Price <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            step="any"
+                            value={row.retail_price}
+                            onChange={(e) => handleRetailPriceChange(idx, Number(e.target.value))}
+                            className="h-8 text-xs text-right font-mono border-primary/40"
+                            placeholder="1"
+                            required
+                          />
+                        </div>
+
+                        {/* Row Total */}
+                        <div className="w-[120px] space-y-1 text-right">
+                          <Label className="text-[11px] font-semibold text-muted-foreground block">
+                            Line Total
+                          </Label>
+                          <div className="h-8 flex items-center justify-end font-mono text-xs font-bold text-foreground">
+                            PKR {row.total_cost.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                          </div>
+                        </div>
+
+                        {/* Remove Row */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeItemRow(idx)}
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        >
+                          <IconX className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Bill Totals & Settlement */}
+              {/* Bill Totals & Payment Status Settlement */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold">
@@ -1120,70 +1247,99 @@ export default function PurchasesPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Bilty #, driver contact, or procurement notes..."
-                    rows={3}
+                    rows={4}
                     className="text-xs"
                   />
                 </div>
 
-                <div className="space-y-1.5 bg-muted/30 p-3 rounded-lg border text-xs">
+                <div className="space-y-2.5 bg-muted/30 p-3.5 rounded-lg border text-xs">
                   <div className="flex justify-between py-0.5">
                     <span className="text-muted-foreground">Items Subtotal:</span>
-                    <span className="font-mono font-semibold">PKR {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    <span className="font-mono font-semibold">
+                      PKR {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 py-1">
-                    <div>
-                      <Label className="text-[10px]">Discount</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={discountAmount}
-                        onChange={(e) => setDiscountAmount(Number(e.target.value))}
-                        className="h-7 text-xs font-mono"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[10px]">Tax (GST)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={taxAmount}
-                        onChange={(e) => setTaxAmount(Number(e.target.value))}
-                        className="h-7 text-xs font-mono"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[10px]">Freight / Bilty</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={shippingCost}
-                        onChange={(e) => setShippingCost(Number(e.target.value))}
-                        className="h-7 text-xs font-mono"
-                      />
-                    </div>
-                  </div>
+
                   <div className="flex justify-between py-1 border-t font-bold text-sm">
                     <span>Net Bill Total:</span>
-                    <span className="text-primary font-mono">PKR {netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    <span className="text-primary font-mono">
+                      PKR {netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div>
+
+                  {/* Dynamic Payment Status Selector + Quick Manage CRUD */}
+                  <div className="space-y-1.5 pt-1 border-t">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">
+                        Payment Status <span className="text-destructive">*</span>
+                      </Label>
+                      {canViewPaymentStatuses && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetStatusOptionForm();
+                            setIsStatusCrudOpen(true);
+                          }}
+                          className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
+                        >
+                          <IconPlus className="h-3 w-3" />
+                          Manage Statuses
+                        </button>
+                      )}
+                    </div>
+                    <Select
+                      value={purchasePaymentStatus}
+                      onValueChange={(val) => setPurchasePaymentStatus(val)}
+                    >
+                      <SelectTrigger className="h-8 text-xs font-semibold">
+                        <SelectValue placeholder="Select Payment Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(paymentStatuses.filter((s) => s.is_active).length > 0
+                          ? paymentStatuses.filter((s) => s.is_active)
+                          : [
+                              { id: 1, name: "Paid", code: "paid", accounting_type: "paid" as const },
+                              { id: 2, name: "Unpaid", code: "unpaid", accounting_type: "unpaid" as const },
+                            ]
+                        ).map((st) => (
+                          <SelectItem key={st.code} value={st.code} className="text-xs">
+                            {st.name} ({st.accounting_type === "paid" ? "Cash / Bank Paid" : st.accounting_type === "partial" ? "Partial Payment" : "Supplier Khata Credit"})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {currentAccBehavior === "partial" && (
+                    <div className="pt-1">
                       <Label className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                        Cash/Bank Paid
+                        Cash/Bank Paid Amount *
                       </Label>
                       <Input
                         type="number"
                         min="0"
+                        max={netTotal}
                         value={paidAmount}
                         onChange={(e) => setPaidAmount(Number(e.target.value))}
                         className="h-7 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                       />
                     </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t">
+                    <div>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
+                        Cash / Bank Paid
+                      </span>
+                      <div className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                        PKR {effectivePaidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
                     <div className="text-right">
-                      <Label className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
+                      <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold block">
                         Vendor Khata Due
-                      </Label>
-                      <div className="h-7 flex items-center justify-end font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
+                      </span>
+                      <div className="font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
                         PKR {balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </div>
                     </div>
@@ -1206,6 +1362,299 @@ export default function PurchasesPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Purchase Payment Status Modal */}
+      <Dialog open={Boolean(editingPurchase)} onOpenChange={(open) => !open && setEditingPurchase(null)}>
+        <DialogContent className="sm:max-w-[460px]">
+          <form onSubmit={handleUpdatePurchaseSubmit}>
+            <DialogHeader>
+              <DialogTitle>Update Purchase &amp; Payment Status</DialogTitle>
+              <DialogDescription>
+                Update payment status for bill{" "}
+                <span className="font-mono font-semibold text-foreground">
+                  {editingPurchase?.invoice_number}
+                </span>
+                . Double-Entry Journal Voucher, Trial Balance, and Balance Sheet will update automatically.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-3">
+              <div className="rounded-lg border bg-muted/40 p-3 space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Supplier:</span>
+                  <span className="font-semibold">{editingPurchase?.supplier_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Net Bill Amount:</span>
+                  <span className="font-mono font-bold text-primary">
+                    PKR {Number(editingPurchase?.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">
+                    Payment Status <span className="text-destructive">*</span>
+                  </Label>
+                  {canViewPaymentStatuses && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetStatusOptionForm();
+                        setIsStatusCrudOpen(true);
+                      }}
+                      className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
+                    >
+                      <IconPlus className="h-3 w-3" />
+                      Manage Statuses
+                    </button>
+                  )}
+                </div>
+                <Select value={editPaymentStatus} onValueChange={setEditPaymentStatus}>
+                  <SelectTrigger className="h-9 text-xs font-semibold">
+                    <SelectValue placeholder="Select Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(paymentStatuses.filter((s) => s.is_active).length > 0
+                      ? paymentStatuses.filter((s) => s.is_active)
+                      : [
+                          { id: 1, name: "Paid", code: "paid", accounting_type: "paid" as const },
+                          { id: 2, name: "Unpaid", code: "unpaid", accounting_type: "unpaid" as const },
+                        ]
+                    ).map((st) => (
+                      <SelectItem key={st.code} value={st.code} className="text-xs">
+                        {st.name} ({st.accounting_type === "paid" ? "Settled via Cash / Bank" : "Credit on Supplier Khata"})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">
+                  Supplier Bill # <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
+                <Input
+                  value={editSupplierBillNo}
+                  onChange={(e) => setEditSupplierBillNo(e.target.value)}
+                  placeholder="e.g. INV-9021"
+                  className="h-8 text-xs font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">
+                  Notes <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
+                <Textarea
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  rows={2}
+                  className="text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingPurchase(null)}
+                disabled={isUpdatingPurchase}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUpdatingPurchase}>
+                {isUpdatingPurchase ? "Updating..." : "Save & Sync Accounting"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dynamic Payment Statuses CRUD Modal */}
+      <Dialog open={isStatusCrudOpen} onOpenChange={setIsStatusCrudOpen}>
+        <DialogContent className="sm:max-w-[620px] max-h-[88vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <IconSettings className="h-5 w-5 text-primary" />
+              Manage Payment Statuses
+            </DialogTitle>
+            <DialogDescription>
+              Create, update, or remove dynamic payment statuses and configure their Double-Entry Accounting behavior.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {(canCreatePaymentStatus || (editingStatusOption && canEditPaymentStatus)) && (
+              <form
+                onSubmit={handleSaveStatusOption}
+                className="p-3.5 rounded-lg border bg-muted/30 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    {editingStatusOption
+                      ? `Edit Payment Status: ${editingStatusOption.name}`
+                      : "Add New Payment Status"}
+                  </span>
+                  {editingStatusOption && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetStatusOptionForm}
+                      className="h-6 text-xs"
+                    >
+                      Cancel Edit
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">
+                      Status Label <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={statusName}
+                      onChange={(e) => setStatusName(e.target.value)}
+                      placeholder="e.g. Paid, Unpaid, Bank Paid"
+                      className="h-8 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">
+                      Accounting Effect <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={statusAccountingType}
+                      onValueChange={(val: "paid" | "unpaid" | "partial") => {
+                        setStatusAccountingType(val);
+                        setStatusColor(val === "paid" ? "emerald" : val === "partial" ? "amber" : "rose");
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="paid" className="text-xs">
+                          Paid (Dr. Inventory / Cr. Cash or Bank)
+                        </SelectItem>
+                        <SelectItem value="unpaid" className="text-xs">
+                          Unpaid (Dr. Inventory / Cr. Supplier Payable)
+                        </SelectItem>
+                        <SelectItem value="partial" className="text-xs">
+                          Partial (Split Cash + Supplier Payable)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">
+                      Description <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
+                    <Input
+                      value={statusDescription}
+                      onChange={(e) => setStatusDescription(e.target.value)}
+                      placeholder="Short note..."
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" disabled={isSavingStatusOption} className="h-8 text-xs">
+                    {isSavingStatusOption
+                      ? "Saving..."
+                      : editingStatusOption
+                      ? "Update Payment Status"
+                      : "Add Payment Status"}
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-xs">
+                    <TableHead>Status Name</TableHead>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Double-Entry Accounting Effect</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paymentStatuses.map((st) => (
+                    <TableRow key={st.id} className="text-xs">
+                      <TableCell className="font-semibold">
+                        <Badge
+                          variant="outline"
+                          className={`capitalize text-xs ${
+                            st.accounting_type === "paid"
+                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                              : st.accounting_type === "partial"
+                              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                              : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                          }`}
+                        >
+                          {st.name}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-muted-foreground">{st.code}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {st.accounting_type === "paid"
+                          ? "Dr. Inventory (1040) / Cr. Cash Drawer (1010)"
+                          : st.accounting_type === "partial"
+                          ? "Dr. Inventory (1040) / Cr. Cash & Payable"
+                          : "Dr. Inventory (1040) / Cr. Accounts Payable (2010)"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {canEditPaymentStatus && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditStatusOption(st)}
+                              className="h-7 w-7"
+                              title="Edit Payment Status"
+                            >
+                              <IconEdit className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {canDeletePaymentStatus && !st.is_system && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteStatusOption(st)}
+                              className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                              title="Delete Payment Status"
+                            >
+                              <IconTrash className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsStatusCrudOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

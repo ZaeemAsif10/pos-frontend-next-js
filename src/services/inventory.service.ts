@@ -43,12 +43,52 @@ export interface PurchaseCreatePayload {
   supplier_id: number;
   supplier_bill_no?: string | null;
   purchase_date?: string;
+  payment_status?: string;
   discount_amount?: number;
   tax_amount?: number;
   shipping_cost?: number;
   paid_amount?: number;
   notes?: string | null;
   items: PurchaseItemPayload[];
+}
+
+export interface PurchaseUpdatePayload {
+  payment_status?: string;
+  paid_amount?: number;
+  supplier_bill_no?: string | null;
+  notes?: string | null;
+  status?: string;
+}
+
+export interface PaymentStatusOptionItem {
+  id: number;
+  tenant_id: number;
+  name: string;
+  code: string;
+  accounting_type: "paid" | "unpaid" | "partial";
+  color: string;
+  description?: string | null;
+  is_system: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentStatusOptionCreatePayload {
+  name: string;
+  code?: string;
+  accounting_type: "paid" | "unpaid" | "partial";
+  color?: string;
+  description?: string | null;
+  is_active?: boolean;
+}
+
+export interface PaymentStatusOptionUpdatePayload {
+  name?: string;
+  accounting_type?: "paid" | "unpaid" | "partial";
+  color?: string;
+  description?: string | null;
+  is_active?: boolean;
 }
 
 export interface PurchaseItem {
@@ -189,6 +229,60 @@ class InventoryService {
     emitAppEvent("purchases:changed", "created", res);
     emitAppEvent("inventory:changed", "updated");
     emitAppEvent("products:changed", "updated");
+    emitAppEvent("suppliers:changed", "updated");
+    emitAppEvent("accounting:changed", "updated");
+    return res;
+  }
+
+  async updatePurchase(id: number, payload: PurchaseUpdatePayload): Promise<PurchaseItem> {
+    const res = await apiClient<PurchaseItem>(API_ENDPOINTS.TENANT.PURCHASE_DETAIL(id), {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    emitAppEvent("purchases:changed", "updated", res);
+    emitAppEvent("suppliers:changed", "updated");
+    emitAppEvent("accounting:changed", "updated");
+    return res;
+  }
+
+  async listPaymentStatuses(activeOnly = false): Promise<PaymentStatusOptionItem[]> {
+    return apiClient<PaymentStatusOptionItem[]>(API_ENDPOINTS.TENANT.PAYMENT_STATUSES, {
+      params: activeOnly ? { active_only: true } : undefined,
+    });
+  }
+
+  async createPaymentStatus(payload: PaymentStatusOptionCreatePayload): Promise<PaymentStatusOptionItem> {
+    const res = await apiClient<PaymentStatusOptionItem>(API_ENDPOINTS.TENANT.PAYMENT_STATUSES, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    emitAppEvent("purchases:changed", "updated");
+    return res;
+  }
+
+  async updatePaymentStatus(
+    id: number,
+    payload: PaymentStatusOptionUpdatePayload
+  ): Promise<PaymentStatusOptionItem> {
+    const res = await apiClient<PaymentStatusOptionItem>(
+      API_ENDPOINTS.TENANT.PAYMENT_STATUS_DETAIL(id),
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }
+    );
+    emitAppEvent("purchases:changed", "updated");
+    return res;
+  }
+
+  async deletePaymentStatus(id: number): Promise<{ message: string }> {
+    const res = await apiClient<{ message: string }>(
+      API_ENDPOINTS.TENANT.PAYMENT_STATUS_DETAIL(id),
+      {
+        method: "DELETE",
+      }
+    );
+    emitAppEvent("purchases:changed", "updated");
     return res;
   }
 

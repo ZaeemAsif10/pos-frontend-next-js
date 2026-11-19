@@ -63,6 +63,8 @@ export const API_ENDPOINTS = {
     PURCHASES_STATS: "/tenant/purchases/stats",
     PURCHASE_DETAIL: (id: number) => `/tenant/purchases/${id}`,
     PURCHASE_RETURN: (id: number) => `/tenant/purchases/${id}/return`,
+    PAYMENT_STATUSES: "/tenant/payment-statuses",
+    PAYMENT_STATUS_DETAIL: (id: number) => `/tenant/payment-statuses/${id}`,
     INVENTORY: "/tenant/inventory",
     INVENTORY_LEDGER: (productId: number) => `/tenant/inventory/${productId}/ledger`,
     STOCK_TRANSFERS: "/tenant/stock/transfers",
