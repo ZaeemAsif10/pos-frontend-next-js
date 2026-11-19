@@ -685,7 +685,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="contactPerson" className="text-xs font-semibold">
-                      Contact Person
+                      Contact Person <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="contactPerson"
@@ -724,7 +724,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="email" className="text-xs font-semibold">
-                      Email Address
+                      Email Address <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="email"
@@ -739,7 +739,7 @@ export default function SuppliersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="terms" className="text-xs font-semibold">
-                      Payment Terms (Credit Days)
+                      Payment Terms (Credit Days) <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="terms"
@@ -751,7 +751,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="supOpening" className="text-xs font-semibold">
-                      Opening Balance (PKR)
+                      Opening Balance (PKR) <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="supOpening"
@@ -765,7 +765,7 @@ export default function SuppliersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="ntn" className="text-xs font-semibold">
-                      NTN Number
+                      NTN Number <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="ntn"
@@ -776,7 +776,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="strn" className="text-xs font-semibold">
-                      STRN (Sales Tax)
+                      STRN (Sales Tax) <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="strn"
@@ -793,7 +793,7 @@ export default function SuppliersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="bankName" className="text-xs font-semibold">
-                      Bank Name
+                      Bank Name <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="bankName"
@@ -804,7 +804,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="bankBranch" className="text-xs font-semibold">
-                      Bank Branch
+                      Bank Branch <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="bankBranch"
@@ -818,7 +818,7 @@ export default function SuppliersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="accNo" className="text-xs font-semibold">
-                      Account Number
+                      Account Number <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="accNo"
@@ -830,7 +830,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="iban" className="text-xs font-semibold">
-                      IBAN
+                      IBAN <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="iban"
@@ -844,7 +844,7 @@ export default function SuppliersPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="supCity" className="text-xs font-semibold">
-                    City
+                    City <span className="text-muted-foreground font-normal">(Optional)</span>
                   </Label>
                   <Input
                     id="supCity"
@@ -856,7 +856,7 @@ export default function SuppliersPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="address" className="text-xs font-semibold">
-                    Office / Factory Address
+                    Office / Factory Address <span className="text-muted-foreground font-normal">(Optional)</span>
                   </Label>
                   <Textarea
                     id="address"

@@ -192,6 +192,7 @@ export default function ProductsPage() {
   const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
   const [brandModalTab, setBrandModalTab] = useState<"list" | "create">("list");
   const [brandSearchQuery, setBrandSearchQuery] = useState("");
+  const [brandCategoryId, setBrandCategoryId] = useState<number>(0);
   const [brandName, setBrandName] = useState("");
   const [brandCode, setBrandCode] = useState("");
   const [brandOrigin, setBrandOrigin] = useState("Pakistan");
@@ -572,6 +573,11 @@ export default function ProductsPage() {
   // Create Quick Brand
   const handleCreateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalCatId = brandCategoryId || categoryId;
+    if (!finalCatId) {
+      toast.error("Please select a category first");
+      return;
+    }
     if (!brandName.trim()) {
       toast.error("Brand name is required");
       return;
@@ -582,10 +588,14 @@ export default function ProductsPage() {
       const newBrand = await productService.createBrand({
         name: brandName.trim(),
         code: code.toUpperCase(),
+        category_id: finalCatId,
         origin: brandOrigin.trim() || "Pakistan",
         is_active: true,
       });
       toast.success(`Brand "${newBrand.name}" created!`);
+      if (!categoryId) {
+        setCategoryId(finalCatId);
+      }
       setBrandId(newBrand.id);
       setIsBrandModalOpen(false);
       setBrandName("");
@@ -826,11 +836,8 @@ export default function ProductsPage() {
             <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="w-[300px]">Product / Item</TableHead>
+                <TableHead className="w-[340px]">Product / Item</TableHead>
                 <TableHead>Category & Brand</TableHead>
-                <TableHead className="text-right">Cost (PKR)</TableHead>
-                <TableHead className="text-right">Retail MRP</TableHead>
-                <TableHead className="text-right">Wholesale</TableHead>
                 <TableHead className="text-center">Total Stock</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -839,7 +846,7 @@ export default function ProductsPage() {
             <TableBody>
               {products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-44 text-center">
+                  <TableCell colSpan={5} className="h-44 text-center">
                     <div className="flex flex-col items-center justify-center gap-2.5 text-muted-foreground py-8">
                       <div className="h-11 w-11 rounded-full bg-muted flex items-center justify-center">
                         <IconBox className="h-6 w-6 text-muted-foreground" />
@@ -927,21 +934,6 @@ export default function ProductsPage() {
                           </div>
                         )}
                       </div>
-                    </TableCell>
-
-                    {/* Cost */}
-                    <TableCell className="text-right font-mono text-xs">
-                      Rs. {p.cost_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </TableCell>
-
-                    {/* Retail MRP */}
-                    <TableCell className="text-right font-mono text-xs font-semibold text-foreground">
-                      Rs. {p.retail_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </TableCell>
-
-                    {/* Wholesale */}
-                    <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                      Rs. {p.wholesale_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
 
                     {/* Total Stock */}
@@ -1401,7 +1393,9 @@ export default function ProductsPage() {
                   {/* Barcode */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="prod_barcode">Primary Barcode (EAN/UPC)</Label>
+                      <Label htmlFor="prod_barcode">
+                        Primary Barcode (EAN/UPC) <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </Label>
                       <button
                         type="button"
                         onClick={handleGenerateBarcode}
@@ -1438,7 +1432,16 @@ export default function ProductsPage() {
                     </div>
                     <Select
                       value={categoryId ? String(categoryId) : ""}
-                      onValueChange={(val) => setCategoryId(Number(val))}
+                      onValueChange={(val) => {
+                        const newCatId = Number(val);
+                        setCategoryId(newCatId);
+                        if (brandId) {
+                          const currentBrand = brands.find((b) => b.id === brandId);
+                          if (currentBrand?.category_id && currentBrand.category_id !== newCatId) {
+                            setBrandId(0);
+                          }
+                        }
+                      }}
                     >
                       <SelectTrigger id="prod_category">
                         <SelectValue placeholder="Select Category" />
@@ -1459,10 +1462,15 @@ export default function ProductsPage() {
                   {/* Brand with Quick Add */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="prod_brand">Brand / Principal</Label>
+                      <Label htmlFor="prod_brand">
+                        Brand / Principal <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </Label>
                       <button
                         type="button"
-                        onClick={() => setIsBrandModalOpen(true)}
+                        onClick={() => {
+                          setBrandCategoryId(categoryId || 0);
+                          setIsBrandModalOpen(true);
+                        }}
                         className="text-[11px] text-primary hover:underline"
                       >
                         + Quick Add
@@ -1477,18 +1485,22 @@ export default function ProductsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">None / Generic</SelectItem>
-                        {brands.map((b) => (
-                          <SelectItem key={b.id} value={String(b.id)}>
-                            {b.name}
-                          </SelectItem>
-                        ))}
+                        {brands
+                          .filter((b) => !categoryId || !b.category_id || b.category_id === categoryId)
+                          .map((b) => (
+                            <SelectItem key={b.id} value={String(b.id)}>
+                              {b.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Base Unit of Measure */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="prod_uom">Base Unit (UOM)</Label>
+                    <Label htmlFor="prod_uom">
+                      Base Unit (UOM) <span className="text-destructive">*</span>
+                    </Label>
                     <Select value={baseUnit} onValueChange={setBaseUnit}>
                       <SelectTrigger id="prod_uom">
                         <SelectValue />
@@ -1524,7 +1536,9 @@ export default function ProductsPage() {
 
                   {/* Description */}
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="prod_desc">Product Description (Optional)</Label>
+                    <Label htmlFor="prod_desc">
+                      Product Description <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
                     <Textarea
                       id="prod_desc"
                       placeholder="Specifications, packaging details, ingredients..."
@@ -1536,7 +1550,9 @@ export default function ProductsPage() {
 
                   {/* Product Image / Visual Media (Morph Attachment) */}
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Product Visual / Image (Saved to Morph Attachments)</Label>
+                    <Label>
+                      Product Visual / Image <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
                     <div className="flex items-center gap-4 p-3 rounded-lg border border-dashed border-border/80 bg-muted/10">
                       <div className="relative h-16 w-16 shrink-0 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
                         {imagePreview ? (
@@ -1625,7 +1641,9 @@ export default function ProductsPage() {
 
                   {/* Wholesale Price */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="wholesale_price">Wholesale Trade Price (PKR)</Label>
+                    <Label htmlFor="wholesale_price">
+                      Wholesale Trade Price (PKR) <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
                     <Input
                       id="wholesale_price"
                       type="number"
@@ -1640,7 +1658,9 @@ export default function ProductsPage() {
 
                   {/* Min Price Floor */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="min_price">Minimum Floor Price (PKR)</Label>
+                    <Label htmlFor="min_price">
+                      Minimum Floor Price (PKR) <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
                     <Input
                       id="min_price"
                       type="number"
@@ -1664,7 +1684,9 @@ export default function ProductsPage() {
 
                   {/* Sales Tax Rate */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="tax_rate">Sales Tax Rate (%)</Label>
+                    <Label htmlFor="tax_rate">
+                      Sales Tax Rate (%) <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
                     <Input
                       id="tax_rate"
                       type="number"
@@ -1731,7 +1753,9 @@ export default function ProductsPage() {
                         className="p-3 rounded-lg border bg-muted/20 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center text-xs"
                       >
                         <div>
-                          <Label className="text-[11px]">Unit Name</Label>
+                          <Label className="text-[11px]">
+                            Unit Name <span className="text-destructive">*</span>
+                          </Label>
                           <Input
                             value={conv.unit_name}
                             onChange={(e) => {
@@ -1745,7 +1769,9 @@ export default function ProductsPage() {
                         </div>
 
                         <div>
-                          <Label className="text-[11px]">Pieces / Carton</Label>
+                          <Label className="text-[11px]">
+                            Pieces / Carton <span className="text-destructive">*</span>
+                          </Label>
                           <Input
                             type="number"
                             min="1"
@@ -1760,7 +1786,9 @@ export default function ProductsPage() {
                         </div>
 
                         <div>
-                          <Label className="text-[11px]">Carton Barcode</Label>
+                          <Label className="text-[11px]">
+                            Carton Barcode <span className="text-muted-foreground font-normal">(Optional)</span>
+                          </Label>
                           <Input
                             value={conv.carton_barcode || ""}
                             onChange={(e) => {
@@ -1774,7 +1802,9 @@ export default function ProductsPage() {
                         </div>
 
                         <div>
-                          <Label className="text-[11px]">Carton Wholesale (Rs)</Label>
+                          <Label className="text-[11px]">
+                            Carton Wholesale (Rs) <span className="text-muted-foreground font-normal">(Optional)</span>
+                          </Label>
                           <Input
                             type="number"
                             min="0"
@@ -1808,7 +1838,9 @@ export default function ProductsPage() {
               {/* TAB 4: BRANCH STOCKS & REORDER */}
               <TabsContent value="stock" className="space-y-4 pt-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="reorder_level">Low Stock Alert Threshold (Overall)</Label>
+                  <Label htmlFor="reorder_level">
+                    Low Stock Alert Threshold (Overall) <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
                   <Input
                     id="reorder_level"
                     type="number"
@@ -2185,7 +2217,9 @@ export default function ProductsPage() {
             <TabsContent value="create" className="space-y-3 pt-3">
               <form onSubmit={handleCreateCategory} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="cat_name">Category Name *</Label>
+                  <Label htmlFor="cat_name">
+                    Category Name <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="cat_name"
                     placeholder="e.g. Beverages & Juices"
@@ -2200,7 +2234,9 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="cat_code">Category Code *</Label>
+                  <Label htmlFor="cat_code">
+                    Category Code <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="cat_code"
                     placeholder="e.g. CAT-BEV"
@@ -2211,7 +2247,9 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="cat_parent">Parent Category (Optional)</Label>
+                  <Label htmlFor="cat_parent">
+                    Parent Category <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
                   <Select
                     value={categoryParentId ? String(categoryParentId) : "0"}
                     onValueChange={(val) => setCategoryParentId(Number(val))}
@@ -2231,7 +2269,9 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="cat_desc">Description (Optional)</Label>
+                  <Label htmlFor="cat_desc">
+                    Description <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
                   <Textarea
                     id="cat_desc"
                     placeholder="Category notes..."
@@ -2346,13 +2386,18 @@ export default function ProductsPage() {
                       )}
                     >
                       <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                             {b.name}
                           </span>
                           <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground border">
                             {b.code}
                           </span>
+                          {b.category_name && (
+                            <span className="text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
+                              {b.category_name}
+                            </span>
+                          )}
                         </div>
                         {b.origin && (
                           <span className="inline-block text-[11px] text-muted-foreground">
@@ -2398,7 +2443,30 @@ export default function ProductsPage() {
             <TabsContent value="create" className="space-y-3 pt-3">
               <form onSubmit={handleCreateBrand} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="brand_name">Brand Name *</Label>
+                  <Label htmlFor="quick_brand_category">
+                    Category <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={(brandCategoryId || categoryId) ? String(brandCategoryId || categoryId) : ""}
+                    onValueChange={(val) => setBrandCategoryId(Number(val))}
+                  >
+                    <SelectTrigger id="quick_brand_category">
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="brand_name">
+                    Brand Name <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="brand_name"
                     placeholder="e.g. Nestle Pakistan"
@@ -2413,7 +2481,9 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="brand_code">Brand Code *</Label>
+                  <Label htmlFor="brand_code">
+                    Brand Code <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="brand_code"
                     placeholder="e.g. BRD-NES"
@@ -2424,7 +2494,9 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="brand_origin">Country / Origin</Label>
+                  <Label htmlFor="brand_origin">
+                    Country / Origin <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
                   <Input
                     id="brand_origin"
                     placeholder="e.g. Pakistan"

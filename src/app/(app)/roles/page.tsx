@@ -1131,7 +1131,9 @@ export default function RolesMatrixPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit_role_desc">Description</Label>
+                <Label htmlFor="edit_role_desc">
+                  Description <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Textarea
                   id="edit_role_desc"
                   rows={3}
@@ -1500,7 +1502,9 @@ export default function RolesMatrixPage() {
 
               {/* Description */}
               <div className="space-y-1.5">
-                <Label htmlFor="edit_perm_desc">Description</Label>
+                <Label htmlFor="edit_perm_desc">
+                  Description <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Textarea
                   id="edit_perm_desc"
                   rows={2}

@@ -16,6 +16,7 @@ import {
   IconCheck,
   IconWorld,
   IconBuildingStore,
+  IconTag,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -74,7 +75,11 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { useAppEventListener } from "@/lib/events";
-import { productService, type BrandItem } from "@/services/product.service";
+import {
+  productService,
+  type BrandItem,
+  type CategoryItem,
+} from "@/services/product.service";
 
 export default function BrandsPage() {
   const { user, tenant } = useAuth();
@@ -92,12 +97,15 @@ export default function BrandsPage() {
 
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<BrandItem[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // Create / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandItem | null>(null);
+  const [categoryId, setCategoryId] = useState<number>(0);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [origin, setOrigin] = useState("Pakistan");
@@ -113,8 +121,12 @@ export default function BrandsPage() {
   const loadBrands = async () => {
     try {
       setLoading(true);
-      const data = await productService.listBrands();
-      setBrands(data || []);
+      const [brandsData, categoriesData] = await Promise.all([
+        productService.listBrands(),
+        productService.listCategories(),
+      ]);
+      setBrands(brandsData || []);
+      setCategories(categoriesData || []);
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to load product brands");
     } finally {
@@ -126,8 +138,11 @@ export default function BrandsPage() {
     loadBrands();
   }, []);
 
-  // Reactive UI: auto-refresh brands table when brands change anywhere
+  // Reactive UI: auto-refresh brands table when brands or categories change anywhere
   useAppEventListener("brands:changed", () => {
+    loadBrands();
+  });
+  useAppEventListener("categories:changed", () => {
     loadBrands();
   });
 
@@ -140,16 +155,20 @@ export default function BrandsPage() {
       const matchesSearch =
         b.name.toLowerCase().includes(search.toLowerCase()) ||
         b.code.toLowerCase().includes(search.toLowerCase()) ||
+        (b.category_name && b.category_name.toLowerCase().includes(search.toLowerCase())) ||
         (b.origin && b.origin.toLowerCase().includes(search.toLowerCase()));
+
+      const matchesCategory =
+        categoryFilter === "all" || String(b.category_id) === categoryFilter;
 
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "active" && b.is_active) ||
         (statusFilter === "inactive" && !b.is_active);
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [brands, search, statusFilter]);
+  }, [brands, search, categoryFilter, statusFilter]);
 
   const paginatedBrands = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -158,7 +177,7 @@ export default function BrandsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter]);
+  }, [search, categoryFilter, statusFilter]);
 
   // Calculate Metrics
   const totalBrands = brands.length;
@@ -169,6 +188,7 @@ export default function BrandsPage() {
   // Open Modal for Add
   const handleOpenAdd = () => {
     setEditingBrand(null);
+    setCategoryId(0);
     setName("");
     setCode("");
     setOrigin("Pakistan");
@@ -180,6 +200,7 @@ export default function BrandsPage() {
   // Open Modal for Edit
   const handleOpenEdit = (brand: BrandItem) => {
     setEditingBrand(brand);
+    setCategoryId(brand.category_id || 0);
     setName(brand.name);
     setCode(brand.code);
     setOrigin(brand.origin || "Pakistan");
@@ -191,6 +212,10 @@ export default function BrandsPage() {
   // Save Brand
   const handleSaveBrand = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!categoryId) {
+      toast.error("Please select a category first");
+      return;
+    }
     if (!name.trim()) {
       toast.error("Brand name is required");
       return;
@@ -203,6 +228,7 @@ export default function BrandsPage() {
         await productService.updateBrand(editingBrand.id, {
           name: name.trim(),
           code: finalCode,
+          category_id: categoryId,
           origin: origin.trim() || "Pakistan",
           description: description.trim() || null,
           is_active: isActive,
@@ -212,6 +238,7 @@ export default function BrandsPage() {
         await productService.createBrand({
           name: name.trim(),
           code: finalCode,
+          category_id: categoryId,
           origin: origin.trim() || "Pakistan",
           description: description.trim() || null,
           is_active: isActive,
@@ -350,11 +377,30 @@ export default function BrandsPage() {
             <div className="relative w-full sm:w-72 md:w-80">
               <IconSearch className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search brand name, code (e.g. BRD-NES), origin..."
+                placeholder="Search brand name, code, category, origin..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 text-xs"
               />
+            </div>
+
+            <div className="w-full sm:w-48">
+              <Select
+                value={categoryFilter}
+                onValueChange={(val) => setCategoryFilter(val)}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="w-full sm:w-44">
@@ -384,7 +430,8 @@ export default function BrandsPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30">
-                <TableHead className="w-[30%]">Brand Name</TableHead>
+                <TableHead className="w-[26%]">Brand Name</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Brand Code</TableHead>
                 <TableHead>Country / Origin</TableHead>
                 <TableHead>Linked Products</TableHead>
@@ -395,7 +442,7 @@ export default function BrandsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-44 text-center">
+                  <TableCell colSpan={7} className="h-44 text-center">
                     <div className="flex flex-col items-center justify-center gap-2.5">
                       <IconRefresh className="h-6 w-6 animate-spin text-primary" />
                       <p className="text-sm font-medium text-muted-foreground">Loading brands catalogue...</p>
@@ -404,7 +451,7 @@ export default function BrandsPage() {
                 </TableRow>
               ) : filteredBrands.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-xs text-muted-foreground">
+                  <TableCell colSpan={7} className="h-32 text-center text-xs text-muted-foreground">
                     No brands found matching your search.
                   </TableCell>
                 </TableRow>
@@ -425,6 +472,17 @@ export default function BrandsPage() {
                         )}
                       </div>
                     </div>
+                  </TableCell>
+
+                  <TableCell>
+                    {b.category_name ? (
+                      <Badge variant="outline" className="text-xs font-medium bg-muted/40 gap-1">
+                        <IconTag className="h-3 w-3 text-primary" />
+                        {b.category_name}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Uncategorized</span>
+                    )}
                   </TableCell>
 
                   <TableCell>
@@ -527,6 +585,27 @@ export default function BrandsPage() {
 
           <form onSubmit={handleSaveBrand} className="space-y-4">
             <div className="space-y-1.5">
+              <Label htmlFor="brand_category">
+                Category <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={categoryId ? String(categoryId) : ""}
+                onValueChange={(val) => setCategoryId(Number(val))}
+              >
+                <SelectTrigger id="brand_category">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
               <Label htmlFor="brand_name">
                 Brand Name <span className="text-destructive">*</span>
               </Label>
@@ -566,7 +645,9 @@ export default function BrandsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="brand_origin">Country / Origin</Label>
+              <Label htmlFor="brand_origin">
+                Country / Origin <span className="text-muted-foreground font-normal">(Optional)</span>
+              </Label>
               <Input
                 id="brand_origin"
                 placeholder="e.g. Pakistan"
@@ -576,7 +657,9 @@ export default function BrandsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="brand_desc">Description (Optional)</Label>
+              <Label htmlFor="brand_desc">
+                Description <span className="text-muted-foreground font-normal">(Optional)</span>
+              </Label>
               <Textarea
                 id="brand_desc"
                 placeholder="Company overview, local distributor details..."

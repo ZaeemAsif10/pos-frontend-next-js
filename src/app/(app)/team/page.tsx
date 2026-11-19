@@ -1142,7 +1142,7 @@ export default function TeamManagementPage() {
               {/* Max Discount */}
               <div className="space-y-1.5">
                 <Label htmlFor="staff_discount">
-                  Max Discount % <span className="text-xs text-muted-foreground">(0-100)</span>
+                  Max Discount % <span className="text-muted-foreground font-normal">(Optional, 0-100)</span>
                 </Label>
                 <Input
                   id="staff_discount"
@@ -1254,7 +1254,9 @@ export default function TeamManagementPage() {
 
               {/* Role Select (Disabled for Owner) */}
               <div className="space-y-1.5">
-                <Label htmlFor="edit_staff_role">Assigned Role</Label>
+                <Label htmlFor="edit_staff_role">
+                  Assigned Role <span className="text-destructive">*</span>
+                </Label>
                 <Select
                   value={editForm.role_id?.toString() || ""}
                   onValueChange={(val) =>
@@ -1283,7 +1285,7 @@ export default function TeamManagementPage() {
               {/* Max Discount % */}
               <div className="space-y-1.5">
                 <Label htmlFor="edit_staff_discount">
-                  Max Allowable Discount (%)
+                  Max Allowable Discount (%) <span className="text-muted-foreground font-normal">(Optional)</span>
                 </Label>
                 <Input
                   id="edit_staff_discount"
@@ -1315,7 +1317,7 @@ export default function TeamManagementPage() {
               {/* Reset Password */}
               <div className="space-y-1.5">
                 <Label htmlFor="edit_staff_pwd">
-                  Reset Password <span className="text-xs text-muted-foreground">(Leave empty to keep unchanged)</span>
+                  Reset Password <span className="text-muted-foreground font-normal">(Optional — Leave empty to keep unchanged)</span>
                 </Label>
                 <Input
                   id="edit_staff_pwd"

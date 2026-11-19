@@ -1147,7 +1147,9 @@ export default function BranchesPage() {
 
               {/* Branch Type */}
               <div className="space-y-1.5">
-                <Label htmlFor="branch_type">Location Type</Label>
+                <Label htmlFor="branch_type">
+                  Location Type <span className="text-destructive">*</span>
+                </Label>
                 <Select
                   value={addForm.type}
                   onValueChange={(val) => setAddForm({ ...addForm, type: val as BranchType })}
@@ -1206,7 +1208,9 @@ export default function BranchesPage() {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <Label htmlFor="branch_email">Branch Email (Optional)</Label>
+                <Label htmlFor="branch_email">
+                  Branch Email <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Input
                   id="branch_email"
                   type="email"
@@ -1219,7 +1223,7 @@ export default function BranchesPage() {
               {/* FBR POS Machine ID */}
               <div className="space-y-1.5">
                 <Label htmlFor="branch_fbr">
-                  FBR POS Machine ID (Optional)
+                  FBR POS Machine ID <span className="text-muted-foreground font-normal">(Optional)</span>
                 </Label>
                 <Input
                   id="branch_fbr"
@@ -1231,7 +1235,9 @@ export default function BranchesPage() {
 
               {/* Street Address */}
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="branch_address">Full Street Address (Optional)</Label>
+                <Label htmlFor="branch_address">
+                  Full Street Address <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Textarea
                   id="branch_address"
                   placeholder="Shop # 14, Main Commercial Market, Liberty..."
@@ -1325,7 +1331,9 @@ export default function BranchesPage() {
 
               {/* Branch Type */}
               <div className="space-y-1.5">
-                <Label htmlFor="edit_branch_type">Location Type</Label>
+                <Label htmlFor="edit_branch_type">
+                  Location Type <span className="text-destructive">*</span>
+                </Label>
                 <Select
                   value={editForm.type}
                   onValueChange={(val) => setEditForm({ ...editForm, type: val as BranchType })}
@@ -1383,7 +1391,9 @@ export default function BranchesPage() {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <Label htmlFor="edit_branch_email">Branch Email</Label>
+                <Label htmlFor="edit_branch_email">
+                  Branch Email <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Input
                   id="edit_branch_email"
                   type="email"
@@ -1394,7 +1404,9 @@ export default function BranchesPage() {
 
               {/* FBR POS Machine ID */}
               <div className="space-y-1.5">
-                <Label htmlFor="edit_branch_fbr">FBR POS Machine ID</Label>
+                <Label htmlFor="edit_branch_fbr">
+                  FBR POS Machine ID <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Input
                   id="edit_branch_fbr"
                   value={editForm.fbr_pos_id || ""}
@@ -1404,7 +1416,9 @@ export default function BranchesPage() {
 
               {/* Street Address */}
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit_branch_address">Full Street Address</Label>
+                <Label htmlFor="edit_branch_address">
+                  Full Street Address <span className="text-muted-foreground font-normal">(Optional)</span>
+                </Label>
                 <Textarea
                   id="edit_branch_address"
                   value={editForm.address || ""}

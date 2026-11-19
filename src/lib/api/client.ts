@@ -65,17 +65,48 @@ export async function apiClient<T>(
   });
 
   if (!response.ok) {
-    let errorData: ApiErrorResponse | undefined;
+    let errorData: any;
+    let rawText = "";
     try {
-      errorData = await response.json();
+      rawText = await response.text();
+      errorData = rawText ? JSON.parse(rawText) : undefined;
     } catch {
       // Non-JSON error payload
     }
 
-    const message =
-      typeof errorData?.detail === "string"
-        ? errorData.detail
-        : `Request failed with status ${response.status}`;
+    let message = "";
+    if (typeof errorData?.detail === "string" && errorData.detail.trim()) {
+      message = errorData.detail;
+    } else if (Array.isArray(errorData?.detail) && errorData.detail.length > 0) {
+      message = errorData.detail
+        .map((item: any) => {
+          const loc = Array.isArray(item?.loc)
+            ? item.loc.filter((p: any) => p !== "body" && p !== "query" && p !== "path").join(".")
+            : "";
+          const field = loc ? `${loc.replace(/_/g, " ")}: ` : "";
+          return `${field}${item?.msg || "Invalid value"}`;
+        })
+        .join(" | ");
+    } else if (typeof errorData?.message === "string" && errorData.message.trim()) {
+      message = errorData.message;
+    } else if (response.status === 401) {
+      message = "Your session has expired or you are not logged in. Please sign in again.";
+    } else if (response.status === 403) {
+      message = "Access denied: You do not have permission or plan quota for this action.";
+    } else if (response.status === 404) {
+      message = "The requested record or endpoint was not found.";
+    } else if (response.status === 409) {
+      message = "Conflict: A record with this name or code already exists.";
+    } else if (response.status === 422) {
+      message = "Validation error: Please check all required fields and try again.";
+    } else if (response.status >= 500) {
+      message =
+        rawText && rawText.length < 200 && !rawText.startsWith("<")
+          ? `Server error: ${rawText}`
+          : "An unexpected server error occurred while processing your request. Please try again.";
+    } else {
+      message = `Request failed (${response.status})`;
+    }
 
     throw new ApiError(response.status, message, errorData);
   }

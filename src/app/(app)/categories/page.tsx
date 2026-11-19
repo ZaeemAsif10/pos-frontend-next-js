@@ -577,7 +577,9 @@ export default function CategoriesPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="cat_parent">Parent Group (Optional)</Label>
+              <Label htmlFor="cat_parent">
+                Parent Group <span className="text-muted-foreground font-normal">(Optional)</span>
+              </Label>
               <Select
                 value={parentId ? String(parentId) : "0"}
                 onValueChange={(val) => setParentId(Number(val))}
@@ -599,7 +601,9 @@ export default function CategoriesPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="cat_desc">Description (Optional)</Label>
+              <Label htmlFor="cat_desc">
+                Description <span className="text-muted-foreground font-normal">(Optional)</span>
+              </Label>
               <Textarea
                 id="cat_desc"
                 placeholder="Juices, mineral water, soft drinks, etc."

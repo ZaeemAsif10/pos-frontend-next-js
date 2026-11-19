@@ -26,6 +26,8 @@ export interface CategoryCreatePayload {
 export interface BrandItem {
   id: number;
   tenant_id: number;
+  category_id?: number | null;
+  category_name?: string | null;
   name: string;
   code: string;
   origin?: string | null;
@@ -39,6 +41,7 @@ export interface BrandItem {
 export interface BrandCreatePayload {
   name: string;
   code: string;
+  category_id?: number | null;
   origin?: string | null;
   description?: string | null;
   is_active?: boolean;

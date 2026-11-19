@@ -578,7 +578,7 @@ export default function DeliveryAreasPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="deliveryDays" className="text-xs font-semibold">
-                    Delivery Days
+                    Delivery Days <span className="text-muted-foreground font-normal">(Optional)</span>
                   </Label>
                   <Input
                     id="deliveryDays"
@@ -589,7 +589,7 @@ export default function DeliveryAreasPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="salesman" className="text-xs font-semibold">
-                    Assigned Salesman
+                    Assigned Salesman <span className="text-muted-foreground font-normal">(Optional)</span>
                   </Label>
                   <Select
                     value={String(assignedSalesmanId)}
@@ -612,7 +612,7 @@ export default function DeliveryAreasPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="description" className="text-xs font-semibold">
-                  Description / Boundaries
+                  Description / Boundaries <span className="text-muted-foreground font-normal">(Optional)</span>
                 </Label>
                 <Textarea
                   id="description"

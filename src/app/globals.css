@@ -162,9 +162,17 @@
     cursor: not-allowed !important;
   }
 
-  /* 2. Prevent blinking text caret cursor on non-editable text when clicked */
-  *:not(input):not(textarea):not([contenteditable="true"]):not([contenteditable=""]) {
-    caret-color: transparent !important;
+  /* 2. Prevent blinking text caret cursor on non-editable text when clicked,
+     while explicitly restoring a visible blinking caret on all inputs & textareas */
+  * {
+    caret-color: transparent;
+  }
+
+  input,
+  textarea,
+  [contenteditable="true"],
+  [contenteditable=""] {
+    caret-color: var(--foreground) !important;
   }
 }
 

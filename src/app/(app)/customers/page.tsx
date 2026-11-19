@@ -785,7 +785,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5 min-w-0">
                     <Label htmlFor="custType" className="text-xs font-semibold">
-                      Customer Type
+                      Customer Type <span className="text-destructive">*</span>
                     </Label>
                     <Select value={customerType} onValueChange={setCustomerType}>
                       <SelectTrigger id="custType" className="w-full">
@@ -816,7 +816,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="ownerName" className="text-xs font-semibold">
-                      Proprietor / Owner Name
+                      Proprietor / Owner Name <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="ownerName"
@@ -842,7 +842,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="whatsapp" className="text-xs font-semibold">
-                      WhatsApp Number
+                      WhatsApp Number <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="whatsapp"
@@ -853,7 +853,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="email" className="text-xs font-semibold">
-                      Email Address
+                      Email Address <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="email"
@@ -868,7 +868,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="cnic" className="text-xs font-semibold">
-                      CNIC Number
+                      CNIC Number <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="cnic"
@@ -879,7 +879,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="ntn" className="text-xs font-semibold">
-                      NTN
+                      NTN <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="ntn"
@@ -890,7 +890,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="strn" className="text-xs font-semibold">
-                      STRN
+                      STRN <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="strn"
@@ -907,7 +907,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="creditLimit" className="text-xs font-semibold">
-                      Credit Limit (PKR)
+                      Credit Limit (PKR) <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="creditLimit"
@@ -919,7 +919,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="creditDays" className="text-xs font-semibold">
-                      Credit Days
+                      Credit Days <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="creditDays"
@@ -931,7 +931,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="openingBal" className="text-xs font-semibold">
-                      Opening Balance (PKR)
+                      Opening Balance (PKR) <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="openingBal"
@@ -945,7 +945,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5 min-w-0">
                     <Label htmlFor="routeSelect" className="text-xs font-semibold">
-                      Delivery Route / Beat
+                      Delivery Route / Beat <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Select
                       value={String(areaId)}
@@ -967,7 +967,7 @@ export default function CustomersPage() {
 
                   <div className="space-y-1.5 min-w-0">
                     <Label htmlFor="branchSelect" className="text-xs font-semibold">
-                      Assigned Branch / Warehouse
+                      Assigned Branch / Warehouse <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Select
                       value={String(branchId)}
@@ -991,7 +991,7 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5 min-w-0">
                     <Label htmlFor="custCity" className="text-xs font-semibold">
-                      City
+                      City <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Input
                       id="custCity"
@@ -1002,7 +1002,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="space-y-1.5 min-w-0">
                     <Label htmlFor="kyc" className="text-xs font-semibold">
-                      KYC Status
+                      KYC Status <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
                     <Select value={kycStatus} onValueChange={setKycStatus}>
                       <SelectTrigger id="kyc" className="w-full">
@@ -1019,7 +1019,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="address" className="text-xs font-semibold">
-                    Complete Address
+                    Complete Address <span className="text-muted-foreground font-normal">(Optional)</span>
                   </Label>
                   <Textarea
                     id="address"
