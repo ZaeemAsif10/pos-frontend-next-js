@@ -12,7 +12,8 @@ export type AppEntity =
   | "products"
   | "invoices"
   | "purchases"
-  | "inventory";
+  | "inventory"
+  | "accounting";
 
 export type AppEventName = `${AppEntity}:changed`;
 

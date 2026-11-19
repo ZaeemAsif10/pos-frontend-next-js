@@ -66,6 +66,7 @@ import {
   type YearEndClosingPreviewResponse,
 } from "@/services/accounting.service";
 import { branchService, type BranchItem } from "@/services/branch.service";
+import { useAppEventListener } from "@/lib/events";
 import { useAuth } from "@/context/auth-context";
 
 // Helper formatters
@@ -190,6 +191,15 @@ function FinancialStatementsContent() {
       fetchBalanceSheet();
     }
   }, [activeTab, fetchPnL, fetchBalanceSheet]);
+
+  // Auto-refresh P&L and Balance Sheet when inventory, purchases, or invoices change
+  useAppEventListener(
+    ["purchases:changed", "inventory:changed", "invoices:changed", "accounting:changed"],
+    () => {
+      fetchPnL();
+      fetchBalanceSheet();
+    }
+  );
 
   // P&L Quick Presets
   const applyPnlPreset = (preset: "today" | "this-month" | "last-month" | "this-quarter" | "this-year") => {

@@ -49,6 +49,7 @@ import {
   type GeneralLedgerAccountReport,
 } from "@/services/accounting.service";
 import { branchService, type BranchItem } from "@/services/branch.service";
+import { useAppEventListener } from "@/lib/events";
 
 function LedgerContent() {
   const router = useRouter();
@@ -160,6 +161,17 @@ function LedgerContent() {
   useEffect(() => {
     fetchTrialBalance();
   }, [fetchTrialBalance]);
+
+  // Auto-refresh Trial Balance & Ledger when inventory, purchases, or invoices change
+  useAppEventListener(
+    ["purchases:changed", "inventory:changed", "invoices:changed", "accounting:changed"],
+    () => {
+      fetchTrialBalance();
+      if (glAccountId && glAccountId !== "none") {
+        fetchGeneralLedger(glAccountId);
+      }
+    }
+  );
 
   // If initial account ID is present or changes, load GL
   useEffect(() => {
