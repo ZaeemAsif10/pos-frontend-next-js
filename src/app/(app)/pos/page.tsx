@@ -231,8 +231,10 @@ export default function POSPage() {
           const defaultBranch = branchList[0].id;
           setSelectedBranchId(defaultBranch);
           loadShift(defaultBranch);
+          loadProducts(defaultBranch);
+        } else {
+          loadProducts();
         }
-        loadProducts();
       } catch (err: any) {
         toast.error("Failed to load initial POS data: " + (err.message || err));
       }
@@ -244,17 +246,18 @@ export default function POSPage() {
   useAppEventListener(
     ["products:changed", "categories:changed", "branches:changed", "customers:changed", "inventory:changed"],
     () => {
-      loadProducts();
+      loadProducts(selectedBranchId);
       partyService.listCustomers().then(setCustomers).catch(() => {});
       productService.listCategories().then(setCategories).catch(() => {});
     }
   );
 
 
-  // When branch changes, reload shift
+  // When branch changes, reload shift and branch-specific in-stock products
   const handleBranchChange = (branchId: number) => {
     setSelectedBranchId(branchId);
     loadShift(branchId);
+    loadProducts(branchId);
   };
 
   const loadShift = async (branchId: number) => {
@@ -266,11 +269,35 @@ export default function POSPage() {
     }
   };
 
-  const loadProducts = async () => {
+  const loadProducts = async (branchIdParam?: number) => {
     setIsLoadingProducts(true);
     try {
-      const pRes = await productService.listProducts({ size: 100 });
-      setProducts(pRes.items || []);
+      const targetBranchId = branchIdParam ?? selectedBranchId;
+      const pRes = await productService.listProducts({
+        branch_id: targetBranchId || undefined,
+        is_active: true,
+        in_stock_only: true,
+        size: 200,
+      });
+      const inStockItems = (pRes.items || []).filter(
+        (p) => p.is_active && Number(p.total_stock) > 0
+      );
+      setProducts(inStockItems);
+
+      // Remove any cart items that have 0 stock in this branch
+      const inStockMap = new Map(inStockItems.map((p) => [p.id, p]));
+      setCart((prev) =>
+        prev
+          .filter((item) => inStockMap.has(item.product.id))
+          .map((item) => {
+            const freshProd = inStockMap.get(item.product.id)!;
+            return {
+              ...item,
+              product: freshProd,
+              quantity: Math.min(item.quantity, Number(freshProd.total_stock)),
+            };
+          })
+      );
     } catch (err: any) {
       toast.error("Failed to load products: " + err.message);
     } finally {
@@ -279,9 +306,10 @@ export default function POSPage() {
   };
 
 
-  // Filtered Products
+  // Filtered Products (strictly only active products with stock > 0)
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      if (!p.is_active || Number(p.total_stock) <= 0) return false;
       const matchCategory =
         selectedCategoryId === 0 || p.category_id === selectedCategoryId;
       const q = searchQuery.toLowerCase().trim();
@@ -294,14 +322,26 @@ export default function POSPage() {
     });
   }, [products, selectedCategoryId, searchQuery]);
 
-  // Add product to cart
+  // Add product to cart (with available stock check)
   const addToCart = (product: ProductListItem) => {
+    const availStock = Number(product.total_stock || 0);
+    if (availStock <= 0) {
+      toast.error(`"${product.name}" has no inventory in stock. Add stock via Purchases & GRN or Live Inventory first.`);
+      return;
+    }
+
+    const existingItem = cart.find((item) => item.product.id === product.id);
+    if (existingItem && existingItem.quantity >= availStock) {
+      toast.error(`Only ${availStock} ${product.base_unit || "unit"}(s) of "${product.name}" available in stock!`);
+      return;
+    }
+
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: Math.min(availStock, item.quantity + 1) }
             : item
         );
       }
@@ -336,7 +376,7 @@ export default function POSPage() {
       setSearchQuery("");
     } else {
       playScanBeep(false);
-      toast.error("No product found with this barcode/SKU");
+      toast.error("No in-stock product found with this barcode/SKU");
     }
   };
 
@@ -355,7 +395,7 @@ export default function POSPage() {
         addToCart(matched);
       } else {
         playScanBeep(false);
-        toast.error(`Barcode not found: ${scannedCode}`);
+        toast.error(`No in-stock product found for barcode: ${scannedCode}`);
       }
     },
   });
@@ -363,6 +403,14 @@ export default function POSPage() {
 
   // Update item quantity
   const updateQuantity = (productId: number, delta: number) => {
+    const targetItem = cart.find((item) => item.product.id === productId);
+    if (targetItem && delta > 0) {
+      const availStock = Number(targetItem.product.total_stock || 0);
+      if (targetItem.quantity + delta > availStock) {
+        toast.error(`Only ${availStock} ${targetItem.product.base_unit || "unit"}(s) available in stock!`);
+        return;
+      }
+    }
     setCart((prev) =>
       prev
         .map((item) => {
@@ -654,11 +702,20 @@ export default function POSPage() {
             {isLoadingProducts ? (
               <div className="flex items-center justify-center h-48 text-muted-foreground text-sm gap-2">
                 <IconRefresh className="h-5 w-5 animate-spin" />
-                Loading product catalogue...
+                Loading in-stock inventory...
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground text-sm">
-                <p>No products found matching your search.</p>
+              <div className="flex flex-col items-center justify-center h-56 text-center text-muted-foreground text-sm px-4 space-y-1.5">
+                <p className="font-semibold text-foreground">
+                  {products.length === 0
+                    ? "No In-Stock Inventory Available in This Branch"
+                    : "No In-Stock Products Match Your Search"}
+                </p>
+                <p className="text-xs text-muted-foreground max-w-md">
+                  {products.length === 0
+                    ? "Products created in the catalogue with 0 stock are hidden from POS until inventory is added via Purchases & GRN or Live Inventory."
+                    : "Try clearing your category filter or search query."}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
@@ -684,6 +741,9 @@ export default function POSPage() {
                             }
                           }}
                         />
+                        <span className="absolute top-1 left-1 bg-emerald-600/90 backdrop-blur-sm text-[9px] text-white px-1.5 py-0.5 rounded font-mono font-semibold">
+                          {p.total_stock} in stock
+                        </span>
                         <span className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm text-[9px] text-white px-1.5 py-0.5 rounded font-mono font-semibold">
                           {p.base_unit || "Pcs"}
                         </span>

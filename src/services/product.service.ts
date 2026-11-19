@@ -186,6 +186,8 @@ export const productService = {
     search?: string;
     category_id?: number;
     brand_id?: number;
+    branch_id?: number;
+    in_stock_only?: boolean;
     stock_status?: string;
     is_active?: boolean;
     page?: number;
@@ -195,6 +197,8 @@ export const productService = {
     if (params?.search) sp.append("search", params.search);
     if (params?.category_id) sp.append("category_id", String(params.category_id));
     if (params?.brand_id) sp.append("brand_id", String(params.brand_id));
+    if (params?.branch_id) sp.append("branch_id", String(params.branch_id));
+    if (params?.in_stock_only !== undefined) sp.append("in_stock_only", String(params.in_stock_only));
     if (params?.stock_status && params.stock_status !== "all") sp.append("stock_status", params.stock_status);
     if (params?.is_active !== undefined) sp.append("is_active", String(params.is_active));
     if (params?.page) sp.append("page", String(params.page));
