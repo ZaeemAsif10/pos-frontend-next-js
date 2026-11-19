@@ -96,7 +96,7 @@ const getLabels = (lang: ReceiptLanguage) => {
   if (lang === "bilingual") {
     return {
       title: "SUPPLIER LEDGER STATEMENT / سپلائر کھاتہ اسٹیٹمنٹ",
-      subtitle: "Verified Mill & Vendor Statement • تصدیق شدہ کھاتہ تفصیل",
+      subtitle: "Verified Supplier & Vendor Statement • تصدیق شدہ کھاتہ تفصیل",
       supplier: "Supplier / سپلائر",
       code: "Supplier Code / کوڈ",
       terms: "Payment Terms / ادھار مدت",
@@ -121,7 +121,7 @@ const getLabels = (lang: ReceiptLanguage) => {
   return {
     title: "SUPPLIER LEDGER STATEMENT",
     subtitle: "Verified Procurement & Vendor Account Statement",
-    supplier: "Supplier / Mill",
+    supplier: "Supplier / Business",
     code: "Supplier Code",
     terms: "Payment Terms",
     phone: "Phone",
@@ -494,7 +494,7 @@ Thank you for your business.`;
         <div class="footer-sig">
           <div class="sig-box">Prepared By (Accounts)</div>
           <div class="sig-box">Authorized Signatory</div>
-          <div class="sig-box">Vendor / Mill Acknowledgment</div>
+          <div class="sig-box">Vendor / Supplier Acknowledgment</div>
         </div>
 
         <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #9ca3af; border-top: 1px solid #f3f4f6; padding-top: 8px;">

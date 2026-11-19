@@ -400,7 +400,7 @@ export default function SuppliersPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Mills & Brands</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Suppliers &amp; Brands</CardTitle>
             <IconBuildingFactory2 className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
@@ -434,7 +434,7 @@ export default function SuppliersPage() {
             cell: (s) => s.code,
           },
           {
-            header: "Company & Contact",
+            header: "Business & Contact",
             cell: (s) => (
               <div>
                 <div className="font-medium text-foreground">{s.company_name}</div>
@@ -634,7 +634,7 @@ export default function SuppliersPage() {
         emptyDescription={
           search || statusFilter !== "all"
             ? "No suppliers match your active search filters. Try clearing your filters."
-            : "Add your suppliers and mills to manage purchase bills"
+            : "Add your suppliers and vendors to manage purchase bills"
         }
         emptyIcon={<IconTruckDelivery className="h-6 w-6 text-muted-foreground/60" />}
         onClearFilters={
@@ -698,7 +698,7 @@ export default function SuppliersPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="compName" className="text-xs font-semibold">
-                    Company / Mill Name <span className="text-destructive">*</span>
+                    Business Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="compName"

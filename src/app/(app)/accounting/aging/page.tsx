@@ -566,7 +566,7 @@ export default function KhataAgingPage() {
             <TableHeader className="bg-muted/10 print:bg-gray-100">
               <TableRow className="print:border-b-2 print:border-gray-400">
                 <TableHead className="w-[200px] font-semibold print:text-black print:font-bold">
-                  {activeTab === "receivables" ? "Customer / Shop" : "Supplier / Mill"}
+                  {activeTab === "receivables" ? "Customer / Shop" : "Supplier / Business"}
                 </TableHead>
                 <TableHead className="w-[100px] font-semibold print:text-black">
                   {activeTab === "receivables" ? "Credit Terms" : "Terms"}
