@@ -83,6 +83,11 @@ const ROUTE_PERMISSIONS: Record<
     requiredPermissions: ["purchases:view"],
     allowedRoles: ["Admin", "Owner"],
   },
+  "/payment-statuses": {
+    name: "Payment Statuses",
+    requiredPermissions: ["payment_statuses:view", "purchases:view"],
+    allowedRoles: ["Admin", "Owner"],
+  },
   "/inventory": {
     name: "Live Multi-Branch Inventory",
     requiredPermissions: ["inventory:view"],

@@ -20,7 +20,9 @@ import {
   IconArrowBackUp,
   IconEdit,
   IconSettings,
+  IconCreditCard,
 } from "@tabler/icons-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
@@ -662,16 +664,15 @@ export default function PurchasesPage() {
           </Button>
           {canViewPaymentStatuses && (
             <Button
+              asChild
               variant="outline"
               size="sm"
-              onClick={() => {
-                resetStatusOptionForm();
-                setIsStatusCrudOpen(true);
-              }}
               className="h-9 gap-1.5"
             >
-              <IconSettings className="h-4 w-4" />
-              Payment Statuses
+              <Link href="/payment-statuses">
+                <IconCreditCard className="h-4 w-4" />
+                Payment Statuses
+              </Link>
             </Button>
           )}
           {canCreate && (

@@ -43,6 +43,7 @@ const CRUMB_LABELS: Record<string, string> = {
   roles: "Roles & Permissions",
   invoices: "Sales Invoices",
   purchases: "Purchases & GRN",
+  "payment-statuses": "Payment Statuses",
   inventory: "Live Inventory",
 };
 

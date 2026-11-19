@@ -26,6 +26,7 @@ import {
   IconReportAnalytics,
   IconBuildingBank,
   IconCalendarTime,
+  IconCreditCard,
   type Icon,
 } from "@tabler/icons-react";
 
@@ -179,6 +180,19 @@ export const sidebarNavigation: SidebarGroup[] = [
         url: "/purchases",
         icon: IconReceipt,
         permissions: ["purchases:view", "purchases:create", "purchases:edit", "purchases:delete"],
+        roles: ["Admin", "Owner"],
+      },
+      {
+        title: "Payment Statuses",
+        url: "/payment-statuses",
+        icon: IconCreditCard,
+        permissions: [
+          "payment_statuses:view",
+          "payment_statuses:create",
+          "payment_statuses:edit",
+          "payment_statuses:delete",
+          "purchases:view",
+        ],
         roles: ["Admin", "Owner"],
       },
       {
