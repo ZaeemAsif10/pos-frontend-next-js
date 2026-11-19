@@ -162,18 +162,45 @@
     cursor: not-allowed !important;
   }
 
-  /* 2. Prevent blinking text caret cursor on non-editable text when clicked,
-     while explicitly restoring a visible blinking caret on all inputs & textareas */
-  * {
-    caret-color: transparent;
+  /* 2. Proper text cursor on all text inputs & textareas */
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([disabled]),
+  textarea:not([disabled]) {
+    cursor: text !important;
   }
 
+  /* Universal high-contrast blinking caret cursor on all inputs, textareas & editable fields */
   input,
   textarea,
   [contenteditable="true"],
-  [contenteditable=""] {
-    caret-color: var(--foreground) !important;
+  [contenteditable=""],
+  [contenteditable] {
+    caret-color: #2563eb !important;
   }
+
+  .dark input,
+  .dark textarea,
+  .dark [contenteditable="true"],
+  .dark [contenteditable=""],
+  .dark [contenteditable] {
+    caret-color: #60a5fa !important;
+  }
+}
+
+/* Standalone unlayered rules to ensure highest cascade priority for visible blinking carets */
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+textarea,
+[contenteditable="true"],
+[contenteditable=""],
+[contenteditable] {
+  caret-color: #2563eb !important;
+}
+
+.dark input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+.dark textarea,
+.dark [contenteditable="true"],
+.dark [contenteditable=""],
+.dark [contenteditable] {
+  caret-color: #60a5fa !important;
 }
 
 /* Theme customizer: centered content layout */
