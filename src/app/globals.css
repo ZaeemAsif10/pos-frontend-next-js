@@ -203,10 +203,11 @@ textarea,
   caret-color: #60a5fa !important;
 }
 
-/* Theme customizer: centered content layout */
-:root[data-content="centered"] .app-main > * {
-  margin-inline: auto;
-  max-width: 80rem;
+/* Theme customizer: unified full-width content layout across all screens */
+:root[data-content="centered"] .app-main > *,
+.app-main > * {
+  width: 100%;
+  max-width: none;
 }
 
 /* Subtle, theme-aware scrollbars */

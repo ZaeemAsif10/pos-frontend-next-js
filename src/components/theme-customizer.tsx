@@ -77,7 +77,10 @@ export function ThemeConfigProvider({
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setConfig({ ...defaultConfig, ...JSON.parse(raw) });
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setConfig({ ...defaultConfig, ...parsed, contentLayout: "full" });
+      }
     } catch {
       // ignore
     }

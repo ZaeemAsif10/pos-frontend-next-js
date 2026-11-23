@@ -21,7 +21,7 @@ import {
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -204,15 +204,19 @@ export default function ChartOfAccountsPage() {
     .reduce((sum, a) => sum + a.current_balance, 0);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <IconHierarchy className="h-6 w-6 text-primary" />
-            Chart of Accounts (COA)
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Chart of Accounts (COA)
+            </h1>
+            <Badge variant="outline" className="text-xs font-mono">
+              {accounts.length} Accounts
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
             General Ledger structure • Assets, Liabilities, Equity, Revenue, and Operating Expenses
           </p>
         </div>
@@ -265,70 +269,75 @@ export default function ChartOfAccountsPage() {
       </div>
 
       {/* 5 KPI Category Balance Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Card className="shadow-2xs">
-          <CardContent className="p-3.5">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              1000 • Assets
-            </p>
-            <p className="text-lg font-bold text-foreground mt-0.5">
-              PKR {totAssets.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Cash, Bank, Debtors, Stock</p>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">1000 • Assets</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
+              PKR {totAssets.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Cash, Bank, Debtors, Stock</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardContent className="p-3.5">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              2000 • Liabilities
-            </p>
-            <p className="text-lg font-bold text-foreground mt-0.5">
-              PKR {totLiabilities.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Suppliers, Tax Payables</p>
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">2000 • Liabilities</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-amber-600 dark:text-amber-400">
+              PKR {totLiabilities.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Suppliers, Tax Payables</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardContent className="p-3.5">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              3000 • Equity
-            </p>
-            <p className="text-lg font-bold text-foreground mt-0.5">
-              PKR {totEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Capital & Retained Earnings</p>
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">3000 • Equity</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-foreground">
+              PKR {totEquity.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Capital &amp; Retained Earnings</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardContent className="p-3.5">
-            <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-              4000 • Revenue
-            </p>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-              PKR {totRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Gross Sales & Income</p>
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">4000 • Revenue</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+              PKR {totRevenue.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Gross Sales &amp; Income</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardContent className="p-3.5">
-            <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-              5000/6000 • Expenses
-            </p>
-            <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5">
-              PKR {totExpenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">COGS & Operating Expenses</p>
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">5000/6000 • Expenses</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-rose-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-rose-600 dark:text-rose-400">
+              PKR {totExpenses.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">COGS &amp; Operating Expenses</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filter Row: Type Tabs + Search */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/30 p-3 rounded-lg border">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-3.5 rounded-xl border shadow-xs">
         <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: "all", label: "All Accounts" },
@@ -584,11 +593,12 @@ export default function ChartOfAccountsPage() {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">Account Class *</Label>
-                  <Select value={fType} onValueChange={setFType}>
+                  <Select value={fType || "none"} onValueChange={(val) => setFType(val === "none" ? ("" as any) : (val as any))}>
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Class" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       <SelectItem value="asset">Asset (1000)</SelectItem>
                       <SelectItem value="liability">Liability (2000)</SelectItem>
                       <SelectItem value="equity">Equity (3000)</SelectItem>
@@ -625,10 +635,10 @@ export default function ChartOfAccountsPage() {
                   <Label className="text-xs font-semibold">Parent Account (Optional)</Label>
                   <Select value={fParentId} onValueChange={setFParentId}>
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="No Parent (Top-level)" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None (Top-Level Account)</SelectItem>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One (None / Top-Level Account)</SelectItem>
                       {accounts
                         .filter((a) => !editingAcc || a.id !== editingAcc.id)
                         .map((a) => (

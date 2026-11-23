@@ -279,7 +279,6 @@ export default function DayBookPage() {
           )}
         >
           <div className="flex items-center gap-2 flex-wrap">
-            <LanguageToggle showLabel variant="outline" />
             <Link href="/accounting/expenses">
               <Button
                 variant="outline"
@@ -436,67 +435,75 @@ export default function DayBookPage() {
       {daybookData && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Opening Cash */}
-          <Card className="border-l-4 border-l-slate-400">
-            <CardHeader className="py-3 px-4 pb-1">
-              <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1">
-                <IconWallet className="h-3.5 w-3.5 text-muted-foreground" />
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
                 {t("Opening Cash", "ابتدائی کیش")}
-              </CardDescription>
-              <CardTitle className="text-xl font-bold font-mono text-foreground">
-                {formatPKR(daybookData.summary.opening_cash)}
               </CardTitle>
+              <IconWallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-              {t("Cash at counter start of day", "صبح کاؤنٹر کھلنے کے وقت کیش")}
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {formatPKR(daybookData.summary.opening_cash)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Cash at counter start of day", "صبح کاؤنٹر کھلنے کے وقت کیش")}
+              </p>
             </CardContent>
           </Card>
 
           {/* Cash In (Aamad) */}
-          <Card className="border-l-4 border-l-emerald-600 bg-emerald-50/20 dark:bg-emerald-950/10">
-            <CardHeader className="py-3 px-4 pb-1">
-              <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-                <IconTrendingUp className="h-3.5 w-3.5" />
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
                 {t("Total Cash In", "آمد (کیش ان)")}
-              </CardDescription>
-              <CardTitle className="text-xl font-bold font-mono text-emerald-700 dark:text-emerald-400">
-                +{formatPKR(daybookData.summary.total_cash_in)}
               </CardTitle>
+              <IconTrendingUp className="h-4 w-4 text-emerald-600" />
             </CardHeader>
-            <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-              {t("Cash Sales", "نقد فروخت")} ({formatPKR(daybookData.summary.cash_sales)}) + {t("Wasooli", "وصولی")} (
-              {formatPKR(daybookData.summary.customer_wasooli)})
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                +{formatPKR(daybookData.summary.total_cash_in)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Cash Sales", "نقد فروخت")} ({formatPKR(daybookData.summary.cash_sales)}) + {t("Wasooli", "وصولی")} (
+                {formatPKR(daybookData.summary.customer_wasooli)})
+              </p>
             </CardContent>
           </Card>
 
           {/* Cash Out (Kharch) */}
-          <Card className="border-l-4 border-l-rose-600 bg-rose-50/20 dark:bg-rose-950/10">
-            <CardHeader className="py-3 px-4 pb-1">
-              <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-rose-700 dark:text-rose-400">
-                <IconTrendingDown className="h-3.5 w-3.5" />
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
                 {t("Total Cash Out", "خرچ (کیش آؤٹ)")}
-              </CardDescription>
-              <CardTitle className="text-xl font-bold font-mono text-rose-700 dark:text-rose-400">
-                -{formatPKR(daybookData.summary.total_cash_out)}
               </CardTitle>
+              <IconTrendingDown className="h-4 w-4 text-rose-600" />
             </CardHeader>
-            <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-              {t("Supplier", "سپلائر")} ({formatPKR(daybookData.summary.supplier_payments)}) + {t("Expenses", "اخراجات")} ({formatPKR(daybookData.summary.cash_expenses || 0)})
+            <CardContent>
+              <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+                -{formatPKR(daybookData.summary.total_cash_out)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Supplier", "سپلائر")} ({formatPKR(daybookData.summary.supplier_payments)}) + {t("Expenses", "اخراجات")} ({formatPKR(daybookData.summary.cash_expenses || 0)})
+              </p>
             </CardContent>
           </Card>
 
           {/* Closing Cash in Drawer */}
-          <Card className="border-l-4 border-l-primary bg-primary/5">
-            <CardHeader className="py-3 px-4 pb-1">
-              <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-primary">
-                <IconCash className="h-3.5 w-3.5" />
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
                 {t("Closing Cash In Drawer", "دراز میں موجود کیش")}
-              </CardDescription>
-              <CardTitle className="text-2xl font-bold font-mono text-primary">
-                {formatPKR(daybookData.summary.closing_cash)}
               </CardTitle>
+              <IconCash className="h-4 w-4 text-blue-600" />
             </CardHeader>
-            <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-              {t("Physical cash that must be in counter till", "کاؤنٹر کی دراز میں موجود نقد رقم")}
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {formatPKR(daybookData.summary.closing_cash)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("Physical cash that must be in counter till", "کاؤنٹر کی دراز میں موجود نقد رقم")}
+              </p>
             </CardContent>
           </Card>
         </div>

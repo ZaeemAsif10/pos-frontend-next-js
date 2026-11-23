@@ -1266,8 +1266,8 @@ export default function RolesMatrixPage() {
                 />
               ) : (
                 <Select
-                  value={permForm.module}
-                  onValueChange={(val) => handlePermModuleChange(val)}
+                  value={permForm.module || "none"}
+                  onValueChange={(val) => handlePermModuleChange(val === "none" ? "" : val)}
                 >
                   <SelectTrigger
                     id="perm_module"
@@ -1276,9 +1276,10 @@ export default function RolesMatrixPage() {
                         "border-destructive ring-1 ring-destructive/40 focus-visible:ring-destructive"
                     )}
                   >
-                    <SelectValue placeholder="Select module" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     {availableModules.map((m) => (
                       <SelectItem key={m.value} value={m.value}>
                         {m.label} ({m.value})
@@ -1421,15 +1422,16 @@ export default function RolesMatrixPage() {
                   Module Category <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={editPermForm.module || "roles"}
+                  value={editPermForm.module || "none"}
                   onValueChange={(val) =>
-                    setEditPermForm({ ...editPermForm, module: val })
+                    setEditPermForm({ ...editPermForm, module: val === "none" ? "" : val })
                   }
                 >
                   <SelectTrigger id="edit_perm_module">
-                    <SelectValue placeholder="Select module" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     {availableModules.map((m) => (
                       <SelectItem key={m.value} value={m.value}>
                         {m.label} ({m.value})

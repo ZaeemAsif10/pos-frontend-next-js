@@ -445,9 +445,9 @@ function MultiStepRegisterForm() {
                 City <span className="text-destructive">*</span>
               </Label>
               <Select
-                value={form.city}
+                value={form.city || "none"}
                 onValueChange={(val) => {
-                  setForm((p) => ({ ...p, city: val }));
+                  setForm((p) => ({ ...p, city: val === "none" ? "" : val }));
                   if (fieldErrors.city) {
                     setFieldErrors((p) => ({ ...p, city: "" }));
                   }
@@ -460,9 +460,10 @@ function MultiStepRegisterForm() {
                       "border-destructive ring-1 ring-destructive/40 focus:ring-destructive"
                   )}
                 >
-                  <SelectValue placeholder="Select City" />
+                  <SelectValue placeholder="Choose One" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                   {PAKISTAN_CITIES.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}

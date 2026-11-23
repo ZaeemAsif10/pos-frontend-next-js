@@ -787,11 +787,12 @@ export default function CustomersPage() {
                     <Label htmlFor="custType" className="text-xs font-semibold">
                       Customer Type <span className="text-destructive">*</span>
                     </Label>
-                    <Select value={customerType} onValueChange={setCustomerType}>
+                    <Select value={customerType || "none"} onValueChange={(val) => setCustomerType(val === "none" ? "" : val)}>
                       <SelectTrigger id="custType" className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                         <SelectItem value="retailer">Retailer (Kirana / Mart)</SelectItem>
                         <SelectItem value="wholesaler">Wholesaler / Distributor</SelectItem>
                         <SelectItem value="corporate">Corporate / Institution</SelectItem>
@@ -952,10 +953,10 @@ export default function CustomersPage() {
                       onValueChange={(val) => setAreaId(Number(val))}
                     >
                       <SelectTrigger id="routeSelect" className="w-full">
-                        <SelectValue placeholder="Select Route" />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">Unassigned</SelectItem>
+                        <SelectItem value="0" className="text-muted-foreground">Choose One (Unassigned)</SelectItem>
                         {routes.map((r) => (
                           <SelectItem key={r.id} value={String(r.id)}>
                             {r.name} ({r.code})
@@ -974,10 +975,10 @@ export default function CustomersPage() {
                       onValueChange={(val) => setBranchId(Number(val))}
                     >
                       <SelectTrigger id="branchSelect" className="w-full">
-                        <SelectValue placeholder="Select Branch" />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">Default Main Store</SelectItem>
+                        <SelectItem value="0" className="text-muted-foreground">Choose One (Default Main Store)</SelectItem>
                         {branches.map((b) => (
                           <SelectItem key={b.id} value={String(b.id)}>
                             {b.name} ({b.city})
@@ -1004,11 +1005,12 @@ export default function CustomersPage() {
                     <Label htmlFor="kyc" className="text-xs font-semibold">
                       KYC Status <span className="text-muted-foreground font-normal">(Optional)</span>
                     </Label>
-                    <Select value={kycStatus} onValueChange={setKycStatus}>
+                    <Select value={kycStatus || "none"} onValueChange={(val) => setKycStatus(val === "none" ? "" : val)}>
                       <SelectTrigger id="kyc" className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                         <SelectItem value="verified">Verified Account</SelectItem>
                         <SelectItem value="pending">Pending Verification</SelectItem>
                         <SelectItem value="rejected">Rejected</SelectItem>

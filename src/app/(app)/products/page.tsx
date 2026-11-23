@@ -28,6 +28,7 @@ import {
   IconFileBarcode,
   IconBuildingWarehouse,
   IconPhoto,
+  IconEye,
 } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -616,13 +617,13 @@ export default function ProductsPage() {
       : 0;
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <PageHeader
             title="Products & Catalogue"
-            description="Manage your master item catalogue, barcode scanning, multi-UOM packaging, and stock per branch."
+            description="Manage your master item catalogue, categories, brands, barcode scanning, and multi-UOM packaging."
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -646,19 +647,19 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* 4 Metric Summary Cards */}
+      {/* 4 Metric Summary Cards (Product Catalogue Focused) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Products */}
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Catalogue Size
+                Total Products
               </span>
               <div className="text-2xl font-bold tracking-tight">
                 {stats.total_products.toLocaleString()}
               </div>
-              <p className="text-[11px] text-muted-foreground">Active products & items</p>
+              <p className="text-[11px] text-muted-foreground">Master catalogue items</p>
             </div>
             <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
               <IconBox className="h-6 w-6" />
@@ -666,56 +667,56 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
-        {/* Total Inventory Valuation */}
+        {/* Active Catalogue Products */}
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Stock Valuation (Cost)
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                Active Products
               </span>
               <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
-                Rs. {stats.total_inventory_value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                {(products.filter((p) => p.is_active !== false).length || stats.total_products).toLocaleString()}
               </div>
-              <p className="text-[11px] text-muted-foreground">Total cost across all shops</p>
+              <p className="text-[11px] text-muted-foreground">Enabled for procurement &amp; POS</p>
             </div>
             <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <IconCoins className="h-6 w-6" />
+              <IconCheck className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Low Stock Alerts */}
+        {/* Product Categories */}
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                Low Stock Warnings
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                Product Categories
               </span>
-              <div className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
-                {stats.low_stock_count}
+              <div className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {categories.length.toLocaleString()}
               </div>
-              <p className="text-[11px] text-muted-foreground">Below reorder threshold</p>
+              <p className="text-[11px] text-muted-foreground">Organized catalogue groups</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <IconAlertTriangle className="h-6 w-6" />
+            <div className="h-11 w-11 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+              <IconTag className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Out of Stock Items */}
+        {/* Registered Brands */}
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-destructive uppercase tracking-wider">
-                Out of Stock
+              <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+                Registered Brands
               </span>
-              <div className="text-2xl font-bold tracking-tight text-destructive">
-                {stats.out_of_stock_count}
+              <div className="text-2xl font-bold tracking-tight text-violet-600 dark:text-violet-400">
+                {brands.length.toLocaleString()}
               </div>
-              <p className="text-[11px] text-muted-foreground">Need urgent supplier PO</p>
+              <p className="text-[11px] text-muted-foreground">Linked brands &amp; principals</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center">
-              <IconX className="h-6 w-6" />
+            <div className="h-11 w-11 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+              <IconBuildingFactory2 className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
@@ -785,25 +786,6 @@ export default function ProductsPage() {
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Stock Status Filter */}
-              <Select
-                value={stockFilter}
-                onValueChange={(val) => {
-                  setStockFilter(val);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-36 h-9 text-xs">
-                  <SelectValue placeholder="Stock Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stock Levels</SelectItem>
-                  <SelectItem value="in_stock">In Stock Only</SelectItem>
-                  <SelectItem value="low_stock">Low Stock</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="flex items-center gap-3">
@@ -836,28 +818,30 @@ export default function ProductsPage() {
             <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="w-[340px]">Product / Item</TableHead>
-                <TableHead>Category & Brand</TableHead>
-                <TableHead className="text-center">Total Stock</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="w-[280px]">Product / Item</TableHead>
+                <TableHead>SKU / Code</TableHead>
+                <TableHead>Barcode</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Brand</TableHead>
+                <TableHead className="text-center">Base Unit (UOM)</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-44 text-center">
+                  <TableCell colSpan={7} className="h-44 text-center">
                     <div className="flex flex-col items-center justify-center gap-2.5 text-muted-foreground py-8">
                       <div className="h-11 w-11 rounded-full bg-muted flex items-center justify-center">
                         <IconBox className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <p className="font-semibold text-sm">No Products Found</p>
                       <p className="text-xs text-muted-foreground max-w-sm">
-                        {search || categoryFilter !== "all" || brandFilter !== "all" || stockFilter !== "all"
+                        {search || categoryFilter !== "all" || brandFilter !== "all"
                           ? "No products match your active search filters. Try clearing or adjusting filters."
                           : "Your item catalogue is empty. Add your first wholesale or retail product."}
                       </p>
-                      {search || categoryFilter !== "all" || brandFilter !== "all" || stockFilter !== "all" ? (
+                      {search || categoryFilter !== "all" || brandFilter !== "all" ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -885,9 +869,9 @@ export default function ProductsPage() {
                 products.map((p) => {
                 return (
                   <TableRow key={p.id} className="hover:bg-muted/30">
-                    {/* Title & SKU */}
+                    {/* Product Image & Name */}
                     <TableCell>
-                      <div className="flex items-start gap-2.5">
+                      <div className="flex items-center gap-2.5">
                         <div className="h-10 w-10 shrink-0 rounded-lg bg-muted/40 overflow-hidden flex items-center justify-center border">
                           <img
                             src={p.image_url || DEFAULT_PRODUCT_IMAGE}
@@ -903,70 +887,55 @@ export default function ProductsPage() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-semibold text-sm text-foreground truncate max-w-[240px]">
+                          <div className="font-semibold text-sm text-foreground truncate max-w-[220px]">
                             {p.name}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
-                            <span className="bg-muted px-1 rounded uppercase font-semibold text-[11px]">
-                              {p.sku}
-                            </span>
-                            {p.barcode && (
-                              <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
-                                <IconBarcode className="h-3 w-3" />
-                                {p.barcode}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
                     </TableCell>
 
-                    {/* Category & Brand */}
+                    {/* SKU */}
                     <TableCell>
-                      <div className="text-xs space-y-1">
-                        <Badge variant="outline" className="text-[11px] font-medium bg-muted/40">
-                          {p.category_name}
-                        </Badge>
-                        {p.brand_name && (
-                          <div className="text-muted-foreground text-[11px] flex items-center gap-1">
-                            <IconBuildingFactory2 className="h-3 w-3" />
-                            {p.brand_name}
-                          </div>
-                        )}
-                      </div>
+                      <span className="bg-muted px-2 py-0.5 rounded uppercase font-mono font-semibold text-xs text-foreground border">
+                        {p.sku}
+                      </span>
                     </TableCell>
 
-                    {/* Total Stock */}
+                    {/* Barcode */}
+                    <TableCell>
+                      {p.barcode ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-mono text-muted-foreground">
+                          <IconBarcode className="h-3.5 w-3.5" />
+                          {p.barcode}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Category */}
+                    <TableCell>
+                      <Badge variant="outline" className="text-[11px] font-medium bg-muted/40">
+                        {p.category_name}
+                      </Badge>
+                    </TableCell>
+
+                    {/* Brand */}
+                    <TableCell>
+                      {p.brand_name ? (
+                        <div className="text-foreground text-xs flex items-center gap-1 font-medium">
+                          <IconBuildingFactory2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          {p.brand_name}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Base Unit (UOM) */}
                     <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenDetail(p.id)}
-                        className="h-7 text-xs font-mono font-bold hover:bg-primary/10 hover:text-primary gap-1"
-                        title="Click to view stock by shop/godown"
-                      >
-                        {p.total_stock} {p.base_unit}s
-                        <IconBuildingStore className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    </TableCell>
-
-                    {/* Stock Status Badge */}
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-xs font-semibold",
-                          p.stock_status === "in_stock" &&
-                            "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-                          p.stock_status === "low_stock" &&
-                            "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
-                          p.stock_status === "out_of_stock" &&
-                            "bg-destructive/10 text-destructive border-destructive/20"
-                        )}
-                      >
-                        {p.stock_status === "in_stock" && "In Stock"}
-                        {p.stock_status === "low_stock" && "Low Stock"}
-                        {p.stock_status === "out_of_stock" && "Out of Stock"}
+                      <Badge variant="secondary" className="text-xs font-mono font-medium">
+                        {p.base_unit || "Piece"}
                       </Badge>
                     </TableCell>
 
@@ -983,8 +952,8 @@ export default function ProductsPage() {
                             onClick={() => handleOpenDetail(p.id)}
                             className="text-xs gap-2"
                           >
-                            <IconBuildingStore className="h-4 w-4 text-primary" />
-                            Branch Stock 360
+                            <IconEye className="h-4 w-4 text-primary" />
+                            View Product Details
                           </DropdownMenuItem>
                           {canEditProduct && (
                             <DropdownMenuItem
@@ -1083,25 +1052,6 @@ export default function ProductsPage() {
                         {b.name}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Stock Status Filter */}
-                <Select
-                  value={stockFilter}
-                  onValueChange={(val) => {
-                    setStockFilter(val);
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-36 h-9 text-xs">
-                    <SelectValue placeholder="Stock Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Stock Levels</SelectItem>
-                    <SelectItem value="in_stock">In Stock Only</SelectItem>
-                    <SelectItem value="low_stock">Low Stock</SelectItem>
-                    <SelectItem value="out_of_stock">Out of Stock</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1206,56 +1156,23 @@ export default function ProductsPage() {
                       variant="outline"
                       className={cn(
                         "text-[10px] font-semibold shrink-0",
-                        p.stock_status === "in_stock" &&
-                          "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-                        p.stock_status === "low_stock" &&
-                          "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
-                        p.stock_status === "out_of_stock" &&
-                          "bg-destructive/10 text-destructive border-destructive/20"
+                        p.is_active !== false
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                          : "bg-muted text-muted-foreground border-border"
                       )}
                     >
-                      {p.stock_status === "in_stock" && "In Stock"}
-                      {p.stock_status === "low_stock" && "Low Stock"}
-                      {p.stock_status === "out_of_stock" && "Out of Stock"}
+                      {p.is_active !== false ? "Active" : "Inactive"}
                     </Badge>
                   </div>
                 </CardHeader>
 
                 <CardContent className="space-y-3 pb-4 text-xs">
-                  {/* Prices Grid */}
-                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/50 text-center">
-                    <div>
-                      <div className="text-[10px] text-muted-foreground">Purchase Cost</div>
-                      <div className="font-mono font-bold text-foreground">
-                        Rs. {p.cost_price.toLocaleString()}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-muted-foreground">Retail MRP</div>
-                      <div className="font-mono font-bold text-foreground">
-                        Rs. {p.retail_price.toLocaleString()}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-muted-foreground">Wholesale</div>
-                      <div className="font-mono font-bold text-muted-foreground">
-                        Rs. {p.wholesale_price.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stock across branches button */}
+                  {/* Base Unit & Brand Info */}
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-muted-foreground">Total Available Stock:</span>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleOpenDetail(p.id)}
-                      className="h-7 text-xs font-mono font-bold gap-1"
-                    >
-                      {p.total_stock} {p.base_unit}s
-                      <IconBuildingStore className="h-3.5 w-3.5" />
-                    </Button>
+                    <span className="text-muted-foreground">Base Unit (UOM):</span>
+                    <Badge variant="secondary" className="text-xs font-mono font-semibold">
+                      {p.base_unit || "Piece"}
+                    </Badge>
                   </div>
 
                   {/* Card Footer Actions */}
@@ -1506,11 +1423,12 @@ export default function ProductsPage() {
                     <Label htmlFor="prod_uom">
                       Base Unit (UOM) <span className="text-destructive">*</span>
                     </Label>
-                    <Select value={baseUnit} onValueChange={setBaseUnit}>
+                    <Select value={baseUnit || "none"} onValueChange={(val) => setBaseUnit(val === "none" ? "" : val)}>
                       <SelectTrigger id="prod_uom">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                         <SelectItem value="Piece">Piece (Pcs)</SelectItem>
                         <SelectItem value="Packet">Packet (Pkt)</SelectItem>
                         <SelectItem value="Kilogram">Kilogram (Kg)</SelectItem>
@@ -1936,131 +1854,58 @@ export default function ProductsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* PRODUCT 360 STOCK BREAKDOWN DRAWER/MODAL */}
+      {/* PRODUCT PRIMARY INFORMATION MODAL */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
-              <IconBuildingStore className="h-5 w-5 text-primary" />
-              Multi-Branch Inventory: {detailProduct?.name}
+              <IconBox className="h-5 w-5 text-primary" />
+              Product Profile: {detailProduct?.name}
             </DialogTitle>
             <DialogDescription>
-              Real-time physical stock counts and low-stock alerts across all active shops and godowns.
+              Primary master catalogue attributes, identifiers, category, brand, and packaging units.
             </DialogDescription>
           </DialogHeader>
 
           {detailProduct && (
             <div className="space-y-4 py-2">
-              {/* Quick Details Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-lg bg-muted/40 border border-border/50 text-xs">
-                <div>
-                  <span className="text-[10px] text-muted-foreground">SKU / Code:</span>
-                  <div className="font-mono font-bold">{detailProduct.sku}</div>
+              <div className="flex items-center gap-3.5 p-3 rounded-lg border bg-muted/20">
+                <div className="h-14 w-14 shrink-0 rounded-lg bg-muted/40 overflow-hidden flex items-center justify-center border">
+                  <img
+                    src={detailProduct.image_url || DEFAULT_PRODUCT_IMAGE}
+                    alt={detailProduct.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div>
-                  <span className="text-[10px] text-muted-foreground">Barcode:</span>
-                  <div className="font-mono">{detailProduct.barcode || "—"}</div>
-                </div>
-                <div>
-                  <span className="text-[10px] text-muted-foreground">Retail MRP:</span>
-                  <div className="font-mono font-bold text-foreground">
-                    Rs. {detailProduct.retail_price}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-[10px] text-muted-foreground">Total Stock:</span>
-                  <div className="font-mono font-bold text-emerald-600">
-                    {detailProduct.total_stock} {detailProduct.base_unit}s
-                  </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="font-bold text-base text-foreground truncate">{detailProduct.name}</div>
+                  {detailProduct.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">{detailProduct.description}</p>
+                  )}
                 </div>
               </div>
 
-              {/* Branch stock table */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Location Inventory Breakdown
-                </h4>
-
-                <div className="space-y-2">
-                  {detailProduct.branch_stocks.map((bs) => {
-                    const isEditingThis = stockEditBranchId === bs.branch_id;
-
-                    return (
-                      <div
-                        key={bs.branch_id}
-                        className="p-3 rounded-lg border bg-card flex items-center justify-between text-xs"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="font-bold text-foreground flex items-center gap-1.5">
-                            {bs.branch_type === "warehouse_godown" ? (
-                              <IconBuildingWarehouse className="h-4 w-4 text-blue-600" />
-                            ) : (
-                              <IconBuildingStore className="h-4 w-4 text-emerald-600" />
-                            )}
-                            {bs.branch_name}
-                          </div>
-                          <div className="text-[11px] text-muted-foreground font-mono">
-                            {bs.branch_code}
-                          </div>
-                        </div>
-
-                        {isEditingThis ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              value={stockEditQty}
-                              onChange={(e) => setStockEditQty(Number(e.target.value) || 0)}
-                              className="h-8 w-24 text-right font-mono text-xs"
-                            />
-                            <Button
-                              size="sm"
-                              onClick={() => handleSaveBranchStock(bs.branch_id)}
-                              disabled={isUpdatingStock}
-                              className="h-8 px-2.5 text-xs gap-1.5"
-                            >
-                              {isUpdatingStock && <IconRefresh className="h-3.5 w-3.5 animate-spin" />}
-                              {isUpdatingStock ? "Saving..." : "Save"}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setStockEditBranchId(null)}
-                              className="h-8 px-2 text-xs"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <span className="font-mono font-bold text-sm text-foreground">
-                                {bs.quantity}
-                              </span>{" "}
-                              <span className="text-muted-foreground">{detailProduct.base_unit}s</span>
-                              {bs.reserved_quantity > 0 && (
-                                <div className="text-[10px] text-amber-600">
-                                  ({bs.reserved_quantity} reserved)
-                                </div>
-                              )}
-                            </div>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setStockEditBranchId(bs.branch_id);
-                                setStockEditQty(bs.quantity);
-                              }}
-                              className="h-7 text-xs"
-                            >
-                              Adjust Stock
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+              {/* Primary Attributes Grid */}
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-lg bg-muted/40 border border-border/50 text-xs">
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">SKU / Code</span>
+                  <div className="font-mono font-bold text-sm mt-0.5">{detailProduct.sku}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Barcode</span>
+                  <div className="font-mono text-sm mt-0.5">{detailProduct.barcode || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Category</span>
+                  <div className="font-semibold text-sm mt-0.5">{detailProduct.category_name || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Brand / Principal</span>
+                  <div className="font-semibold text-sm mt-0.5">{detailProduct.brand_name || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Base Unit (UOM)</span>
+                  <div className="font-mono font-semibold text-sm mt-0.5">{detailProduct.base_unit || "Piece"}</div>
                 </div>
               </div>
 
@@ -2077,11 +1922,6 @@ export default function ProductsPage() {
                         <div className="text-muted-foreground">
                           1 {conv.unit_name} = {conv.conversion_factor} {detailProduct.base_unit}s
                         </div>
-                        {conv.carton_wholesale_price && (
-                          <div className="font-mono text-foreground">
-                            Wholesale: Rs. {conv.carton_wholesale_price}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -2260,10 +2100,10 @@ export default function ProductsPage() {
                     onValueChange={(val) => setCategoryParentId(Number(val))}
                   >
                     <SelectTrigger id="cat_parent">
-                      <SelectValue placeholder="Main Category (No Parent)" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">Main Category (No Parent)</SelectItem>
+                      <SelectItem value="0" className="text-muted-foreground">Choose One (Main Category - No Parent)</SelectItem>
                       {categories.map((c) => (
                         <SelectItem key={c.id} value={String(c.id)}>
                           {c.name}

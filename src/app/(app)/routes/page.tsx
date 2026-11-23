@@ -596,10 +596,10 @@ export default function DeliveryAreasPage() {
                     onValueChange={(val) => setAssignedSalesmanId(Number(val))}
                   >
                     <SelectTrigger id="salesman">
-                      <SelectValue placeholder="Select Salesman" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">Unassigned</SelectItem>
+                      <SelectItem value="0" className="text-muted-foreground">Choose One (Unassigned)</SelectItem>
                       {salesmen.map((s) => (
                         <SelectItem key={s.id} value={String(s.user_id)}>
                           {s.full_name} ({s.role_name})

@@ -674,15 +674,13 @@ function FinancialStatementsContent() {
           {pnlData && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Net Revenue */}
-              <Card className="border-l-4 border-l-blue-500 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Net Revenue
-                    </span>
-                    <IconReceipt2 className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <div className="text-2xl font-bold tracking-tight text-blue-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Net Revenue</CardTitle>
+                  <IconReceipt2 className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     PKR {formatPKR(pnlData.net_revenue)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 flex items-center justify-between">
@@ -697,15 +695,13 @@ function FinancialStatementsContent() {
               </Card>
 
               {/* COGS */}
-              <Card className="border-l-4 border-l-amber-500 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Cost of Goods Sold (COGS)
-                    </span>
-                    <IconCoin className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div className="text-2xl font-bold tracking-tight text-amber-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Cost of Goods Sold (COGS)</CardTitle>
+                  <IconCoin className="h-4 w-4 text-amber-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     PKR {formatPKR(pnlData.total_cogs)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -717,62 +713,42 @@ function FinancialStatementsContent() {
               </Card>
 
               {/* Gross Profit */}
-              <Card className="border-l-4 border-l-purple-500 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Gross Profit
-                    </span>
-                    <IconTrendingUp className="h-4 w-4 text-purple-500" />
-                  </div>
-                  <div className="text-2xl font-bold tracking-tight text-purple-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
+                  <IconTrendingUp className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
                     PKR {formatPKR(pnlData.gross_profit)}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Badge variant="secondary" className="text-[11px] font-semibold bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
-                      GP Margin: {pnlData.gross_profit_margin_pct}%
-                    </Badge>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    GP Margin: {pnlData.gross_profit_margin_pct}%
+                  </p>
                 </CardContent>
               </Card>
 
               {/* Net Profit */}
-              <Card
-                className={`border-l-4 shadow-sm ${
-                  pnlData.is_profitable
-                    ? "border-l-emerald-500"
-                    : "border-l-rose-500"
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Net Profit / (Loss)
-                    </span>
-                    {pnlData.is_profitable ? (
-                      <IconTrendingUp className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <IconTrendingDown className="h-4 w-4 text-rose-500" />
-                    )}
-                  </div>
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Net Profit / (Loss)</CardTitle>
+                  {pnlData.is_profitable ? (
+                    <IconTrendingUp className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <IconTrendingDown className="h-4 w-4 text-rose-600" />
+                  )}
+                </CardHeader>
+                <CardContent>
                   <div
-                    className={`text-2xl font-bold tracking-tight ${
-                      pnlData.is_profitable ? "text-emerald-600" : "text-rose-600"
+                    className={`text-2xl font-bold ${
+                      pnlData.is_profitable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                     }`}
                   >
                     PKR {formatPKR(pnlData.net_profit)}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Badge
-                      className={`text-[11px] font-semibold ${
-                        pnlData.is_profitable
-                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
-                          : "bg-rose-500/10 text-rose-600 border border-rose-500/30"
-                      }`}
-                    >
-                      {pnlData.is_profitable ? "Profitable" : "Net Loss"} ({pnlData.net_profit_margin_pct}%)
-                    </Badge>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {pnlData.is_profitable ? "Profitable" : "Net Loss"} ({pnlData.net_profit_margin_pct}%)
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -1124,15 +1100,13 @@ function FinancialStatementsContent() {
           {bsData && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Assets */}
-              <Card className="border-l-4 border-l-blue-500 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Total Assets
-                    </span>
-                    <IconReceipt2 className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <div className="text-2xl font-bold tracking-tight text-blue-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+                  <IconReceipt2 className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     PKR {formatPKR(bsData.total_assets)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1142,15 +1116,13 @@ function FinancialStatementsContent() {
               </Card>
 
               {/* Total Liabilities */}
-              <Card className="border-l-4 border-l-amber-500 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Total Liabilities
-                    </span>
-                    <IconCoin className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div className="text-2xl font-bold tracking-tight text-amber-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
+                  <IconCoin className="h-4 w-4 text-amber-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     PKR {formatPKR(bsData.total_liabilities)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1160,15 +1132,13 @@ function FinancialStatementsContent() {
               </Card>
 
               {/* Total Equity */}
-              <Card className="border-l-4 border-l-purple-500 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Total Equity
-                    </span>
-                    <IconLayersLinked className="h-4 w-4 text-purple-500" />
-                  </div>
-                  <div className="text-2xl font-bold tracking-tight text-purple-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Equity</CardTitle>
+                  <IconLayersLinked className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
                     PKR {formatPKR(bsData.total_equity)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1178,42 +1148,26 @@ function FinancialStatementsContent() {
               </Card>
 
               {/* Equilibrium Status Badge */}
-              <Card
-                className={`border-l-4 shadow-sm ${
-                  bsData.is_balanced
-                    ? "border-l-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10"
-                    : "border-l-rose-500 bg-rose-50/20 dark:bg-rose-950/10"
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-muted-foreground mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                      Equilibrium Invariant
-                    </span>
-                    {bsData.is_balanced ? (
-                      <IconShieldCheck className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <IconAlertTriangle className="h-4 w-4 text-rose-600" />
-                    )}
-                  </div>
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Equilibrium Invariant</CardTitle>
+                  {bsData.is_balanced ? (
+                    <IconShieldCheck className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <IconAlertTriangle className="h-4 w-4 text-rose-600" />
+                  )}
+                </CardHeader>
+                <CardContent>
                   <div
-                    className={`text-2xl font-bold tracking-tight ${
-                      bsData.is_balanced ? "text-emerald-600" : "text-rose-600"
+                    className={`text-2xl font-bold ${
+                      bsData.is_balanced ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                     }`}
                   >
                     {bsData.is_balanced ? "0.00 (Balanced)" : `Δ PKR ${formatPKR(bsData.discrepancy)}`}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Badge
-                      className={`text-[11px] font-semibold ${
-                        bsData.is_balanced
-                          ? "bg-emerald-500/15 text-emerald-700 border border-emerald-500/30"
-                          : "bg-rose-500/15 text-rose-700 border border-rose-500/30"
-                      }`}
-                    >
-                      {bsData.is_balanced ? "Assets = Liab + Equity ✓" : "Out of Equilibrium"}
-                    </Badge>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {bsData.is_balanced ? "Assets = Liab + Equity ✓" : "Out of Equilibrium"}
+                  </p>
                 </CardContent>
               </Card>
             </div>

@@ -348,161 +348,152 @@ export default function KhataAgingPage() {
 
       {/* ---------------- Summary KPI Cards ---------------- */}
       {activeTab === "receivables" && arReport && (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 print:grid-cols-5 print:gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 print:grid-cols-5 print:gap-2">
           {/* Total AR */}
-          <Card className="border shadow-sm print:border-gray-400 print:shadow-none">
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                Total Receivables
-              </span>
-              <span className="text-lg font-black font-mono text-blue-700 dark:text-blue-300 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Receivables</CardTitle>
+              <IconCalendarTime className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-blue-600 dark:text-blue-400 print:text-black">
                 PKR {formatPKR(arReport.summary.total_receivables)}
-              </span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Across {arReport.summary.total_customers_count} accounts
-              </span>
+              </p>
             </CardContent>
           </Card>
 
           {/* Current (0-30d) */}
-          <Card className="border shadow-sm print:border-gray-400 print:shadow-none">
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                Current (0 - 30d)
-              </span>
-              <span className="text-lg font-black font-mono text-emerald-800 dark:text-emerald-200 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Current (0 - 30d)</CardTitle>
+              <IconCalendarTime className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">
                 PKR {formatPKR(arReport.summary.total_current)}
-              </span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Within standard terms
-              </span>
+              </p>
             </CardContent>
           </Card>
 
           {/* Total Overdue */}
-          <Card
-            className={`border shadow-sm print:border-gray-400 print:shadow-none ${
-              arReport.summary.total_overdue > 0
-                ? "bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900"
-                : ""
-            }`}
-          >
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
-                Total Overdue (&gt;30d)
-              </span>
-              <span className="text-lg font-black font-mono text-rose-800 dark:text-rose-200 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Overdue (&gt;30d)</CardTitle>
+              <IconCalendarTime className="h-4 w-4 text-rose-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-rose-600 dark:text-rose-400 print:text-black">
                 PKR {formatPKR(arReport.summary.total_overdue)}
-              </span>
-              <span className="text-[10px] text-rose-600 block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 {arReport.summary.overdue_customers_count} customers overdue
-              </span>
+              </p>
             </CardContent>
           </Card>
 
           {/* Days Sales Outstanding (DSO) */}
-          <Card className="border shadow-sm print:border-gray-400 print:shadow-none">
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">
-                Days Sales Out (DSO)
-              </span>
-              <span className="text-lg font-black font-mono text-purple-800 dark:text-purple-200 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Days Sales Out (DSO)</CardTitle>
+              <IconCalendarTime className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-foreground print:text-black">
                 {arReport.summary.days_sales_outstanding} Days
-              </span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Avg. collection turnaround
-              </span>
+              </p>
             </CardContent>
           </Card>
 
-          {/* High Risk (&gt;90d) */}
-          <Card
-            className={`border shadow-sm print:border-gray-400 print:shadow-none ${
-              arReport.summary.high_risk_customers_count > 0
-                ? "bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900"
-                : ""
-            }`}
-          >
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                High Risk (&gt;90d)
-              </span>
-              <span className="text-lg font-black font-mono text-amber-800 dark:text-amber-200 print:text-black">
+          {/* High Risk (>90d) */}
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">High Risk (&gt;90d)</CardTitle>
+              <IconCalendarTime className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-amber-600 dark:text-amber-400 print:text-black">
                 PKR {formatPKR(arReport.summary.total_overdue_90_plus)}
-              </span>
-              <span className="text-[10px] text-amber-600 block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 {arReport.summary.high_risk_customers_count} accounts past 90 days
-              </span>
+              </p>
             </CardContent>
           </Card>
         </div>
       )}
 
       {activeTab === "payables" && apReport && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 print:grid-cols-4 print:gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4 print:gap-2">
           {/* Total AP */}
-          <Card className="border shadow-sm print:border-gray-400 print:shadow-none">
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                Total Payables
-              </span>
-              <span className="text-lg font-black font-mono text-purple-700 dark:text-purple-300 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Payables</CardTitle>
+              <IconBuildingStore className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-foreground print:text-black">
                 PKR {formatPKR(apReport.summary.total_payables)}
-              </span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Across {apReport.summary.total_suppliers_count} vendors
-              </span>
+              </p>
             </CardContent>
           </Card>
 
           {/* Current (0-30d) */}
-          <Card className="border shadow-sm print:border-gray-400 print:shadow-none">
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                Current (0 - 30d)
-              </span>
-              <span className="text-lg font-black font-mono text-emerald-800 dark:text-emerald-200 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Current (0 - 30d)</CardTitle>
+              <IconBuildingStore className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">
                 PKR {formatPKR(apReport.summary.total_current)}
-              </span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Within supplier terms
-              </span>
+              </p>
             </CardContent>
           </Card>
 
           {/* Overdue Payables */}
-          <Card
-            className={`border shadow-sm print:border-gray-400 print:shadow-none ${
-              apReport.summary.total_overdue > 0
-                ? "bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900"
-                : ""
-            }`}
-          >
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
-                Overdue Payables
-              </span>
-              <span className="text-lg font-black font-mono text-rose-800 dark:text-rose-200 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Overdue Payables</CardTitle>
+              <IconBuildingStore className="h-4 w-4 text-rose-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-rose-600 dark:text-rose-400 print:text-black">
                 PKR {formatPKR(apReport.summary.total_overdue)}
-              </span>
-              <span className="text-[10px] text-rose-600 block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 {apReport.summary.overdue_suppliers_count} suppliers pending
-              </span>
+              </p>
             </CardContent>
           </Card>
 
           {/* Days Payable Outstanding (DPO) */}
-          <Card className="border shadow-sm print:border-gray-400 print:shadow-none">
-            <CardContent className="p-3">
-              <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">
-                Days Payable Out (DPO)
-              </span>
-              <span className="text-lg font-black font-mono text-blue-800 dark:text-blue-200 print:text-black">
+          <Card className="shadow-xs print:border-gray-400 print:shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Days Payable Out (DPO)</CardTitle>
+              <IconBuildingStore className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-blue-600 dark:text-blue-400 print:text-black">
                 {apReport.summary.days_payable_outstanding} Days
-              </span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Avg. supplier payment cycle
-              </span>
+              </p>
             </CardContent>
           </Card>
         </div>

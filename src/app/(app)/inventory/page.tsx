@@ -360,7 +360,7 @@ export default function InventoryPage() {
               />
             </div>
 
-            {/* Branch Filter */}
+            {/* Warehouse / Branch Filter */}
             <Select
               value={selectedBranch}
               onValueChange={(val) => {
@@ -368,14 +368,14 @@ export default function InventoryPage() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-36 h-9 text-xs">
-                <SelectValue placeholder="Branch" />
+              <SelectTrigger className="w-48 h-9 text-xs">
+                <SelectValue placeholder="Warehouse / Branch" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Branches</SelectItem>
+                <SelectItem value="all">All Warehouses / Branches</SelectItem>
                 {branches.map((b) => (
                   <SelectItem key={b.id} value={String(b.id)}>
-                    {b.name}
+                    Warehouse: {b.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -433,7 +433,7 @@ export default function InventoryPage() {
                 <TableHead className="w-[110px]">SKU / Barcode</TableHead>
                 <TableHead>Product Name</TableHead>
                 <TableHead>Category / Brand</TableHead>
-                <TableHead>Branch Location</TableHead>
+                <TableHead>Warehouse / Branch</TableHead>
                 <TableHead className="text-right">Current Stock</TableHead>
                 <TableHead className="text-right">Reorder Pt</TableHead>
                 <TableHead className="text-right">Cost Price</TableHead>
@@ -657,11 +657,12 @@ export default function InventoryPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold">Action Type</Label>
-                    <Select value={adjType} onValueChange={(val: any) => setAdjType(val)}>
+                    <Select value={adjType || ("none" as any)} onValueChange={(val: any) => setAdjType(val === "none" ? "" : val)}>
                       <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-xs text-muted-foreground">Choose One</SelectItem>
                         <SelectItem value="SUBTRACT">Deduct (Damage / Loss)</SelectItem>
                         <SelectItem value="ADD">Add (Audit Surplus)</SelectItem>
                       </SelectContent>
@@ -684,11 +685,12 @@ export default function InventoryPage() {
 
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold">Reason</Label>
-                  <Select value={adjReason} onValueChange={setAdjReason}>
+                  <Select value={adjReason || "none"} onValueChange={(val) => setAdjReason(val === "none" ? "" : val)}>
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-xs text-muted-foreground">Choose One</SelectItem>
                       <SelectItem value="damage">Damaged Goods</SelectItem>
                       <SelectItem value="expiry">Expired Stock</SelectItem>
                       <SelectItem value="audit_correction">Audit Discrepancy</SelectItem>

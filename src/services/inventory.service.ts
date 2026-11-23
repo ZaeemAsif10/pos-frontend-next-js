@@ -27,6 +27,7 @@ export interface PurchaseItemDetail {
   product_sku?: string | null;
   unit_name: string;
   quantity: number;
+  returned_quantity?: number;
   conversion_factor: number;
   total_base_quantity: number;
   unit_cost: number;
@@ -36,6 +37,66 @@ export interface PurchaseItemDetail {
   total_cost: number;
   batch_number?: string | null;
   expiry_date?: string | null;
+}
+
+export interface PurchaseReturnItemInput {
+  purchase_item_id?: number | null;
+  product_id: number;
+  unit_name: string;
+  quantity: number;
+  conversion_factor?: number;
+  unit_cost: number;
+}
+
+export interface PurchaseReturnItemRecord {
+  id: number;
+  purchase_return_id: number;
+  purchase_item_id?: number | null;
+  product_id: number;
+  product_name?: string | null;
+  product_sku?: string | null;
+  unit_name: string;
+  quantity: number;
+  conversion_factor: number;
+  total_base_quantity: number;
+  unit_cost: number;
+  total_cost: number;
+}
+
+export interface PurchaseReturnRecord {
+  id: number;
+  tenant_id: number;
+  purchase_id?: number | null;
+  purchase_invoice_number?: string | null;
+  branch_id: number;
+  branch_name?: string | null;
+  supplier_id: number;
+  supplier_name?: string | null;
+  return_number: string;
+  return_date: string;
+  total_qty: number;
+  total_amount: number;
+  refund_method: string;
+  refund_account_id?: number | null;
+  refund_account_name?: string | null;
+  refund_account_code?: string | null;
+  journal_entry_number?: string | null;
+  reason?: string | null;
+  notes?: string | null;
+  created_at: string;
+  items: PurchaseReturnItemRecord[];
+}
+
+export interface StandalonePurchaseReturnCreatePayload {
+  branch_id: number;
+  supplier_id: number;
+  purchase_id?: number | null;
+  return_date?: string;
+  refund_method: string;
+  refund_account_id?: number | null;
+  reason?: string | null;
+  notes?: string | null;
+  items: PurchaseReturnItemInput[];
 }
 
 export interface PurchaseCreatePayload {
@@ -48,6 +109,7 @@ export interface PurchaseCreatePayload {
   tax_amount?: number;
   shipping_cost?: number;
   paid_amount?: number;
+  paid_from_account_id?: number | null;
   notes?: string | null;
   items: PurchaseItemPayload[];
 }
@@ -55,6 +117,7 @@ export interface PurchaseCreatePayload {
 export interface PurchaseUpdatePayload {
   payment_status?: string;
   paid_amount?: number;
+  paid_from_account_id?: number | null;
   supplier_bill_no?: string | null;
   notes?: string | null;
   status?: string;
@@ -104,6 +167,9 @@ export interface PurchaseItem {
   supplier_id: number;
   supplier_name?: string | null;
   items_count: number;
+  total_qty?: number;
+  returned_qty?: number;
+  returned_amount?: number;
   subtotal: number;
   discount_amount: number;
   tax_amount: number;
@@ -111,6 +177,10 @@ export interface PurchaseItem {
   total_amount: number;
   paid_amount: number;
   balance_due: number;
+  paid_from_account_id?: number | null;
+  paid_from_account_name?: string | null;
+  paid_from_account_code?: string | null;
+  journal_entry_number?: string | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;
@@ -298,7 +368,13 @@ class InventoryService {
 
   async returnPurchase(
     id: number,
-    payload?: { reason?: string; refund_payment_method?: string }
+    payload?: {
+      reason?: string;
+      refund_payment_method?: string;
+      refund_account_id?: number | null;
+      notes?: string | null;
+      items?: PurchaseReturnItemInput[];
+    }
   ): Promise<PurchaseDetail> {
     const res = await apiClient<PurchaseDetail>(API_ENDPOINTS.TENANT.PURCHASE_RETURN(id), {
       method: "POST",
@@ -308,6 +384,32 @@ class InventoryService {
     emitAppEvent("inventory:changed", "updated");
     emitAppEvent("products:changed", "updated");
     emitAppEvent("suppliers:changed", "updated");
+    emitAppEvent("accounting:changed", "updated");
+    return res;
+  }
+
+  async listPurchaseReturns(params?: {
+    branch_id?: number;
+    supplier_id?: number;
+    search?: string;
+  }): Promise<PurchaseReturnRecord[]> {
+    return apiClient<PurchaseReturnRecord[]>(API_ENDPOINTS.TENANT.PURCHASE_RETURNS, {
+      params,
+    });
+  }
+
+  async createStandalonePurchaseReturn(
+    payload: StandalonePurchaseReturnCreatePayload
+  ): Promise<PurchaseReturnRecord> {
+    const res = await apiClient<PurchaseReturnRecord>(API_ENDPOINTS.TENANT.PURCHASE_RETURNS, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    emitAppEvent("purchases:changed", "updated");
+    emitAppEvent("inventory:changed", "updated");
+    emitAppEvent("products:changed", "updated");
+    emitAppEvent("suppliers:changed", "updated");
+    emitAppEvent("accounting:changed", "updated");
     return res;
   }
 

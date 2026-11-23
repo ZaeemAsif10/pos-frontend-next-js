@@ -27,6 +27,7 @@ import {
   IconBuildingBank,
   IconCalendarTime,
   IconCreditCard,
+  IconArrowBackUp,
   type Icon,
 } from "@tabler/icons-react";
 
@@ -123,7 +124,7 @@ export const sidebarNavigation: SidebarGroup[] = [
         roles: ["Admin", "Owner"],
       },
       {
-        title: "Shops & Branches",
+        title: "Shops, Branches & Warehouses",
         url: "/branches",
         icon: IconBuildingStore,
         permissions: ["branches:view", "branches:create", "branches:edit", "branches:delete"],
@@ -180,6 +181,13 @@ export const sidebarNavigation: SidebarGroup[] = [
         url: "/purchases",
         icon: IconReceipt,
         permissions: ["purchases:view", "purchases:create", "purchases:edit", "purchases:delete"],
+        roles: ["Admin", "Owner"],
+      },
+      {
+        title: "Purchase Returns",
+        url: "/purchase-returns",
+        icon: IconArrowBackUp,
+        permissions: ["purchases:view", "purchases:create", "purchases:edit"],
         roles: ["Admin", "Owner"],
       },
       {

@@ -21,6 +21,10 @@ import {
   IconEdit,
   IconSettings,
   IconCreditCard,
+  IconReportAnalytics,
+  IconPrinter,
+  IconBuildingBank,
+  IconBuildingWarehouse,
 } from "@tabler/icons-react";
 import Link from "next/link";
 
@@ -90,6 +94,7 @@ import {
 import { branchService, type BranchItem } from "@/services/branch.service";
 import { partyService, type SupplierItem } from "@/services/party.service";
 import { productService, type ProductListItem } from "@/services/product.service";
+import { accountingService, type AccountItem } from "@/services/accounting.service";
 
 interface FormItemRow {
   product_id: number;
@@ -159,6 +164,8 @@ export default function PurchasesPage() {
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierItem[]>([]);
   const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [accounts, setAccounts] = useState<AccountItem[]>([]);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Filter States
   const [search, setSearch] = useState("");
@@ -181,11 +188,14 @@ export default function PurchasesPage() {
   const [taxAmount, setTaxAmount] = useState<number>(0);
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [paidAmount, setPaidAmount] = useState<number>(0);
+  const [paidFromAccountId, setPaidFromAccountId] = useState<number | 0>(0);
   const [notes, setNotes] = useState("");
 
   // Edit Purchase Payment Status Modal State
   const [editingPurchase, setEditingPurchase] = useState<PurchaseItem | null>(null);
   const [editPaymentStatus, setEditPaymentStatus] = useState<string>("unpaid");
+  const [editPaidAmount, setEditPaidAmount] = useState<number>(0);
+  const [editPaidFromAccountId, setEditPaidFromAccountId] = useState<number | 0>(0);
   const [editSupplierBillNo, setEditSupplierBillNo] = useState<string>("");
   const [editNotes, setEditNotes] = useState<string>("");
   const [isUpdatingPurchase, setIsUpdatingPurchase] = useState(false);
@@ -212,23 +222,82 @@ export default function PurchasesPage() {
 
   // Return / Debit Note State
   const [returningPurchase, setReturningPurchase] = useState<PurchaseItem | null>(null);
+  const [returningPurchaseDetail, setReturningPurchaseDetail] = useState<PurchaseDetail | null>(null);
+  const [isReturnDetailLoading, setIsReturnDetailLoading] = useState(false);
+  const [returnItemQuantities, setReturnItemQuantities] = useState<Record<number, number>>({});
   const [returnReason, setReturnReason] = useState("Goods Returned to Supplier / Debit Note");
-  const [returnRefundMethod, setReturnRefundMethod] = useState("cash");
+  const [returnRefundMethod, setReturnRefundMethod] = useState("credit");
+  const [returnRefundAccountId, setReturnRefundAccountId] = useState<number>(0);
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+
+  const openReturnPurchaseModal = async (p: PurchaseItem) => {
+    setReturningPurchase(p);
+    setReturningPurchaseDetail(null);
+    setReturnReason("Goods Returned to Supplier / Debit Note");
+    setReturnRefundMethod(Number(p.paid_amount) > 0 && Number(p.balance_due) <= 0 ? "cash" : "credit");
+    setReturnRefundAccountId(p.paid_from_account_id || 0);
+    try {
+      setIsReturnDetailLoading(true);
+      const detail = await inventoryService.getPurchaseDetail(p.id);
+      setReturningPurchaseDetail(detail);
+      const initialQtys: Record<number, number> = {};
+      (detail.items || []).forEach((it) => {
+        const rem = Math.max(0, Number(it.quantity) - Number(it.returned_quantity || 0));
+        initialQtys[it.id] = rem;
+      });
+      setReturnItemQuantities(initialQtys);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || "Failed to load purchase items for return");
+    } finally {
+      setIsReturnDetailLoading(false);
+    }
+  };
 
   const handleConfirmReturn = async () => {
     if (!returningPurchase) return;
+    const detailItems = returningPurchaseDetail?.items || [];
+    const itemsPayload = detailItems
+      .map((it) => {
+        const retQ = Number(returnItemQuantities[it.id] || 0);
+        const maxRem = Math.max(0, Number(it.quantity) - Number(it.returned_quantity || 0));
+        const validQ = Math.min(Math.max(0, retQ), maxRem);
+        return {
+          purchase_item_id: it.id,
+          product_id: it.product_id,
+          unit_name: it.unit_name,
+          quantity: validQ,
+          conversion_factor: Number(it.conversion_factor || 1),
+          unit_cost: Number(it.unit_cost || 0),
+        };
+      })
+      .filter((x) => x.quantity > 0);
+
+    if (itemsPayload.length === 0) {
+      toast.error("Please enter a return quantity greater than 0 for at least one item.");
+      return;
+    }
+
     try {
       setIsSubmittingReturn(true);
       await inventoryService.returnPurchase(returningPurchase.id, {
         reason: returnReason,
         refund_payment_method: returnRefundMethod,
+        refund_account_id:
+          returnRefundMethod !== "credit" && returnRefundAccountId > 0
+            ? returnRefundAccountId
+            : null,
+        items: itemsPayload,
       });
-      toast.success(`Purchase ${returningPurchase.invoice_number} returned and Debit Note posted successfully.`);
+      const totRetQty = itemsPayload.reduce((acc, x) => acc + x.quantity, 0);
+      const totRetAmt = itemsPayload.reduce((acc, x) => acc + x.quantity * x.unit_cost, 0);
+      toast.success(
+        `Returned ${totRetQty} Qty (PKR ${totRetAmt.toLocaleString()}) from Warehouse '${returningPurchase.branch_name || "Main"}' and posted Debit Note!`
+      );
       setReturningPurchase(null);
+      setReturningPurchaseDetail(null);
       loadData();
     } catch (err: any) {
-      toast.error(err.message || "Failed to process purchase return");
+      toast.error(err?.detail || err?.message || "Failed to process purchase return");
     } finally {
       setIsSubmittingReturn(false);
     }
@@ -237,7 +306,7 @@ export default function PurchasesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [purchasesData, statsData, branchesData, suppliersData, productsData, statusesData] = await Promise.all([
+      const [purchasesData, statsData, branchesData, suppliersData, productsData, statusesData, accountsData] = await Promise.all([
         inventoryService.listPurchases(),
         inventoryService.getPurchaseStats().catch(() => ({
           total_purchases_count: 0,
@@ -249,6 +318,7 @@ export default function PurchasesPage() {
         partyService.listSuppliers().catch(() => []),
         productService.listProducts().catch(() => ({ items: [] })),
         inventoryService.listPaymentStatuses().catch(() => []),
+        accountingService.listAccounts({ active_only: true }).catch(() => []),
       ]);
 
       setPurchases(purchasesData || []);
@@ -257,6 +327,7 @@ export default function PurchasesPage() {
       setSuppliers(suppliersData || []);
       setProducts(productsData?.items || []);
       setPaymentStatuses(statusesData || []);
+      setAccounts(accountsData || []);
     } catch (err: any) {
       toast.error(err?.detail || err?.message || "Failed to load purchases");
     } finally {
@@ -287,6 +358,7 @@ export default function PurchasesPage() {
     setTaxAmount(0);
     setShippingCost(0);
     setPaidAmount(0);
+    setPaidFromAccountId(0);
     setNotes("");
 
     // Default Purchase Price = 1 and Sale Price = 1 for all rows
@@ -431,6 +503,19 @@ export default function PurchasesPage() {
     setItemRows(copy);
   };
 
+  // Eligible Cash / Bank / Asset accounts from Chart of Accounts for making payments
+  const paymentAccounts = accounts
+    .filter(
+      (a) =>
+        a.is_active &&
+        a.account_type === "asset" &&
+        a.code !== "1030" &&
+        a.code !== "1040" &&
+        !a.name.toLowerCase().includes("inventory") &&
+        !a.name.toLowerCase().includes("receivable")
+    )
+    .sort((a, b) => a.code.localeCompare(b.code));
+
   const subtotal = itemRows.reduce((sum, r) => sum + r.quantity * r.unit_cost, 0);
   const netTotal = Math.max(0, subtotal);
 
@@ -446,12 +531,27 @@ export default function PurchasesPage() {
       : "unpaid");
 
   const effectivePaidAmount =
-    currentAccBehavior === "paid"
-      ? netTotal
-      : currentAccBehavior === "unpaid"
+    currentAccBehavior === "unpaid"
       ? 0
-      : Math.min(paidAmount, netTotal);
+      : Math.min(Math.max(0, Number(paidAmount) || 0), netTotal);
   const balanceDue = Math.max(0, netTotal - effectivePaidAmount);
+
+  const editStatusObj = paymentStatuses.find(
+    (s) => s.code.toLowerCase() === editPaymentStatus.toLowerCase()
+  );
+  const editAccBehavior =
+    editStatusObj?.accounting_type ||
+    (editPaymentStatus.toLowerCase() === "paid"
+      ? "paid"
+      : editPaymentStatus.toLowerCase() === "partial"
+      ? "partial"
+      : "unpaid");
+  const editNetTotal = Number(editingPurchase?.total_amount || 0);
+  const editEffectivePaidAmount =
+    editAccBehavior === "unpaid"
+      ? 0
+      : Math.min(Math.max(0, Number(editPaidAmount) || 0), editNetTotal);
+  const editBalanceDue = Math.max(0, editNetTotal - editEffectivePaidAmount);
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -475,6 +575,16 @@ export default function PurchasesPage() {
       toast.error("Please select a payment status");
       return;
     }
+    if (currentAccBehavior !== "unpaid") {
+      if (!paidFromAccountId) {
+        toast.error("Please select the Cash / Bank account from which payment was made");
+        return;
+      }
+      if (!effectivePaidAmount || effectivePaidAmount <= 0) {
+        toast.error("Please enter a valid paid amount greater than 0");
+        return;
+      }
+    }
 
     try {
       setIsSubmitting(true);
@@ -488,6 +598,7 @@ export default function PurchasesPage() {
         retail_price: Number(r.retail_price) || 1,
         tax_rate: 0,
         tax_amount: 0,
+        total_cost: r.total_cost,
         batch_number: r.batch_number.trim() || null,
         expiry_date: r.expiry_date.trim() || null,
       }));
@@ -502,6 +613,7 @@ export default function PurchasesPage() {
         tax_amount: 0,
         shipping_cost: 0,
         paid_amount: effectivePaidAmount,
+        paid_from_account_id: currentAccBehavior !== "unpaid" ? paidFromAccountId : null,
         notes: notes.trim() || null,
         items: itemsPayload,
       });
@@ -518,7 +630,9 @@ export default function PurchasesPage() {
 
   const openEditPurchaseModal = (p: PurchaseItem) => {
     setEditingPurchase(p);
-    setEditPaymentStatus(p.payment_status || "unpaid");
+    setEditPaymentStatus(p.payment_status === "partial" ? "paid" : (p.payment_status || "unpaid"));
+    setEditPaidAmount(Number(p.paid_amount || 0) > 0 ? Number(p.paid_amount) : Number(p.total_amount || 0));
+    setEditPaidFromAccountId(p.paid_from_account_id || 0);
     setEditSupplierBillNo(p.supplier_bill_no || "");
     setEditNotes(p.notes || "");
   };
@@ -530,15 +644,27 @@ export default function PurchasesPage() {
       toast.error("Please select a payment status");
       return;
     }
+    if (editAccBehavior !== "unpaid") {
+      if (!editPaidFromAccountId) {
+        toast.error("Please select the Cash / Bank account from which payment was made");
+        return;
+      }
+      if (!editEffectivePaidAmount || editEffectivePaidAmount <= 0) {
+        toast.error("Please enter a valid paid amount greater than 0");
+        return;
+      }
+    }
     try {
       setIsUpdatingPurchase(true);
       await inventoryService.updatePurchase(editingPurchase.id, {
         payment_status: editPaymentStatus,
+        paid_amount: editEffectivePaidAmount,
+        paid_from_account_id: editAccBehavior !== "unpaid" ? editPaidFromAccountId : 0,
         supplier_bill_no: editSupplierBillNo.trim() || null,
         notes: editNotes.trim() || null,
       });
       toast.success(
-        `Purchase ${editingPurchase.invoice_number} updated to "${editPaymentStatus.toUpperCase()}"! Double-Entry Journal & Balance Sheet synced.`
+        `Purchase ${editingPurchase.invoice_number} updated! Paid: PKR ${editEffectivePaidAmount.toLocaleString()} | Pending: PKR ${editBalanceDue.toLocaleString()}. Double-Entry Journal & Balance Sheet synced.`
       );
       setEditingPurchase(null);
       loadData();
@@ -685,6 +811,26 @@ export default function PurchasesPage() {
             <IconRefresh className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReportOpen(true)}
+            className="h-9 gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+          >
+            <IconReportAnalytics className="h-4 w-4" />
+            Payment &amp; Pending Report
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+          >
+            <Link href="/purchase-returns">
+              <IconArrowBackUp className="h-4 w-4" />
+              Purchase Returns
+            </Link>
+          </Button>
           {canViewPaymentStatuses && (
             <Button
               asChild
@@ -788,10 +934,10 @@ export default function PurchasesPage() {
                 <SelectValue placeholder="Branch" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Branches</SelectItem>
+                <SelectItem value="all">All Warehouses / Branches</SelectItem>
                 {branches.map((b) => (
                   <SelectItem key={b.id} value={String(b.id)}>
-                    {b.name}
+                    Warehouse: {b.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -858,8 +1004,8 @@ export default function PurchasesPage() {
                 <TableHead className="w-[130px]">Invoice #</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Supplier</TableHead>
-                <TableHead>Receiving Branch</TableHead>
-                <TableHead className="text-center">Items</TableHead>
+                <TableHead>Warehouse / Branch</TableHead>
+                <TableHead className="text-center">Qty</TableHead>
                 <TableHead className="text-right">Total Bill</TableHead>
                 <TableHead className="text-right">Paid</TableHead>
                 <TableHead className="text-right">Balance Due</TableHead>
@@ -909,21 +1055,41 @@ export default function PurchasesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <IconBuildingStore className="h-3.5 w-3.5 text-blue-500" />
-                        <span>{p.branch_name || "Branch"}</span>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <IconBuildingWarehouse className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                        <div>
+                          <span className="font-medium text-foreground">{p.branch_name || "Main Warehouse"}</span>
+                          <span className="block text-[10px] text-muted-foreground">Stock Inward Warehouse</span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                        {p.items_count} Items
-                      </Badge>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-mono">
+                          {p.total_qty && p.total_qty > 0 ? p.total_qty : p.items_count}
+                        </Badge>
+                        {Number(p.returned_qty || 0) > 0 && (
+                          <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold">
+                            -{p.returned_qty} Ret (Kept: {Math.max(0, Number(p.total_qty || 0) - Number(p.returned_qty || 0))})
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right text-xs font-semibold">
-                      PKR {Number(p.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      <div>PKR {Number(p.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      {Number(p.returned_amount || 0) > 0 && (
+                        <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400">
+                          Ret: PKR {Number(p.returned_amount).toLocaleString()}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-right text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                      PKR {Number(p.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      <div>PKR {Number(p.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      {p.paid_from_account_name && Number(p.paid_amount) > 0 && (
+                        <div className="text-[10px] text-muted-foreground font-mono">
+                          via {p.paid_from_account_code} - {p.paid_from_account_name}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-right text-xs font-bold text-rose-600 dark:text-rose-400">
                       PKR {Number(p.balance_due).toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -935,14 +1101,17 @@ export default function PurchasesPage() {
                             (s) => s.code.toLowerCase() === (p.payment_status || "").toLowerCase()
                           );
                           const isPaidLike =
-                            stObj?.accounting_type === "paid" || p.payment_status === "paid";
+                            (stObj?.accounting_type === "paid" || p.payment_status === "paid") &&
+                            Number(p.balance_due) <= 0;
                           const isPartialLike =
-                            stObj?.accounting_type === "partial" || p.payment_status === "partial";
+                            stObj?.accounting_type === "partial" ||
+                            p.payment_status === "partial" ||
+                            (Number(p.paid_amount) > 0 && Number(p.balance_due) > 0);
                           return (
                             <Badge
                               variant="outline"
                               onClick={() => canEdit && openEditPurchaseModal(p)}
-                              title={canEdit ? "Click to update Payment Status" : undefined}
+                              title={canEdit ? "Click to update Payment Status & Account" : undefined}
                               className={`text-[10px] capitalize ${
                                 canEdit ? "cursor-pointer hover:opacity-80" : ""
                               } ${
@@ -953,13 +1122,23 @@ export default function PurchasesPage() {
                                   : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                               }`}
                             >
-                              {stObj ? stObj.name : p.payment_status}
+                              {isPartialLike ? "Partial" : stObj ? stObj.name : p.payment_status}
                             </Badge>
                           );
                         })()}
+                        {p.journal_entry_number && (
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            {p.journal_entry_number}
+                          </span>
+                        )}
                         {p.status === "returned" && (
                           <Badge variant="outline" className="text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
-                            Returned (Debit Note)
+                            Fully Returned (Debit Note)
+                          </Badge>
+                        )}
+                        {p.status === "partial_returned" && (
+                          <Badge variant="outline" className="text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                            Partial Return ({p.returned_qty} Qty)
                           </Badge>
                         )}
                       </div>
@@ -984,15 +1163,11 @@ export default function PurchasesPage() {
                           )}
                           {p.status !== "returned" && p.status !== "cancelled" && canCreate && (
                             <DropdownMenuItem
-                              onClick={() => {
-                                setReturningPurchase(p);
-                                setReturnReason("Goods Returned to Supplier / Debit Note");
-                                setReturnRefundMethod("cash");
-                              }}
+                              onClick={() => openReturnPurchaseModal(p)}
                               className="text-amber-600 focus:text-amber-600 dark:text-amber-400"
                             >
                               <IconArrowBackUp className="mr-2 h-4 w-4" />
-                              Return / Debit Note
+                              Return Qty / Debit Note
                             </DropdownMenuItem>
                           )}
                           {canDelete && p.status !== "returned" && (
@@ -1046,8 +1221,9 @@ export default function PurchasesPage() {
               {/* Top Controls */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-muted/40 p-3 rounded-lg border">
                 <div className="space-y-1">
-                  <Label className="text-xs font-semibold">
-                    Receiving Branch / Godown <span className="text-destructive">*</span>
+                  <Label className="text-xs font-semibold flex items-center gap-1">
+                    <IconBuildingWarehouse className="h-3.5 w-3.5 text-primary" />
+                    Receiving Warehouse / Godown <span className="text-destructive">*</span>
                   </Label>
                   <Select value={String(branchId)} onValueChange={(val) => setBranchId(Number(val))}>
                     <SelectTrigger className="h-8 text-xs">
@@ -1059,7 +1235,7 @@ export default function PurchasesPage() {
                       </SelectItem>
                       {branches.map((b) => (
                         <SelectItem key={b.id} value={String(b.id)} className="text-xs">
-                          {b.name}
+                          Warehouse: {b.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1174,9 +1350,12 @@ export default function PurchasesPage() {
                             onValueChange={(val) => handleUomSelect(idx, val)}
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
+                              <SelectValue placeholder="Choose One" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="none" className="text-xs text-muted-foreground">
+                                Choose One
+                              </SelectItem>
                               <SelectItem value="base" className="text-xs">
                                 {prod?.base_unit || "Piece"} (Base)
                               </SelectItem>
@@ -1306,7 +1485,18 @@ export default function PurchasesPage() {
                       <Label className="text-xs font-semibold">
                         Payment Status <span className="text-destructive">*</span>
                       </Label>
-                      {canViewPaymentStatuses && (
+                      <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+          >
+            <Link href="/purchase-returns">
+              <IconArrowBackUp className="h-4 w-4" />
+              Purchase Returns
+            </Link>
+          </Button>
+          {canViewPaymentStatuses && (
                         <button
                           type="button"
                           onClick={() => {
@@ -1322,7 +1512,23 @@ export default function PurchasesPage() {
                     </div>
                     <Select
                       value={purchasePaymentStatus}
-                      onValueChange={(val) => setPurchasePaymentStatus(val)}
+                      onValueChange={(val) => {
+                        setPurchasePaymentStatus(val);
+                        const st = paymentStatuses.find((s) => s.code.toLowerCase() === val.toLowerCase());
+                        const behavior =
+                          st?.accounting_type ||
+                          (val.toLowerCase() === "paid"
+                            ? "paid"
+                            : val.toLowerCase() === "partial"
+                            ? "partial"
+                            : "unpaid");
+                        if (behavior === "unpaid") {
+                          setPaidAmount(0);
+                          setPaidFromAccountId(0);
+                        } else if (paidAmount <= 0) {
+                          setPaidAmount(netTotal);
+                        }
+                      }}
                     >
                       <SelectTrigger className="h-8 text-xs font-semibold">
                         <SelectValue placeholder="Choose One" />
@@ -1346,26 +1552,69 @@ export default function PurchasesPage() {
                     </Select>
                   </div>
 
-                  {currentAccBehavior === "partial" && (
-                    <div className="pt-1">
-                      <Label className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                        Cash/Bank Paid Amount *
-                      </Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max={netTotal}
-                        value={paidAmount}
-                        onChange={(e) => setPaidAmount(Number(e.target.value))}
-                        className="h-7 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                      />
+                  {currentAccBehavior !== "unpaid" && purchasePaymentStatus !== "none" && (
+                    <div className="space-y-2.5 pt-2 border-t border-primary/20">
+                      {/* 1. Paid From Account Dropdown */}
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold flex items-center gap-1">
+                          <IconBuildingBank className="h-3.5 w-3.5 text-primary" />
+                          Paid From Account (Cash / Bank) <span className="text-destructive">*</span>
+                        </Label>
+                        <Select
+                          value={String(paidFromAccountId)}
+                          onValueChange={(val) => setPaidFromAccountId(Number(val))}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Choose One" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0" className="text-xs text-muted-foreground">
+                              Choose One
+                            </SelectItem>
+                            {paymentAccounts.map((acc) => (
+                              <SelectItem key={acc.id} value={String(acc.id)} className="text-xs">
+                                {acc.code} — {acc.name} (Bal: PKR {Number(acc.current_balance || 0).toLocaleString()})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* 2. Paid Amount Input */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                            Paid Amount (PKR) <span className="text-destructive">*</span>
+                          </Label>
+                          <button
+                            type="button"
+                            onClick={() => setPaidAmount(netTotal)}
+                            className="text-[10px] font-medium text-primary hover:underline"
+                          >
+                            Pay Full (PKR {netTotal.toLocaleString()})
+                          </button>
+                        </div>
+                        <Input
+                          type="number"
+                          min="0"
+                          max={netTotal}
+                          step="any"
+                          value={paidAmount}
+                          onChange={(e) => setPaidAmount(Number(e.target.value))}
+                          placeholder="Enter amount paid (e.g. 60000)"
+                          className="h-8 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                          If paid amount is less than PKR {netTotal.toLocaleString()}, the remaining balance will automatically post as pending on Supplier Khata (Accounts Payable 2010).
+                        </p>
+                      </div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
                     <div>
                       <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
-                        Cash / Bank Paid
+                        Paid via Account
                       </span>
                       <div className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
                         PKR {effectivePaidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -1373,13 +1622,18 @@ export default function PurchasesPage() {
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold block">
-                        Vendor Khata Due
+                        Pending (Vendor Khata Due)
                       </span>
                       <div className="font-mono font-bold text-xs text-rose-600 dark:text-rose-400">
                         PKR {balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </div>
                     </div>
                   </div>
+                  {effectivePaidAmount > 0 && balanceDue > 0 && (
+                    <div className="rounded bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                      Double-Entry Split: Dr. Inventory PKR {netTotal.toLocaleString()} → Cr. Selected Account PKR {effectivePaidAmount.toLocaleString()} &amp; Cr. Supplier Payable PKR {balanceDue.toLocaleString()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1435,7 +1689,18 @@ export default function PurchasesPage() {
                   <Label className="text-xs font-semibold">
                     Payment Status <span className="text-destructive">*</span>
                   </Label>
-                  {canViewPaymentStatuses && (
+                  <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+          >
+            <Link href="/purchase-returns">
+              <IconArrowBackUp className="h-4 w-4" />
+              Purchase Returns
+            </Link>
+          </Button>
+          {canViewPaymentStatuses && (
                     <button
                       type="button"
                       onClick={() => {
@@ -1449,7 +1714,26 @@ export default function PurchasesPage() {
                     </button>
                   )}
                 </div>
-                <Select value={editPaymentStatus} onValueChange={setEditPaymentStatus}>
+                <Select
+                  value={editPaymentStatus}
+                  onValueChange={(val) => {
+                    setEditPaymentStatus(val);
+                    const st = paymentStatuses.find((s) => s.code.toLowerCase() === val.toLowerCase());
+                    const behavior =
+                      st?.accounting_type ||
+                      (val.toLowerCase() === "paid"
+                        ? "paid"
+                        : val.toLowerCase() === "partial"
+                        ? "partial"
+                        : "unpaid");
+                    if (behavior === "unpaid") {
+                      setEditPaidAmount(0);
+                      setEditPaidFromAccountId(0);
+                    } else if (editPaidAmount <= 0) {
+                      setEditPaidAmount(editNetTotal);
+                    }
+                  }}
+                >
                   <SelectTrigger className="h-9 text-xs font-semibold">
                     <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
@@ -1471,6 +1755,74 @@ export default function PurchasesPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {editAccBehavior !== "unpaid" && editPaymentStatus !== "none" && (
+                <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold flex items-center gap-1">
+                      <IconBuildingBank className="h-3.5 w-3.5 text-primary" />
+                      Paid From Account (Cash / Bank) <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={String(editPaidFromAccountId)}
+                      onValueChange={(val) => setEditPaidFromAccountId(Number(val))}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Choose One" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0" className="text-xs text-muted-foreground">
+                          Choose One
+                        </SelectItem>
+                        {paymentAccounts.map((acc) => (
+                          <SelectItem key={acc.id} value={String(acc.id)} className="text-xs">
+                            {acc.code} — {acc.name} (Bal: PKR {Number(acc.current_balance || 0).toLocaleString()})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        Paid Amount (PKR) <span className="text-destructive">*</span>
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={() => setEditPaidAmount(editNetTotal)}
+                        className="text-[10px] font-medium text-primary hover:underline"
+                      >
+                        Pay Full (PKR {editNetTotal.toLocaleString()})
+                      </button>
+                    </div>
+                    <Input
+                      type="number"
+                      min="0"
+                      max={editNetTotal}
+                      step="any"
+                      value={editPaidAmount}
+                      onChange={(e) => setEditPaidAmount(Number(e.target.value))}
+                      className="h-8 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t text-xs">
+                    <div>
+                      <span className="text-[10px] text-emerald-600 font-semibold block">Paid via Account:</span>
+                      <span className="font-mono font-bold text-emerald-600">
+                        PKR {editEffectivePaidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-rose-600 font-semibold block">Pending on Khata:</span>
+                      <span className="font-mono font-bold text-rose-600">
+                        PKR {editBalanceDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">
@@ -1571,16 +1923,23 @@ export default function PurchasesPage() {
                       Accounting Effect <span className="text-destructive">*</span>
                     </Label>
                     <Select
-                      value={statusAccountingType}
-                      onValueChange={(val: "paid" | "unpaid" | "partial") => {
+                      value={statusAccountingType || ("none" as any)}
+                      onValueChange={(val: any) => {
+                        if (val === "none") {
+                          setStatusAccountingType("" as any);
+                          return;
+                        }
                         setStatusAccountingType(val);
                         setStatusColor(val === "paid" ? "emerald" : val === "partial" ? "amber" : "rose");
                       }}
                     >
                       <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-xs text-muted-foreground">
+                          Choose One
+                        </SelectItem>
                         <SelectItem value="paid" className="text-xs">
                           Paid (Dr. Inventory / Cr. Cash or Bank)
                         </SelectItem>
@@ -1807,100 +2166,555 @@ export default function PurchasesPage() {
                   <span className="font-mono text-primary">PKR {Number(viewingPurchase.total_amount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between pt-1 text-xs">
-                  <span className="text-emerald-600 font-semibold">Paid:</span>
+                  <span className="text-emerald-600 font-semibold">
+                    Paid {viewingPurchase.paid_from_account_name ? `(via ${viewingPurchase.paid_from_account_code} - ${viewingPurchase.paid_from_account_name})` : ""}:
+                  </span>
                   <span className="font-mono text-emerald-600 font-semibold">PKR {Number(viewingPurchase.paid_amount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-rose-600 font-semibold">Balance Due to Supplier:</span>
+                  <span className="text-rose-600 font-semibold">Pending Balance Due to Supplier:</span>
                   <span className="font-mono text-rose-600 font-bold">PKR {Number(viewingPurchase.balance_due).toLocaleString()}</span>
                 </div>
+                {viewingPurchase.journal_entry_number && (
+                  <div className="flex justify-between pt-1 border-t text-[11px] text-muted-foreground">
+                    <span>Double-Entry Journal Voucher:</span>
+                    <span className="font-mono font-semibold text-foreground">{viewingPurchase.journal_entry_number}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* PURCHASE RETURN & DEBIT NOTE MODAL */}
-      <Dialog open={Boolean(returningPurchase)} onOpenChange={(open) => !open && setReturningPurchase(null)}>
-        <DialogContent className="sm:max-w-[480px]">
+      {/* INVOICE PAYMENT & PENDING DOUBLE-ENTRY REPORT MODAL */}
+      <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+        <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Issue Debit Note & Return Goods</DialogTitle>
-            <DialogDescription>
-              Process a purchase return to supplier for bill <span className="font-mono font-semibold text-foreground">{returningPurchase?.invoice_number}</span>.
-            </DialogDescription>
+            <div className="flex items-center justify-between pr-6">
+              <div>
+                <DialogTitle className="flex items-center gap-2 text-lg">
+                  <IconReportAnalytics className="h-5 w-5 text-primary" />
+                  Purchase Invoice Payment &amp; Pending Report (Double-Entry)
+                </DialogTitle>
+                <DialogDescription>
+                  Complete breakdown of how much was paid against each purchase invoice, which Cash/Bank account was credited, and remaining pending balance on Supplier Khata.
+                </DialogDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="h-8 gap-1.5 text-xs print:hidden"
+              >
+                <IconPrinter className="h-3.5 w-3.5" />
+                Print Report
+              </Button>
+            </div>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="rounded-lg border bg-muted/40 p-3 space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Supplier:</span>
-                <span className="font-medium text-foreground">{returningPurchase?.supplier_name || "Supplier"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Original Total Amount:</span>
-                <span className="font-mono font-semibold text-foreground">
-                  PKR {Number(returningPurchase?.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              {Number(returningPurchase?.balance_due || 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Unpaid Balance to Cancel:</span>
-                  <span className="font-mono font-semibold text-rose-600">
-                    PKR {Number(returningPurchase?.balance_due || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              )}
-              {Number(returningPurchase?.paid_amount || 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Paid Amount to Refund:</span>
-                  <span className="font-mono font-semibold text-emerald-600">
-                    PKR {Number(returningPurchase?.paid_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              )}
-            </div>
+            {/* Report Summary KPIs */}
+            {(() => {
+              const activePurchases = filteredPurchases.filter((p) => p.status !== "cancelled");
+              const totInvoiced = activePurchases.reduce((s, p) => s + Number(p.total_amount || 0), 0);
+              const totPaid = activePurchases.reduce((s, p) => s + Number(p.paid_amount || 0), 0);
+              const totPending = activePurchases.reduce((s, p) => s + Number(p.balance_due || 0), 0);
+              return (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <span className="text-[11px] text-muted-foreground font-semibold uppercase">
+                        Total Invoiced (Dr. Inventory 1040)
+                      </span>
+                      <div className="text-lg font-bold font-mono text-foreground mt-0.5">
+                        PKR {totInvoiced.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        Across {activePurchases.length} purchase bills
+                      </span>
+                    </div>
+                    <div className="rounded-lg border bg-emerald-500/5 border-emerald-500/20 p-3">
+                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">
+                        Total Paid (Cr. Cash / Bank Account)
+                      </span>
+                      <div className="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        PKR {totPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        Settled from selected accounts
+                      </span>
+                    </div>
+                    <div className="rounded-lg border bg-rose-500/5 border-rose-500/20 p-3">
+                      <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold uppercase">
+                        Total Pending (Cr. Supplier Payable 2010)
+                      </span>
+                      <div className="text-lg font-bold font-mono text-rose-600 dark:text-rose-400 mt-0.5">
+                        PKR {totPending.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        Remaining payable on Supplier Khata
+                      </span>
+                    </div>
+                  </div>
 
-            {Number(returningPurchase?.paid_amount || 0) > 0 && (
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Refund Treatment (for paid amount)</label>
-                <Select value={returnRefundMethod} onValueChange={setReturnRefundMethod}>
-                  <SelectTrigger className="text-xs h-9">
-                    <SelectValue placeholder="Select refund mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash" className="text-xs">Cash Refund (Returned to Counter / Drawer)</SelectItem>
-                    <SelectItem value="bank" className="text-xs">Bank Transfer (Deposited to Bank Account)</SelectItem>
-                    <SelectItem value="credit" className="text-xs">Credit to Supplier Khata (Advance Balance)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Return Reason</label>
-              <Input
-                value={returnReason}
-                onChange={(e) => setReturnReason(e.target.value)}
-                placeholder="e.g. Expired stock, damaged cartons, wrong delivery"
-                className="text-xs"
-              />
-            </div>
-
-            <p className="text-[11px] text-muted-foreground">
-              Stock will be deducted from your warehouse and a double-entry Debit Note Journal Voucher will be automatically posted to Accounts Payable.
-            </p>
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow className="text-xs">
+                          <TableHead>Invoice #</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Supplier</TableHead>
+                          <TableHead>Paid From Account</TableHead>
+                          <TableHead>Double-Entry JV</TableHead>
+                          <TableHead className="text-right">Total Bill</TableHead>
+                          <TableHead className="text-right">Paid Amount</TableHead>
+                          <TableHead className="text-right">Pending Balance</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {activePurchases.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={9} className="h-24 text-center text-xs text-muted-foreground">
+                              No purchase invoices found for current filter.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          activePurchases.map((p) => {
+                            const isPartial = Number(p.paid_amount) > 0 && Number(p.balance_due) > 0;
+                            const isPaid = Number(p.balance_due) <= 0 && Number(p.paid_amount) > 0;
+                            return (
+                              <TableRow key={p.id} className="text-xs">
+                                <TableCell className="font-mono font-semibold">
+                                  <div>{p.invoice_number}</div>
+                                  {p.supplier_bill_no && (
+                                    <span className="text-[10px] text-muted-foreground">Ref: {p.supplier_bill_no}</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">{p.purchase_date}</TableCell>
+                                <TableCell className="font-medium">{p.supplier_name}</TableCell>
+                                <TableCell>
+                                  {p.paid_from_account_name && Number(p.paid_amount) > 0 ? (
+                                    <Badge variant="outline" className="font-mono text-[10px]">
+                                      {p.paid_from_account_code} - {p.paid_from_account_name}
+                                    </Badge>
+                                  ) : Number(p.paid_amount) > 0 ? (
+                                    <span className="text-muted-foreground text-[11px]">Cash / Bank (Default)</span>
+                                  ) : (
+                                    <span className="text-muted-foreground text-[11px]">— (On Credit)</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="font-mono text-[11px] text-primary">
+                                  {p.journal_entry_number || "Auto-Posted"}
+                                </TableCell>
+                                <TableCell className="text-right font-mono font-semibold">
+                                  PKR {Number(p.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </TableCell>
+                                <TableCell className="text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                                  PKR {Number(p.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </TableCell>
+                                <TableCell className="text-right font-mono font-bold text-rose-600 dark:text-rose-400">
+                                  PKR {Number(p.balance_due).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] capitalize ${
+                                      isPaid
+                                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                        : isPartial
+                                        ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                        : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                                    }`}
+                                  >
+                                    {isPaid ? "Paid" : isPartial ? "Partial" : "Unpaid"}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                        )}
+                        {activePurchases.length > 0 && (
+                          <TableRow className="bg-muted/40 font-bold text-xs border-t-2">
+                            <TableCell colSpan={5} className="text-right uppercase tracking-wider">
+                              Grand Totals:
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              PKR {totInvoiced.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-emerald-600 dark:text-emerald-400">
+                              PKR {totPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-rose-600 dark:text-rose-400">
+                              PKR {totPending.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell />
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
+          <DialogFooter className="print:hidden">
+            <Button type="button" variant="outline" onClick={() => setIsReportOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PURCHASE RETURN & DEBIT NOTE MODAL (ITEM-LEVEL PARTIAL OR FULL QTY RETURN) */}
+      <Dialog
+        open={Boolean(returningPurchase)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReturningPurchase(null);
+            setReturningPurchaseDetail(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[780px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <IconArrowBackUp className="h-5 w-5 text-amber-600" />
+              Issue Debit Note &amp; Return Goods (Partial / Full Qty)
+            </DialogTitle>
+            <DialogDescription>
+              Enter the exact quantity to return for bill{" "}
+              <span className="font-mono font-semibold text-foreground">
+                {returningPurchase?.invoice_number}
+              </span>{" "}
+              (e.g., 100 received → keep 80, return 20). Stock will be deducted from the receiving warehouse and the returned amount will be adjusted in Double-Entry Accounting.
+            </DialogDescription>
+          </DialogHeader>
+
+          {(() => {
+            const detailItems = returningPurchaseDetail?.items || [];
+            const computedLines = detailItems.map((it) => {
+              const purchasedQty = Number(it.quantity || 0);
+              const alreadyRet = Number(it.returned_quantity || 0);
+              const maxReturnable = Math.max(0, purchasedQty - alreadyRet);
+              const rawInputQty = Number(returnItemQuantities[it.id] || 0);
+              const retQty = Math.min(Math.max(0, rawInputQty), maxReturnable);
+              const keptQty = Math.max(0, maxReturnable - retQty);
+              const unitCost = Number(it.unit_cost || 0);
+              const retAmount = Math.round(retQty * unitCost * 100) / 100;
+              return {
+                ...it,
+                purchasedQty,
+                alreadyRet,
+                maxReturnable,
+                retQty,
+                keptQty,
+                unitCost,
+                retAmount,
+              };
+            });
+
+            const totalReturnQty = computedLines.reduce((acc, l) => acc + l.retQty, 0);
+            const totalKeptQty = computedLines.reduce((acc, l) => acc + l.keptQty, 0);
+            const totalReturnAmount = computedLines.reduce((acc, l) => acc + l.retAmount, 0);
+            const currentBillBalanceDue = Number(returningPurchase?.balance_due || 0);
+            const payableReduction = Math.min(currentBillBalanceDue, totalReturnAmount);
+
+            return (
+              <div className="space-y-4 py-2">
+                {/* Top Summary Banner with Warehouse & Supplier */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-lg border bg-muted/40 p-3 text-xs">
+                  <div>
+                    <span className="text-muted-foreground block">Supplier / Vendor:</span>
+                    <span className="font-semibold text-foreground text-sm">
+                      {returningPurchase?.supplier_name || "Supplier"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Stock Warehouse / Godown:</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400 text-sm flex items-center gap-1">
+                      <IconBuildingWarehouse className="h-4 w-4" />
+                      {returningPurchase?.branch_name || "Main Warehouse"}
+                    </span>
+                  </div>
+                  <div className="sm:text-right">
+                    <span className="text-muted-foreground block">Original Bill Total:</span>
+                    <span className="font-mono font-bold text-foreground text-sm">
+                      PKR {Number(returningPurchase?.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                    {currentBillBalanceDue > 0 && (
+                      <span className="block text-[10px] font-mono text-rose-600">
+                        Unpaid Khata Due: PKR {currentBillBalanceDue.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Line Items Quantity Return Table */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Select Quantities to Return from Warehouse
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-[11px]"
+                        onClick={() => {
+                          const allMax: Record<number, number> = {};
+                          detailItems.forEach((it) => {
+                            allMax[it.id] = Math.max(0, Number(it.quantity) - Number(it.returned_quantity || 0));
+                          });
+                          setReturnItemQuantities(allMax);
+                        }}
+                      >
+                        Return All Remaining
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[11px]"
+                        onClick={() => {
+                          const allZero: Record<number, number> = {};
+                          detailItems.forEach((it) => {
+                            allZero[it.id] = 0;
+                          });
+                          setReturnItemQuantities(allZero);
+                        }}
+                      >
+                        Clear Qty
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow className="text-xs">
+                          <TableHead>Product / Item</TableHead>
+                          <TableHead className="text-center">Purchased</TableHead>
+                          <TableHead className="text-center">Return Qty *</TableHead>
+                          <TableHead className="text-center">Kept in Warehouse</TableHead>
+                          <TableHead className="text-right">Purchase Rate</TableHead>
+                          <TableHead className="text-right">Return Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {isReturnDetailLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="h-24 text-center text-xs text-muted-foreground">
+                              <IconRefresh className="h-5 w-5 animate-spin mx-auto mb-1 text-primary" />
+                              Loading invoice items...
+                            </TableCell>
+                          </TableRow>
+                        ) : computedLines.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="h-20 text-center text-xs text-muted-foreground">
+                              No items found on this purchase bill.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          computedLines.map((line) => (
+                            <TableRow key={line.id} className="text-xs">
+                              <TableCell>
+                                <div className="font-semibold text-foreground">{line.product_name}</div>
+                                <div className="text-[10px] font-mono text-muted-foreground">
+                                  {line.product_sku} • {line.unit_name}
+                                  {line.alreadyRet > 0 && (
+                                    <span className="ml-1.5 text-amber-600 font-semibold">
+                                      (Already Returned: {line.alreadyRet})
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center font-mono font-semibold">
+                                {line.maxReturnable} {line.unit_name}
+                              </TableCell>
+                              <TableCell className="text-center w-[130px]">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max={line.maxReturnable}
+                                  step="any"
+                                  disabled={line.maxReturnable <= 0}
+                                  value={returnItemQuantities[line.id] ?? 0}
+                                  onChange={(e) => {
+                                    const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                    setReturnItemQuantities((prev) => ({
+                                      ...prev,
+                                      [line.id]: Math.min(Math.max(0, val), line.maxReturnable),
+                                    }));
+                                  }}
+                                  className="h-8 text-xs text-center font-mono font-bold border-amber-500/50"
+                                />
+                              </TableCell>
+                              <TableCell className="text-center font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                                {line.keptQty} {line.unit_name}
+                              </TableCell>
+                              <TableCell className="text-right font-mono">
+                                PKR {line.unitCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                                PKR {line.retAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                {/* Live Accounting & Stock Calculation Summary Box */}
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5 space-y-2 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold block">
+                        Returning Qty
+                      </span>
+                      <span className="text-sm font-bold font-mono text-amber-600 dark:text-amber-400">
+                        {totalReturnQty} Units
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold block">
+                        Kept in Warehouse
+                      </span>
+                      <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                        {totalKeptQty} Units
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold block">
+                        Return Debit Note Amount
+                      </span>
+                      <span className="text-sm font-bold font-mono text-amber-600 dark:text-amber-400">
+                        PKR {totalReturnAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold block">
+                        Remaining Bill Net Value
+                      </span>
+                      <span className="text-sm font-bold font-mono text-foreground">
+                        PKR {Math.max(0, Number(returningPurchase?.total_amount || 0) - Number(returningPurchase?.returned_amount || 0) - totalReturnAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-amber-500/20 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      Warehouse Deduction:{" "}
+                      <strong className="text-foreground">
+                        -{totalReturnQty} units from {returningPurchase?.branch_name || "Main Warehouse"}
+                      </strong>
+                    </span>
+                    <span>
+                      Double-Entry:{" "}
+                      <strong className="text-foreground">
+                        Dr. {returnRefundMethod === "credit" ? "Supplier Payable (2010)" : "Cash / Bank Account"} PKR {totalReturnAmount.toLocaleString()} / Cr. Inventory (1040) PKR {totalReturnAmount.toLocaleString()}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Settlement / Refund Treatment & Reason */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">
+                      Return Amount Accounting Treatment <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={returnRefundMethod || "none"}
+                      onValueChange={(val) => setReturnRefundMethod(val === "none" ? "" : val)}
+                    >
+                      <SelectTrigger className="text-xs h-9">
+                        <SelectValue placeholder="Choose One" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none" className="text-xs text-muted-foreground">
+                          Choose One
+                        </SelectItem>
+                        <SelectItem value="credit" className="text-xs">
+                          Adjust Supplier Khata Payable (Reduce Balance / Credit Note)
+                        </SelectItem>
+                        <SelectItem value="cash" className="text-xs">
+                          Cash Refund Received (Dr. Cash / Cr. Inventory)
+                        </SelectItem>
+                        <SelectItem value="bank" className="text-xs">
+                          Bank Refund Received (Dr. Bank Account / Cr. Inventory)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {payableReduction > 0 && returnRefundMethod === "credit" && (
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                        Supplier Khata due will reduce by PKR {payableReduction.toLocaleString()}.
+                      </p>
+                    )}
+                  </div>
+
+                  {returnRefundMethod !== "credit" && returnRefundMethod !== "" && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">
+                        Refund Received Into Account (Cash / Bank)
+                      </Label>
+                      <Select
+                        value={String(returnRefundAccountId)}
+                        onValueChange={(val) => setReturnRefundAccountId(Number(val))}
+                      >
+                        <SelectTrigger className="text-xs h-9">
+                          <SelectValue placeholder="Choose One" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0" className="text-xs text-muted-foreground">
+                            Choose One (Default Cash/Bank)
+                          </SelectItem>
+                          {paymentAccounts.map((acc) => (
+                            <SelectItem key={acc.id} value={String(acc.id)} className="text-xs">
+                              {acc.code} — {acc.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className={returnRefundMethod === "credit" ? "space-y-1.5" : "sm:col-span-2 space-y-1.5"}>
+                    <Label className="text-xs font-semibold">Return Reason</Label>
+                    <Input
+                      value={returnReason}
+                      onChange={(e) => setReturnReason(e.target.value)}
+                      placeholder="e.g. 20 units damaged / excess stock returned to supplier"
+                      className="text-xs h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReturningPurchase(null)} disabled={isSubmittingReturn}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReturningPurchase(null);
+                setReturningPurchaseDetail(null);
+              }}
+              disabled={isSubmittingReturn}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleConfirmReturn}
-              disabled={isSubmittingReturn}
+              disabled={isSubmittingReturn || isReturnDetailLoading}
               className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
             >
-              {isSubmittingReturn ? "Processing..." : "Confirm Return & Issue Debit Note"}
+              {isSubmittingReturn ? "Posting Debit Note..." : "Confirm Return & Issue Debit Note"}
             </Button>
           </DialogFooter>
         </DialogContent>

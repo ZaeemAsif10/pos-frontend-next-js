@@ -347,22 +347,22 @@ function BankReconciliationContent() {
       {/* ---------------- Bank Accounts Overview Grid ---------------- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:grid-cols-3 print:gap-3 print:mb-4">
         {bankAccounts.map((acc) => (
-          <Card key={acc.id} className="border shadow-sm print:shadow-none print:border-gray-400">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <IconBuildingBank className="h-4 w-4 text-blue-600 print:text-black" />
-                  <span className="font-bold text-sm tracking-tight">{acc.name}</span>
-                </div>
-                <div className="text-xs text-muted-foreground print:text-gray-600 font-mono">
-                  Code: {acc.code} • {acc.currency}
-                </div>
-                <div className="text-lg font-black font-mono text-blue-700 dark:text-blue-300 print:text-black">
+          <Card key={acc.id} className="shadow-xs print:shadow-none print:border-gray-400">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{acc.name}</CardTitle>
+              <IconBuildingBank className="h-4 w-4 text-blue-600 print:text-black" />
+            </CardHeader>
+            <CardContent className="flex items-end justify-between">
+              <div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 print:text-black">
                   PKR {formatPKR(acc.current_balance)}
                 </div>
+                <p className="text-xs text-muted-foreground mt-1 font-mono">
+                  Code: {acc.code} • {acc.currency}
+                </p>
               </div>
 
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-end gap-1.5">
                 <Badge
                   variant={acc.unreconciled_count > 0 ? "secondary" : "outline"}
                   className="text-xs font-mono print:border print:border-gray-400 print:bg-gray-100 print:text-black"
@@ -373,7 +373,7 @@ function BankReconciliationContent() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 text-xs text-blue-600 hover:text-blue-700 gap-1 p-1 print:hidden"
+                    className="h-7 text-xs text-primary hover:text-primary/80 gap-1 p-1 print:hidden"
                     onClick={() => {
                       setSelectedAccountId(String(acc.id));
                       setNewDialogOpen(true);
@@ -534,11 +534,12 @@ function BankReconciliationContent() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Bank Account</Label>
-              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+              <Select value={selectedAccountId || "none"} onValueChange={(val) => setSelectedAccountId(val === "none" ? "" : val)}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Select bank account" />
+                  <SelectValue placeholder="Choose One" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                   {bankAccounts.map((acc) => (
                     <SelectItem key={acc.id} value={String(acc.id)}>
                       {acc.code} - {acc.name} (PKR {formatPKR(acc.current_balance)})

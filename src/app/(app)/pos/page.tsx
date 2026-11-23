@@ -646,13 +646,14 @@ export default function POSPage() {
           <div className="flex items-center gap-1.5">
             <IconBuildingStore className="h-4 w-4 text-muted-foreground" />
             <Select
-              value={selectedBranchId ? String(selectedBranchId) : ""}
+              value={selectedBranchId ? String(selectedBranchId) : "0"}
               onValueChange={(val) => handleBranchChange(Number(val))}
             >
               <SelectTrigger className="h-8 w-[180px] text-xs">
-                <SelectValue placeholder="Select Branch" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="0" className="text-muted-foreground">Choose One</SelectItem>
                 {branches.map((b) => (
                   <SelectItem key={b.id} value={String(b.id)}>
                     {b.name} ({b.code})
@@ -837,11 +838,11 @@ export default function POSPage() {
                   onValueChange={setSelectedCustomerId}
                 >
                   <SelectTrigger className="h-8 text-xs flex-1 min-w-0">
-                    <SelectValue placeholder="Select Customer" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="walk-in">
-                      Walk-in Retail Buyer (Cash)
+                    <SelectItem value="walk-in" className="text-muted-foreground">
+                      Choose One (Walk-in Retail Buyer - Cash)
                     </SelectItem>
                     {customers.map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
@@ -1248,11 +1249,12 @@ export default function POSPage() {
                   <Label htmlFor="quickCustType" className="text-xs font-semibold">
                     Customer Type
                   </Label>
-                  <Select value={newCustType} onValueChange={setNewCustType}>
+                  <Select value={newCustType || "none"} onValueChange={(val) => setNewCustType(val === "none" ? "" : val)}>
                     <SelectTrigger id="quickCustType" className="w-full">
-                      <SelectValue />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       <SelectItem value="retailer">Retailer (Dukan)</SelectItem>
                       <SelectItem value="wholesaler">Wholesaler</SelectItem>
                       <SelectItem value="corporate">Corporate</SelectItem>

@@ -585,10 +585,10 @@ export default function CategoriesPage() {
                 onValueChange={(val) => setParentId(Number(val))}
               >
                 <SelectTrigger id="cat_parent">
-                  <SelectValue placeholder="Main Category (Root)" />
+                  <SelectValue placeholder="Choose One" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">Main Category (Root - No Parent)</SelectItem>
+                  <SelectItem value="0" className="text-muted-foreground">Choose One (Main Category - No Parent)</SelectItem>
                   {categories
                     .filter((c) => !editingCategory || c.id !== editingCategory.id)
                     .map((c) => (

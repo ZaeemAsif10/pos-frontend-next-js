@@ -690,11 +690,12 @@ Payment transferred successfully.
                   <Label htmlFor="payment-method" className="text-xs">
                     Payment Method
                   </Label>
-                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <Select value={paymentMethod || ("none" as any)} onValueChange={(val: any) => setPaymentMethod(val === "none" ? "" : val)}>
                     <SelectTrigger id="payment-method" className="h-9 text-xs">
-                      <SelectValue placeholder="Select method" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       <SelectItem value="cash">💵 Cash</SelectItem>
                       <SelectItem value="bank_transfer">🏦 Bank Transfer</SelectItem>
                       <SelectItem value="cheque">📜 Cheque</SelectItem>

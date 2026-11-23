@@ -294,17 +294,21 @@ export default function ExpensesPage() {
   const selectedPaidObj = paymentAccounts.find((a) => String(a.id) === formPaidFromAccountId);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto print:p-0 print:m-0 print:max-w-none">
+    <div className="space-y-6">
       {/* Background Page Content (Hidden during Voucher Print) */}
       <div className="space-y-6 print:hidden">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <IconReceiptTax className="h-7 w-7 text-rose-600" />
-            {t("Expense Vouchers", "اخراجات واؤچر")}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              {t("Expense Vouchers", "اخراجات واؤچر")}
+            </h1>
+            <Badge variant="outline" className="text-xs font-mono">
+              {totalExpenses} Vouchers
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
             {t(
               "Record petty cash, shop rent, electricity bills, chai/refreshment, fuel, and daily office operational expenses with auto-posted double entries.",
               "روزمرہ دکان اور دفتر کے اخراجات کا اندراج اور خودکار ڈبل انٹری پوسٹنگ۔"
@@ -313,9 +317,6 @@ export default function ExpensesPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Language Display Mode Toggle */}
-          <LanguageToggle showLabel variant="outline" />
-
           <Button
             variant="outline"
             size="sm"
@@ -346,66 +347,74 @@ export default function ExpensesPage() {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Today's Expenses */}
-        <Card className="border-l-4 border-l-rose-500 shadow-sm">
-          <CardHeader className="py-3 px-4 pb-1">
-            <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-rose-700 dark:text-rose-400">
-              <IconClock className="h-3.5 w-3.5" />
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               {t("Today's Expenses", "آج کے اخراجات")}
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold font-mono text-rose-700 dark:text-rose-400">
-              {formatPKR(summary?.today_total || 0)}
             </CardTitle>
+            <IconClock className="h-4 w-4 text-rose-600" />
           </CardHeader>
-          <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-            {t("Operational cash & bank outflows today", "آج کے دن کی کل ادائیگیاں")}
+          <CardContent>
+            <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+              {formatPKR(summary?.today_total || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("Operational cash & bank outflows today", "آج کے دن کی کل ادائیگیاں")}
+            </p>
           </CardContent>
         </Card>
 
         {/* This Month's Expenses */}
-        <Card className="border-l-4 border-l-amber-500 shadow-sm">
-          <CardHeader className="py-3 px-4 pb-1">
-            <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-amber-700 dark:text-amber-400">
-              <IconCalendar className="h-3.5 w-3.5" />
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               {t("This Month", "اس ماہ کا خرچ")}
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold font-mono text-amber-700 dark:text-amber-400">
-              {formatPKR(summary?.month_total || 0)}
             </CardTitle>
+            <IconCalendar className="h-4 w-4 text-amber-600" />
           </CardHeader>
-          <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-            {t("Current calendar month accumulated", "موجودہ مہینے کے مجموعی اخراجات")}
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {formatPKR(summary?.month_total || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("Current calendar month accumulated", "موجودہ مہینے کے مجموعی اخراجات")}
+            </p>
           </CardContent>
         </Card>
 
         {/* Paid via Cash Drawer */}
-        <Card className="border-l-4 border-l-emerald-500 shadow-sm">
-          <CardHeader className="py-3 px-4 pb-1">
-            <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-              <IconCash className="h-3.5 w-3.5" />
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               {t("Cash Drawer", "کاؤنٹر دراز سے ادا")}
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold font-mono text-foreground">
-              {formatPKR(summary?.cash_total || 0)}
             </CardTitle>
+            <IconCash className="h-4 w-4 text-emerald-600" />
           </CardHeader>
-          <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-            {t("Reflected live in Day Book (Roznamcha)", "روزنامچہ میں کیش آؤٹ کا اندراج")}
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {formatPKR(summary?.cash_total || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("Reflected live in Day Book (Roznamcha)", "روزنامچہ میں کیش آؤٹ کا اندراج")}
+            </p>
           </CardContent>
         </Card>
 
         {/* Paid via Bank / Digital */}
-        <Card className="border-l-4 border-l-blue-500 shadow-sm">
-          <CardHeader className="py-3 px-4 pb-1">
-            <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1 text-blue-700 dark:text-blue-400">
-              <IconBuildingBank className="h-3.5 w-3.5" />
+        <Card className="shadow-xs">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               {t("Bank & Digital", "بینک / آن لائن")}
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold font-mono text-foreground">
-              {formatPKR(summary?.bank_total || 0)}
             </CardTitle>
+            <IconBuildingBank className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-            {t("Bank transfers, cheques, and Raast payments", "بینک ٹرانسفر، چیک اور آن لائن ادائیگیاں")}
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {formatPKR(summary?.bank_total || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("Bank transfers, cheques, and Raast payments", "بینک ٹرانسفر، چیک اور آن لائن ادائیگیاں")}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -836,13 +845,14 @@ export default function ExpensesPage() {
                   {t("Expense Category", "کھاتہ / خرچہ کی قسم")} <span className="text-rose-500">*</span>
                 </Label>
                 <Select
-                  value={formExpenseAccountId}
-                  onValueChange={setFormExpenseAccountId}
+                  value={formExpenseAccountId || "none"}
+                  onValueChange={(val) => setFormExpenseAccountId(val === "none" ? "" : val)}
                 >
                   <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Select Operating Expense Head" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     {expenseAccounts.map((a) => (
                       <SelectItem key={a.id} value={String(a.id)}>
                         <span className="font-mono font-medium text-rose-600 dark:text-rose-400 mr-2">
@@ -911,9 +921,10 @@ export default function ExpensesPage() {
                     }}
                   >
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Channel" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       <SelectItem value="cash">{t("Cash", "کیش")}</SelectItem>
                       <SelectItem value="bank_transfer">{t("Bank Transfer", "بینک ٹرانسفر")}</SelectItem>
                       <SelectItem value="card">{t("Card", "کارڈ")}</SelectItem>
@@ -923,13 +934,14 @@ export default function ExpensesPage() {
                   </Select>
 
                   <Select
-                    value={formPaidFromAccountId}
-                    onValueChange={setFormPaidFromAccountId}
+                    value={formPaidFromAccountId || "none"}
+                    onValueChange={(val) => setFormPaidFromAccountId(val === "none" ? "" : val)}
                   >
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Account Head" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       {paymentAccounts.map((a) => (
                         <SelectItem key={a.id} value={String(a.id)}>
                           {a.code} - {a.name}
@@ -950,10 +962,10 @@ export default function ExpensesPage() {
                   onValueChange={setFormBranchId}
                 >
                   <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Select Branch" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{t("Head Office / No Specific Branch", "مرکزی دفتر")}</SelectItem>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One ({t("Head Office / No Specific Branch", "مرکزی دفتر")})</SelectItem>
                     {branches.map((b) => (
                       <SelectItem key={b.id} value={String(b.id)}>
                         {b.name} ({b.code})

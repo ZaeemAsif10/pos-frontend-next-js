@@ -627,7 +627,7 @@ export default function AdminPlansPage() {
   const highlightedPlan = plans.find((p) => p.is_highlighted && p.is_active);
 
   return (
-    <div className="flex-1 space-y-6 p-6 md:p-8 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {/* 1. Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5">
         <div>

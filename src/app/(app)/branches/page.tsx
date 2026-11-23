@@ -408,7 +408,7 @@ export default function BranchesPage() {
   const quotaPercent = isUnlimited ? 20 : Math.min(Math.round((quotaUsed / quotaMax) * 100), 100);
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -1151,13 +1151,14 @@ export default function BranchesPage() {
                   Location Type <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={addForm.type}
-                  onValueChange={(val) => setAddForm({ ...addForm, type: val as BranchType })}
+                  value={addForm.type || ("none" as any)}
+                  onValueChange={(val) => setAddForm({ ...addForm, type: (val === "none" ? "" : val) as BranchType })}
                 >
                   <SelectTrigger id="branch_type">
-                    <SelectValue />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     <SelectItem value="retail_shop">Retail Shop / POS</SelectItem>
                     <SelectItem value="warehouse_godown">Warehouse / Godown</SelectItem>
                     <SelectItem value="wholesale_depot">Wholesale Depot</SelectItem>
@@ -1171,13 +1172,14 @@ export default function BranchesPage() {
                   City <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={addForm.city}
-                  onValueChange={(val) => setAddForm({ ...addForm, city: val })}
+                  value={addForm.city || "none"}
+                  onValueChange={(val) => setAddForm({ ...addForm, city: val === "none" ? "" : val })}
                 >
                   <SelectTrigger id="branch_city">
-                    <SelectValue placeholder="Select City" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     {pakistaniCities.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
@@ -1335,13 +1337,14 @@ export default function BranchesPage() {
                   Location Type <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={editForm.type}
-                  onValueChange={(val) => setEditForm({ ...editForm, type: val as BranchType })}
+                  value={editForm.type || ("none" as any)}
+                  onValueChange={(val) => setEditForm({ ...editForm, type: (val === "none" ? "" : val) as BranchType })}
                 >
                   <SelectTrigger id="edit_branch_type">
-                    <SelectValue />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     <SelectItem value="retail_shop">Retail Shop / POS</SelectItem>
                     <SelectItem value="warehouse_godown">Warehouse / Godown</SelectItem>
                     <SelectItem value="wholesale_depot">Wholesale Depot</SelectItem>
@@ -1355,13 +1358,14 @@ export default function BranchesPage() {
                   City <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={editForm.city}
-                  onValueChange={(val) => setEditForm({ ...editForm, city: val })}
+                  value={editForm.city || "none"}
+                  onValueChange={(val) => setEditForm({ ...editForm, city: val === "none" ? "" : val })}
                 >
                   <SelectTrigger id="edit_branch_city">
-                    <SelectValue placeholder="Select City" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                     {pakistaniCities.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}

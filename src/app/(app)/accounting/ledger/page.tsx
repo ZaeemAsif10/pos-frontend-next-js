@@ -361,67 +361,62 @@ function LedgerContent() {
           {/* Trial Balance KPI Summary Cards */}
           {tbData && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden">
-              <Card className="border-l-4 border-l-blue-600">
-                <CardHeader className="py-3 px-4 pb-1">
-                  <CardDescription className="text-xs font-semibold tracking-wider uppercase">
-                    Total Debits
-                  </CardDescription>
-                  <CardTitle className="text-xl font-bold text-blue-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
+                  <IconTrendingUp className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatPKR(tbData.total_debits)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                  Sum of all debit account balances
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sum of all debit account balances
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-amber-600">
-                <CardHeader className="py-3 px-4 pb-1">
-                  <CardDescription className="text-xs font-semibold tracking-wider uppercase">
-                    Total Credits
-                  </CardDescription>
-                  <CardTitle className="text-xl font-bold text-amber-600">
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
+                  <IconTrendingDown className="h-4 w-4 text-amber-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {formatPKR(tbData.total_credits)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                  Sum of all credit account balances
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sum of all credit account balances
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card
-                className={`border-l-4 ${
-                  tbData.is_balanced
-                    ? "border-l-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20"
-                    : "border-l-rose-600 bg-rose-50/50 dark:bg-rose-950/20"
-                }`}
-              >
-                <CardHeader className="py-3 px-4 pb-1">
-                  <CardDescription className="text-xs font-semibold tracking-wider uppercase">
-                    Equilibrium Status
-                  </CardDescription>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    {tbData.is_balanced ? (
-                      <>
-                        <IconCheck className="h-5 w-5 text-emerald-600" />
-                        <span className="text-emerald-700 dark:text-emerald-400">
-                          Perfect Equilibrium
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <IconAlertTriangle className="h-5 w-5 text-rose-600" />
-                        <span className="text-rose-700 dark:text-rose-400">
-                          Diff: {formatPKR(Math.abs(tbData.total_debits - tbData.total_credits))}
-                        </span>
-                      </>
-                    )}
-                  </CardTitle>
+              <Card className="shadow-xs">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Equilibrium Status</CardTitle>
+                  {tbData.is_balanced ? (
+                    <IconCheck className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <IconAlertTriangle className="h-4 w-4 text-rose-600" />
+                  )}
                 </CardHeader>
-                <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                  {tbData.is_balanced
-                    ? "Double-entry accounting invariant satisfied (Debits = Credits)"
-                    : "Action required: Total debits do not match total credits"}
+                <CardContent>
+                  <div className="text-xl font-bold flex items-center gap-2">
+                    {tbData.is_balanced ? (
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        Perfect Equilibrium
+                      </span>
+                    ) : (
+                      <span className="text-rose-600 dark:text-rose-400">
+                        Diff: {formatPKR(Math.abs(tbData.total_debits - tbData.total_credits))}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {tbData.is_balanced
+                      ? "Double-entry invariant satisfied (Debits = Credits)"
+                      : "Action required: Total debits do not match total credits"}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -550,11 +545,12 @@ function LedgerContent() {
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
                     <IconBook2 className="h-3.5 w-3.5" /> Select Account
                   </Label>
-                  <Select value={glAccountId} onValueChange={setGlAccountId}>
+                  <Select value={glAccountId || "none"} onValueChange={(val) => setGlAccountId(val === "none" ? "" : val)}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Choose an account..." />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent className="max-h-72">
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       {accounts.map((acc) => (
                         <SelectItem key={acc.id} value={String(acc.id)}>
                           <span className="font-mono text-xs font-semibold mr-2">{acc.code}</span>
@@ -648,76 +644,70 @@ function LedgerContent() {
               {/* KPI Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden">
                 {/* Opening Balance */}
-                <Card>
-                  <CardHeader className="py-3 px-4 pb-1">
-                    <CardDescription className="text-xs font-semibold tracking-wider uppercase">
-                      Opening Balance
-                    </CardDescription>
-                    <CardTitle className="text-lg font-bold font-mono">
-                      {formatPKR(Math.abs(glReport.opening_balance))}
-                    </CardTitle>
+                <Card className="shadow-xs">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Opening Balance</CardTitle>
+                    <IconBook2 className="h-4 w-4 text-primary" />
                   </CardHeader>
-                  <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                    {glReport.opening_balance >= 0 ? (
-                      <span className="text-blue-600 font-medium">Debit (Dr)</span>
-                    ) : (
-                      <span className="text-amber-600 font-medium">Credit (Cr)</span>
-                    )}
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {formatPKR(Math.abs(glReport.opening_balance))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {glReport.opening_balance >= 0 ? (
+                        <span className="text-blue-600 font-medium">Debit (Dr)</span>
+                      ) : (
+                        <span className="text-amber-600 font-medium">Credit (Cr)</span>
+                      )}
+                    </p>
                   </CardContent>
                 </Card>
 
                 {/* Period Debits */}
-                <Card>
-                  <CardHeader className="py-3 px-4 pb-1">
-                    <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1">
-                      <IconTrendingUp className="h-3.5 w-3.5 text-blue-600" />
-                      Total Debits
-                    </CardDescription>
-                    <CardTitle className="text-lg font-bold font-mono text-blue-600">
-                      {formatPKR(glReport.total_debit)}
-                    </CardTitle>
+                <Card className="shadow-xs">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
+                    <IconTrendingUp className="h-4 w-4 text-blue-600" />
                   </CardHeader>
-                  <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                    Debits posted in period
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {formatPKR(glReport.total_debit)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Debits posted in period
+                    </p>
                   </CardContent>
                 </Card>
 
                 {/* Period Credits */}
-                <Card>
-                  <CardHeader className="py-3 px-4 pb-1">
-                    <CardDescription className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1">
-                      <IconTrendingDown className="h-3.5 w-3.5 text-amber-600" />
-                      Total Credits
-                    </CardDescription>
-                    <CardTitle className="text-lg font-bold font-mono text-amber-600">
-                      {formatPKR(glReport.total_credit)}
-                    </CardTitle>
+                <Card className="shadow-xs">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
+                    <IconTrendingDown className="h-4 w-4 text-amber-600" />
                   </CardHeader>
-                  <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                    Credits posted in period
+                  <CardContent>
+                    <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                      {formatPKR(glReport.total_credit)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Credits posted in period
+                    </p>
                   </CardContent>
                 </Card>
 
                 {/* Closing Balance */}
-                <Card className="border-l-4 border-l-primary bg-primary/5">
-                  <CardHeader className="py-3 px-4 pb-1">
-                    <CardDescription className="text-xs font-semibold tracking-wider uppercase">
-                      Closing Balance
-                    </CardDescription>
-                    <CardTitle className="text-lg font-bold font-mono">
-                      {formatPKR(Math.abs(glReport.closing_balance))}
-                    </CardTitle>
+                <Card className="shadow-xs">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Closing Balance</CardTitle>
+                    <IconScale className="h-4 w-4 text-emerald-600" />
                   </CardHeader>
-                  <CardContent className="px-4 py-2 text-xs text-muted-foreground">
-                    {glReport.closing_balance >= 0 ? (
-                      <Badge variant="outline" className="text-blue-700 border-blue-300">
-                        Net Dr
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-amber-700 border-amber-300">
-                        Net Cr
-                      </Badge>
-                    )}
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatPKR(Math.abs(glReport.closing_balance))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {glReport.closing_balance >= 0 ? "Net Debit (Dr)" : "Net Credit (Cr)"}
+                    </p>
                   </CardContent>
                 </Card>
               </div>

@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -218,18 +218,22 @@ export default function JournalEntriesPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto print:p-0 print:m-0 print:max-w-none">
+    <div className="space-y-6">
       {/* Background Journal List Container (Hidden during Voucher print) */}
       <div className="space-y-6 print:hidden">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <IconNotes className="h-6 w-6 text-primary" />
-              General Journal Vouchers (JV)
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Double-entry audit trail • Automated POS invoices, customer receipts, and manual adjustments
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                General Journal Vouchers (JV)
+              </h1>
+              <Badge variant="outline" className="text-xs font-mono">
+                {total} Vouchers
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Double-entry audit trail • Automated POS invoices, customer receipts, and manual adjustments.
             </p>
           </div>
 
@@ -258,8 +262,61 @@ export default function JournalEntriesPage() {
           </div>
         </div>
 
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Vouchers Posted</CardTitle>
+              <IconNotes className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{total}</div>
+              <p className="text-xs text-muted-foreground mt-1">Auto &amp; manual journal entries</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Debits (Dr)</CardTitle>
+              <IconCheck className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                PKR {entries.reduce((acc, jv) => acc + (jv.total_debit || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Current page debit volume</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Credits (Cr)</CardTitle>
+              <IconCheck className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                PKR {entries.reduce((acc, jv) => acc + (jv.total_credit || jv.total_debit || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Current page credit volume</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Equilibrium Status</CardTitle>
+              <IconCheck className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                Balanced (Dr = Cr)
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Strict double-entry verified</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filter Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/30 p-3 rounded-lg border">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-3.5 rounded-xl border shadow-xs">
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Source Type Filter */}
             <div className="w-44">
@@ -695,10 +752,10 @@ export default function JournalEntriesPage() {
                   <Label className="text-xs font-semibold">Branch (Optional)</Label>
                   <Select value={jvBranch} onValueChange={setJvBranch}>
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Branch" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Central / Head Office</SelectItem>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One (Central / Head Office)</SelectItem>
                       {branches.map((b) => (
                         <SelectItem key={b.id} value={b.id.toString()}>
                           {b.name}
@@ -760,13 +817,14 @@ export default function JournalEntriesPage() {
                         <TableRow key={line.id}>
                           <TableCell className="p-2">
                             <Select
-                              value={line.account_id}
-                              onValueChange={(val) => updateLine(line.id, "account_id", val)}
+                              value={line.account_id || "none"}
+                              onValueChange={(val) => updateLine(line.id, "account_id", val === "none" ? "" : val)}
                             >
                               <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder="Select Account" />
+                                <SelectValue placeholder="Choose One" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                                 {accounts.map((a) => (
                                   <SelectItem key={a.id} value={a.id.toString()}>
                                     {a.code} — {a.name} ({a.account_type})

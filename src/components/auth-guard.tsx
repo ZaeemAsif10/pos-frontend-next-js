@@ -83,6 +83,11 @@ const ROUTE_PERMISSIONS: Record<
     requiredPermissions: ["purchases:view"],
     allowedRoles: ["Admin", "Owner"],
   },
+  "/purchase-returns": {
+    name: "Purchase Returns & Debit Notes",
+    requiredPermissions: ["purchases:view", "purchases:create"],
+    allowedRoles: ["Admin", "Owner"],
+  },
   "/payment-statuses": {
     name: "Payment Statuses",
     requiredPermissions: ["payment_statuses:view", "purchases:view"],

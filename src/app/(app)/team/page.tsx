@@ -1103,9 +1103,9 @@ export default function TeamManagementPage() {
                   Assigned Role <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={addForm.role_id ? addForm.role_id.toString() : ""}
+                  value={addForm.role_id ? addForm.role_id.toString() : "0"}
                   onValueChange={(val) => {
-                    setAddForm({ ...addForm, role_id: parseInt(val, 10) });
+                    setAddForm({ ...addForm, role_id: parseInt(val, 10) || 0 });
                     if (addErrors.role_id) {
                       setAddErrors((prev) => {
                         const { role_id, ...rest } = prev;
@@ -1121,9 +1121,10 @@ export default function TeamManagementPage() {
                         "border-destructive ring-1 ring-destructive/40 focus-visible:ring-destructive"
                     )}
                   >
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0" className="text-muted-foreground">Choose One</SelectItem>
                     {roles.map((r) => (
                       <SelectItem key={r.id} value={r.id.toString()}>
                         {r.name}
@@ -1258,16 +1259,17 @@ export default function TeamManagementPage() {
                   Assigned Role <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={editForm.role_id?.toString() || ""}
+                  value={editForm.role_id ? editForm.role_id.toString() : "0"}
                   onValueChange={(val) =>
-                    setEditForm({ ...editForm, role_id: parseInt(val, 10) })
+                    setEditForm({ ...editForm, role_id: parseInt(val, 10) || 0 })
                   }
                   disabled={editingStaff.is_owner}
                 >
                   <SelectTrigger id="edit_staff_role">
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0" className="text-muted-foreground">Choose One</SelectItem>
                     {roles.map((r) => (
                       <SelectItem key={r.id} value={r.id.toString()}>
                         {r.name}

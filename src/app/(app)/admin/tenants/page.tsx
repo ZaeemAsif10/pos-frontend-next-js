@@ -626,15 +626,16 @@ You can log in right away to start managing your Sales, Purchases, and Inventory
                       City <span className="text-destructive">*</span>
                     </Label>
                     <Select
-                      value={createForm.city}
+                      value={createForm.city || "none"}
                       onValueChange={(val) =>
-                        setCreateForm((p) => ({ ...p, city: val }))
+                        setCreateForm((p) => ({ ...p, city: val === "none" ? "" : val }))
                       }
                     >
                       <SelectTrigger id="biz_city">
-                        <SelectValue placeholder="Select City" />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                         {PAKISTAN_CITIES.map((c) => (
                           <SelectItem key={c} value={c}>
                             {c}
@@ -715,19 +716,20 @@ You can log in right away to start managing your Sales, Purchases, and Inventory
                       Plan Tier
                     </Label>
                     <Select
-                      value={createForm.plan_tier}
-                      onValueChange={(val: "free_trial" | "basic" | "standard" | "enterprise") => {
+                      value={createForm.plan_tier || ("none" as any)}
+                      onValueChange={(val: any) => {
                         setCreateForm((p) => ({
                           ...p,
-                          plan_tier: val,
+                          plan_tier: val === "none" ? ("" as any) : val,
                           subscription_days: val === "free_trial" ? 14 : p.subscription_days,
                         }));
                       }}
                     >
                       <SelectTrigger id="biz_plan">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                         <SelectItem value="free_trial">Free Trial (14 Days)</SelectItem>
                         <SelectItem value="basic">Basic (Small Retail)</SelectItem>
                         <SelectItem value="standard">Standard (Wholesale & Distribution)</SelectItem>
@@ -741,15 +743,16 @@ You can log in right away to start managing your Sales, Purchases, and Inventory
                       Validity Period (Days)
                     </Label>
                     <Select
-                      value={String(createForm.subscription_days)}
+                      value={createForm.subscription_days ? String(createForm.subscription_days) : "0"}
                       onValueChange={(val) =>
                         setCreateForm((p) => ({ ...p, subscription_days: Number(val) }))
                       }
                     >
                       <SelectTrigger id="biz_days">
-                        <SelectValue />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="0" className="text-muted-foreground">Choose One</SelectItem>
                         <SelectItem value="14">14 Days (Trial)</SelectItem>
                         <SelectItem value="30">30 Days (1 Month)</SelectItem>
                         <SelectItem value="90">90 Days (Quarterly)</SelectItem>

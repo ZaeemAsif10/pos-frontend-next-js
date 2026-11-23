@@ -607,8 +607,12 @@ export default function PaymentStatusesPage() {
                   Accounting Effect <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={statusAccountingType}
-                  onValueChange={(val: "paid" | "unpaid" | "partial") => {
+                  value={statusAccountingType || ("none" as any)}
+                  onValueChange={(val: any) => {
+                    if (val === "none") {
+                      setStatusAccountingType("" as any);
+                      return;
+                    }
                     setStatusAccountingType(val);
                     if (!editingStatus) {
                       setStatusColor(val === "paid" ? "emerald" : val === "partial" ? "amber" : "rose");
@@ -616,9 +620,12 @@ export default function PaymentStatusesPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-muted-foreground">
+                      Choose One
+                    </SelectItem>
                     <SelectItem value="paid">
                       Paid (Dr. Inventory / Cr. Cash or Bank Account)
                     </SelectItem>
@@ -638,11 +645,12 @@ export default function PaymentStatusesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">Badge Color Preview</Label>
-                  <Select value={statusColor} onValueChange={setStatusColor}>
+                  <Select value={statusColor || "none"} onValueChange={(val) => setStatusColor(val === "none" ? "" : val)}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                       <SelectItem value="emerald">Emerald (Green)</SelectItem>
                       <SelectItem value="rose">Rose (Red)</SelectItem>
                       <SelectItem value="amber">Amber (Orange)</SelectItem>

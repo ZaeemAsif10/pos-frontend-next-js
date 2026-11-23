@@ -135,15 +135,14 @@ export default function AccountingMappingsPage() {
   const expenseAccounts = accounts.filter((a) => a.account_type === "expense");
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <IconSettingsAutomation className="h-6 w-6 text-primary" />
-            Account Mappings & Posting Configuration
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Account Mappings &amp; Posting Configuration
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Configure automated General Ledger accounts for POS billing, customer receipts, and supplier payouts.
           </p>
         </div>
@@ -219,11 +218,12 @@ export default function AccountingMappingsPage() {
         <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Default Sales Revenue Account (Income)</Label>
-            <Select value={salesAcc} onValueChange={setSalesAcc}>
+            <Select value={salesAcc || "none"} onValueChange={(val) => setSalesAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Sales Income Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {revenueAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -236,11 +236,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Accounts Receivable (Customer Khata)</Label>
-            <Select value={arAcc} onValueChange={setArAcc}>
+            <Select value={arAcc || "none"} onValueChange={(val) => setArAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Accounts Receivable" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {assetAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -253,11 +254,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Sales Tax Output Payable (FBR / PRA)</Label>
-            <Select value={taxAcc} onValueChange={setTaxAcc}>
+            <Select value={taxAcc || "none"} onValueChange={(val) => setTaxAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Sales Tax Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {liabilityAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -270,11 +272,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Sales Discounts Allowed (Contra-Revenue)</Label>
-            <Select value={discountAcc} onValueChange={setDiscountAcc}>
+            <Select value={discountAcc || "none"} onValueChange={(val) => setDiscountAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Discounts Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {revenueAccounts.concat(expenseAccounts).map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -303,11 +306,12 @@ export default function AccountingMappingsPage() {
         <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">💵 Counter Cash / Cash Drawer</Label>
-            <Select value={pmCash} onValueChange={setPmCash}>
+            <Select value={pmCash || "none"} onValueChange={(val) => setPmCash(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Cash Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {assetAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -320,11 +324,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">🏦 Bank Transfers (Online / IBFT)</Label>
-            <Select value={pmBank} onValueChange={setPmBank}>
+            <Select value={pmBank || "none"} onValueChange={(val) => setPmBank(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Bank Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {assetAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -337,11 +342,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">⚡ Raast Instant Payments</Label>
-            <Select value={pmRaast} onValueChange={setPmRaast}>
+            <Select value={pmRaast || "none"} onValueChange={(val) => setPmRaast(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Raast Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {assetAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -354,11 +360,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">💳 Card Machine / POS Terminal</Label>
-            <Select value={pmCard} onValueChange={setPmCard}>
+            <Select value={pmCard || "none"} onValueChange={(val) => setPmCard(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Merchant Card Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {assetAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -387,11 +394,12 @@ export default function AccountingMappingsPage() {
         <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Accounts Payable (Supplier Khata)</Label>
-            <Select value={apAcc} onValueChange={setApAcc}>
+            <Select value={apAcc || "none"} onValueChange={(val) => setApAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Accounts Payable" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {liabilityAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -404,11 +412,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Merchandise Inventory (Stock Asset)</Label>
-            <Select value={inventoryAcc} onValueChange={setInventoryAcc}>
+            <Select value={inventoryAcc || "none"} onValueChange={(val) => setInventoryAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select Inventory Asset" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {assetAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
@@ -421,11 +430,12 @@ export default function AccountingMappingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Cost of Goods Sold (COGS)</Label>
-            <Select value={cogsAcc} onValueChange={setCogsAcc}>
+            <Select value={cogsAcc || "none"} onValueChange={(val) => setCogsAcc(val === "none" ? "" : val)}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select COGS Account" />
+                <SelectValue placeholder="Choose One" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="text-muted-foreground">Choose One</SelectItem>
                 {expenseAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     {a.code} — {a.name}
