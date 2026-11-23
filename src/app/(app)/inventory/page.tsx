@@ -746,9 +746,12 @@ export default function InventoryPage() {
                   <Label className="text-xs font-semibold">Destination Branch</Label>
                   <Select value={String(trfToBranchId)} onValueChange={(val) => setTrfToBranchId(Number(val))}>
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select Branch" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="0" className="text-xs text-muted-foreground">
+                        Choose One
+                      </SelectItem>
                       {branches
                         .filter((b) => b.id !== trfProduct.branch_id)
                         .map((b) => (

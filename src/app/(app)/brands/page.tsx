@@ -589,13 +589,16 @@ export default function BrandsPage() {
                 Category <span className="text-destructive">*</span>
               </Label>
               <Select
-                value={categoryId ? String(categoryId) : ""}
+                value={categoryId ? String(categoryId) : "0"}
                 onValueChange={(val) => setCategoryId(Number(val))}
               >
                 <SelectTrigger id="brand_category">
-                  <SelectValue placeholder="Select Category" />
+                  <SelectValue placeholder="Choose One" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="0" className="text-muted-foreground">
+                    Choose One
+                  </SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.name}

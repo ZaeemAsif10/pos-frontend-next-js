@@ -349,6 +349,17 @@ export default function PurchasesPage() {
   };
 
   const handleProductSelect = (index: number, productId: number) => {
+    if (!productId) {
+      const copy = [...itemRows];
+      copy[index] = {
+        ...copy[index],
+        product_id: 0,
+        product_name: "",
+        sku: "",
+      };
+      setItemRows(copy);
+      return;
+    }
     const p = products.find((x) => x.id === productId);
     if (!p) return;
 
@@ -456,6 +467,14 @@ export default function PurchasesPage() {
       toast.error("Please add at least one product item");
       return;
     }
+    if (itemRows.some((r) => !r.product_id)) {
+      toast.error("Please select a product for all line items");
+      return;
+    }
+    if (!purchasePaymentStatus || purchasePaymentStatus === "none") {
+      toast.error("Please select a payment status");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -507,6 +526,10 @@ export default function PurchasesPage() {
   const handleUpdatePurchaseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPurchase) return;
+    if (!editPaymentStatus || editPaymentStatus === "none") {
+      toast.error("Please select a payment status");
+      return;
+    }
     try {
       setIsUpdatingPurchase(true);
       await inventoryService.updatePurchase(editingPurchase.id, {
@@ -1028,9 +1051,12 @@ export default function PurchasesPage() {
                   </Label>
                   <Select value={String(branchId)} onValueChange={(val) => setBranchId(Number(val))}>
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select Branch" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="0" className="text-xs text-muted-foreground">
+                        Choose One
+                      </SelectItem>
                       {branches.map((b) => (
                         <SelectItem key={b.id} value={String(b.id)} className="text-xs">
                           {b.name}
@@ -1046,9 +1072,12 @@ export default function PurchasesPage() {
                   </Label>
                   <Select value={String(supplierId)} onValueChange={(val) => setSupplierId(Number(val))}>
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select Supplier" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="0" className="text-xs text-muted-foreground">
+                        Choose One
+                      </SelectItem>
                       {suppliers.map((s) => (
                         <SelectItem key={s.id} value={String(s.id)} className="text-xs">
                           {s.company_name}
@@ -1112,9 +1141,12 @@ export default function PurchasesPage() {
                             onValueChange={(val) => handleProductSelect(idx, Number(val))}
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
+                              <SelectValue placeholder="Choose One" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="0" className="text-xs text-muted-foreground">
+                                Choose One
+                              </SelectItem>
                               {products.map((p) => (
                                 <SelectItem key={p.id} value={String(p.id)} className="text-xs">
                                   {p.name} ({p.sku})
@@ -1293,9 +1325,12 @@ export default function PurchasesPage() {
                       onValueChange={(val) => setPurchasePaymentStatus(val)}
                     >
                       <SelectTrigger className="h-8 text-xs font-semibold">
-                        <SelectValue placeholder="Select Payment Status" />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none" className="text-xs text-muted-foreground">
+                          Choose One
+                        </SelectItem>
                         {(paymentStatuses.filter((s) => s.is_active).length > 0
                           ? paymentStatuses.filter((s) => s.is_active)
                           : [
@@ -1416,9 +1451,12 @@ export default function PurchasesPage() {
                 </div>
                 <Select value={editPaymentStatus} onValueChange={setEditPaymentStatus}>
                   <SelectTrigger className="h-9 text-xs font-semibold">
-                    <SelectValue placeholder="Select Payment Status" />
+                    <SelectValue placeholder="Choose One" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none" className="text-xs text-muted-foreground">
+                      Choose One
+                    </SelectItem>
                     {(paymentStatuses.filter((s) => s.is_active).length > 0
                       ? paymentStatuses.filter((s) => s.is_active)
                       : [

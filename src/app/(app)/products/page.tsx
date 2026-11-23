@@ -1431,7 +1431,7 @@ export default function ProductsPage() {
                       </button>
                     </div>
                     <Select
-                      value={categoryId ? String(categoryId) : ""}
+                      value={categoryId ? String(categoryId) : "0"}
                       onValueChange={(val) => {
                         const newCatId = Number(val);
                         setCategoryId(newCatId);
@@ -1444,9 +1444,12 @@ export default function ProductsPage() {
                       }}
                     >
                       <SelectTrigger id="prod_category">
-                        <SelectValue placeholder="Select Category" />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="0" className="text-muted-foreground">
+                          Choose One
+                        </SelectItem>
                         {categories.map((c) => (
                           <SelectItem key={c.id} value={String(c.id)}>
                             {c.name}
@@ -1481,10 +1484,12 @@ export default function ProductsPage() {
                       onValueChange={(val) => setBrandId(Number(val))}
                     >
                       <SelectTrigger id="prod_brand">
-                        <SelectValue placeholder="No Brand Assigned" />
+                        <SelectValue placeholder="Choose One" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">None / Generic</SelectItem>
+                        <SelectItem value="0" className="text-muted-foreground">
+                          Choose One (None / Generic)
+                        </SelectItem>
                         {brands
                           .filter((b) => !categoryId || !b.category_id || b.category_id === categoryId)
                           .map((b) => (
@@ -2447,13 +2452,16 @@ export default function ProductsPage() {
                     Category <span className="text-destructive">*</span>
                   </Label>
                   <Select
-                    value={(brandCategoryId || categoryId) ? String(brandCategoryId || categoryId) : ""}
+                    value={(brandCategoryId || categoryId) ? String(brandCategoryId || categoryId) : "0"}
                     onValueChange={(val) => setBrandCategoryId(Number(val))}
                   >
                     <SelectTrigger id="quick_brand_category">
-                      <SelectValue placeholder="Select Category" />
+                      <SelectValue placeholder="Choose One" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="0" className="text-muted-foreground">
+                        Choose One
+                      </SelectItem>
                       {categories.map((c) => (
                         <SelectItem key={c.id} value={String(c.id)}>
                           {c.name}
