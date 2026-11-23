@@ -395,7 +395,7 @@ export default function ExpensesPage() {
               {formatPKR(summary?.cash_total || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {t("Reflected live in Day Book (Roznamcha)", "روزنامچہ میں کیش آؤٹ کا اندراج")}
+              {t("Reflected live in Daily Cash Register", "کیش رجسٹر میں کیش آؤٹ کا اندراج")}
             </p>
           </CardContent>
         </Card>

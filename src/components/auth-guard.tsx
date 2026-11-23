@@ -116,7 +116,7 @@ const ROUTE_PERMISSIONS: Record<
     allowedRoles: ["Admin", "Owner", "Salesman"],
   },
   "/daybook": {
-    name: "Day Book & Roznamcha (Cash & Bank Book)",
+    name: "Daily Cash Register (Cash & Bank Book)",
     requiredPermissions: ["daybook:view"],
     allowedRoles: ["Admin", "Owner", "Cashier", "Accountant"],
   },

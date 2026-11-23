@@ -166,19 +166,19 @@ export default function DayBookPage() {
       case "customer_payment":
         return (
           <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-medium">
-            {t("Wasooli (CRV)", "وصولی")}
+            Customer Receipt (CRV)
           </Badge>
         );
       case "supplier_payment":
         return (
           <Badge variant="outline" className="border-amber-400 text-amber-700 dark:border-amber-700 dark:text-amber-400 font-medium">
-            {t("Adaiygi (CPV)", "ادائیگی")}
+            Supplier Payment (CPV)
           </Badge>
         );
       case "expense":
         return (
           <Badge variant="outline" className="border-rose-400 bg-rose-50 text-rose-700 dark:bg-rose-950 dark:border-rose-700 dark:text-rose-400 font-medium">
-            {t("Expense", "خرچ")}
+            Expense Voucher
           </Badge>
         );
       default:
@@ -261,7 +261,7 @@ export default function DayBookPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `DayBook_Roznamcha_${selectedDate}.csv`);
+    link.setAttribute("download", `Daily_Cash_Register_${selectedDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -272,11 +272,8 @@ export default function DayBookPage() {
       {/* Page Header */}
       <div className="print:hidden">
         <PageHeader
-          title={t("Day Book (Roznamcha)", "روزنامچہ")}
-          description={t(
-            "Live daily cash register, counter inflows, wasooli receipts, and payouts.",
-            "روزمرہ کیش رجسٹر، کاؤنٹر آمدن، وصولیاں اور ادائیگیاں۔"
-          )}
+          title="Daily Cash Register"
+          description="Live daily cash & bank register, counter inflows, customer receipts, and supplier payouts."
         >
           <div className="flex items-center gap-2 flex-wrap">
             <Link href="/accounting/expenses">
@@ -286,7 +283,7 @@ export default function DayBookPage() {
                 className="h-9 gap-1.5"
               >
                 <IconReceiptTax className="h-4 w-4" />
-                {t("Record Expense", "خرچہ")}
+                Record Expense
               </Button>
             </Link>
             <Button
@@ -297,7 +294,7 @@ export default function DayBookPage() {
               className="h-9 gap-1.5"
             >
               <IconDownload className="h-4 w-4" />
-              {t("Export CSV", "ایکسپورٹ")}
+              Export CSV
             </Button>
             <Button
               variant="outline"
@@ -307,7 +304,7 @@ export default function DayBookPage() {
               className="h-9 gap-1.5"
             >
               <IconPrinter className="h-4 w-4" />
-              {t("Print Roznamcha", "پرنٹ کریں")}
+              Print Register
             </Button>
           </div>
         </PageHeader>
@@ -552,7 +549,7 @@ export default function DayBookPage() {
 
       {/* Print Sheet Header (Only visible on print) */}
       <div className="hidden print:block mb-6 border-b pb-4">
-        <h1 className="text-2xl font-bold text-center">DAY BOOK / ROZNAMCHA REGISTER</h1>
+        <h1 className="text-2xl font-bold text-center">DAILY CASH REGISTER STATEMENT</h1>
         <p className="text-sm text-center text-muted-foreground">
           Date: {selectedDate} | Branch:{" "}
           {selectedBranch === "all"
@@ -579,8 +576,8 @@ export default function DayBookPage() {
                 <TableHead>Customer / Supplier / Particulars</TableHead>
                 <TableHead className="w-28">Channel</TableHead>
                 <TableHead className="w-28 hidden md:table-cell">Branch</TableHead>
-                <TableHead className="text-right w-36">Cash In (آمد / Dr)</TableHead>
-                <TableHead className="text-right w-36">Cash Out (خرچ / Cr)</TableHead>
+                <TableHead className="text-right w-36">Cash In (Dr)</TableHead>
+                <TableHead className="text-right w-36">Cash Out (Cr)</TableHead>
                 <TableHead className="text-right w-40">Running Balance</TableHead>
               </TableRow>
             </TableHeader>

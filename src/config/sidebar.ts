@@ -165,7 +165,7 @@ export const sidebarNavigation: SidebarGroup[] = [
         roles: ["Admin", "Owner"],
       },
       {
-        title: "Day Book (Roznamcha)",
+        title: "Daily Cash Register",
         url: "/daybook",
         icon: IconBook2,
         permissions: ["daybook:view"],
