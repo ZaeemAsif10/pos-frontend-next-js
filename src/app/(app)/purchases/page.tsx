@@ -1499,20 +1499,7 @@ export default function PurchasesPage() {
                       <Label className="text-xs font-semibold">
                         Payment Status <span className="text-destructive">*</span>
                       </Label>
-                      {canViewPurchaseReturns && (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
-            >
-              <Link href="/purchase-returns">
-                <IconArrowBackUp className="h-4 w-4" />
-                Purchase Returns
-              </Link>
-            </Button>
-          )}
-          {canViewPaymentStatuses && (
+                      {canViewPaymentStatuses && (
                         <button
                           type="button"
                           onClick={() => {
@@ -1673,7 +1660,7 @@ export default function PurchasesPage() {
 
       {/* Update Purchase Payment Status Modal */}
       <Dialog open={Boolean(editingPurchase)} onOpenChange={(open) => !open && setEditingPurchase(null)}>
-        <DialogContent className="sm:max-w-[460px]">
+        <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleUpdatePurchaseSubmit}>
             <DialogHeader>
               <DialogTitle>Update Purchase &amp; Payment Status</DialogTitle>
@@ -1705,20 +1692,7 @@ export default function PurchasesPage() {
                   <Label className="text-xs font-semibold">
                     Payment Status <span className="text-destructive">*</span>
                   </Label>
-                  {canViewPurchaseReturns && (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
-            >
-              <Link href="/purchase-returns">
-                <IconArrowBackUp className="h-4 w-4" />
-                Purchase Returns
-              </Link>
-            </Button>
-          )}
-          {canViewPaymentStatuses && (
+                  {canViewPaymentStatuses && (
                     <button
                       type="button"
                       onClick={() => {
