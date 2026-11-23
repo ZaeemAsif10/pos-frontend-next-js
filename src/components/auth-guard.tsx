@@ -85,7 +85,14 @@ const ROUTE_PERMISSIONS: Record<
   },
   "/purchase-returns": {
     name: "Purchase Returns & Debit Notes",
-    requiredPermissions: ["purchases:view", "purchases:create"],
+    requiredPermissions: [
+      "purchase_returns:view",
+      "purchase_returns:create",
+      "purchase_returns:edit",
+      "purchase_returns:delete",
+      "purchases:view",
+      "purchases:create",
+    ],
     allowedRoles: ["Admin", "Owner"],
   },
   "/payment-statuses": {

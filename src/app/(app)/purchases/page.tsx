@@ -130,6 +130,18 @@ export default function PurchasesPage() {
     userPerms.includes("purchases:create") ||
     userPerms.includes("payment_statuses:edit");
   const canDelete = isOwnerOrAdmin || userPerms.includes("purchases:delete");
+  const canReturnPurchase =
+    isOwnerOrAdmin ||
+    userPerms.includes("purchase_returns:create") ||
+    userPerms.includes("purchase_returns:manage") ||
+    userPerms.includes("purchases:create");
+  const canViewPurchaseReturns =
+    isOwnerOrAdmin ||
+    userPerms.includes("purchase_returns:view") ||
+    userPerms.includes("purchase_returns:create") ||
+    userPerms.includes("purchase_returns:edit") ||
+    userPerms.includes("purchases:view") ||
+    userPerms.includes("purchases:create");
 
   const canViewPaymentStatuses =
     isOwnerOrAdmin ||
@@ -820,17 +832,19 @@ export default function PurchasesPage() {
             <IconReportAnalytics className="h-4 w-4" />
             Payment &amp; Pending Report
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
-          >
-            <Link href="/purchase-returns">
-              <IconArrowBackUp className="h-4 w-4" />
-              Purchase Returns
-            </Link>
-          </Button>
+          {canViewPurchaseReturns && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+            >
+              <Link href="/purchase-returns">
+                <IconArrowBackUp className="h-4 w-4" />
+                Purchase Returns
+              </Link>
+            </Button>
+          )}
           {canViewPaymentStatuses && (
             <Button
               asChild
@@ -1161,7 +1175,7 @@ export default function PurchasesPage() {
                               Update Payment Status
                             </DropdownMenuItem>
                           )}
-                          {p.status !== "returned" && p.status !== "cancelled" && canCreate && (
+                          {p.status !== "returned" && p.status !== "cancelled" && canReturnPurchase && (
                             <DropdownMenuItem
                               onClick={() => openReturnPurchaseModal(p)}
                               className="text-amber-600 focus:text-amber-600 dark:text-amber-400"
@@ -1485,17 +1499,19 @@ export default function PurchasesPage() {
                       <Label className="text-xs font-semibold">
                         Payment Status <span className="text-destructive">*</span>
                       </Label>
-                      <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
-          >
-            <Link href="/purchase-returns">
-              <IconArrowBackUp className="h-4 w-4" />
-              Purchase Returns
-            </Link>
-          </Button>
+                      {canViewPurchaseReturns && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+            >
+              <Link href="/purchase-returns">
+                <IconArrowBackUp className="h-4 w-4" />
+                Purchase Returns
+              </Link>
+            </Button>
+          )}
           {canViewPaymentStatuses && (
                         <button
                           type="button"
@@ -1689,17 +1705,19 @@ export default function PurchasesPage() {
                   <Label className="text-xs font-semibold">
                     Payment Status <span className="text-destructive">*</span>
                   </Label>
-                  <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
-          >
-            <Link href="/purchase-returns">
-              <IconArrowBackUp className="h-4 w-4" />
-              Purchase Returns
-            </Link>
-          </Button>
+                  {canViewPurchaseReturns && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+            >
+              <Link href="/purchase-returns">
+                <IconArrowBackUp className="h-4 w-4" />
+                Purchase Returns
+              </Link>
+            </Button>
+          )}
           {canViewPaymentStatuses && (
                     <button
                       type="button"

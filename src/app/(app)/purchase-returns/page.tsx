@@ -16,6 +16,7 @@ import {
   IconBuildingBank,
   IconPackage,
   IconFileInvoice,
+  IconLock,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -90,7 +91,20 @@ export default function PurchaseReturnsPage() {
     userRole === "owner" ||
     userPerms.includes("*");
 
-  const canCreate = isOwnerOrAdmin || userPerms.includes("purchases:create");
+  const canView =
+    isOwnerOrAdmin ||
+    userPerms.includes("purchase_returns:view") ||
+    userPerms.includes("purchase_returns:create") ||
+    userPerms.includes("purchase_returns:edit") ||
+    userPerms.includes("purchase_returns:manage") ||
+    userPerms.includes("purchases:view") ||
+    userPerms.includes("purchases:create");
+
+  const canCreate =
+    isOwnerOrAdmin ||
+    userPerms.includes("purchase_returns:create") ||
+    userPerms.includes("purchase_returns:manage") ||
+    userPerms.includes("purchases:create");
 
   const [loading, setLoading] = useState(true);
   const [returnsList, setReturnsList] = useState<PurchaseReturnRecord[]>([]);
@@ -389,6 +403,25 @@ export default function PurchaseReturnsPage() {
   const sumCreditAdjusted = returnsList
     .filter((r) => r.refund_method === "credit")
     .reduce((acc, r) => acc + Number(r.total_amount || 0), 0);
+
+  if (!canView) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="p-3 bg-destructive/10 text-destructive rounded-full">
+          <IconLock className="h-8 w-8" />
+        </div>
+        <h2 className="text-xl font-bold">Access Restricted</h2>
+        <p className="text-sm text-muted-foreground max-w-md">
+          You do not have the required permissions (`purchase_returns:view`) to view or manage Purchase Returns &amp; Debit Notes.
+        </p>
+        <Button asChild variant="outline">
+          <Link href="/purchases">
+            <IconArrowBackUp className="h-4 w-4 mr-2" /> Return to Purchases &amp; GRN
+          </Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

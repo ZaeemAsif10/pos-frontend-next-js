@@ -187,7 +187,15 @@ export const sidebarNavigation: SidebarGroup[] = [
         title: "Purchase Returns",
         url: "/purchase-returns",
         icon: IconArrowBackUp,
-        permissions: ["purchases:view", "purchases:create", "purchases:edit"],
+        permissions: [
+          "purchase_returns:view",
+          "purchase_returns:create",
+          "purchase_returns:edit",
+          "purchase_returns:delete",
+          "purchases:view",
+          "purchases:create",
+          "purchases:edit",
+        ],
         roles: ["Admin", "Owner"],
       },
       {
