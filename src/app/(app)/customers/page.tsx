@@ -493,7 +493,7 @@ export default function CustomersPage() {
             cell: (c) =>
               c.area_name ? (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <IconRoute className="h-3.5 w-3.5 text-blue-500" />
+                  <IconRoute className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>{c.area_name}</span>
                 </div>
               ) : (
@@ -600,10 +600,10 @@ export default function CustomersPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setLedgerCustomer(c)}
-                  className="h-8 px-2.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/5 border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-500/50 transition-all gap-1.5 shadow-2xs"
+                  className="h-8 px-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-1.5 shadow-2xs"
                   title="Customer Ledger Statement"
                 >
-                  <IconFileText className="h-3.5 w-3.5 text-blue-500" />
+                  <IconFileText className="h-3.5 w-3.5 text-muted-foreground" />
                   Ledger
                 </Button>
                 <DropdownMenu>

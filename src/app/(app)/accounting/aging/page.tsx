@@ -261,7 +261,7 @@ export default function KhataAgingPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">Khata & Aging Analysis</h1>
-            <Badge variant="outline" className="border-blue-500/40 text-blue-600 bg-blue-500/10 font-medium text-xs">
+            <Badge variant="outline" className="border-slate-200 text-slate-700 bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:bg-slate-800 font-medium text-xs">
               IFRS / GAAP Standard
             </Badge>
           </div>
@@ -325,7 +325,7 @@ export default function KhataAgingPage() {
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)}>
           <TabsList className="bg-muted/40 p-1">
             <TabsTrigger value="receivables" className="gap-2 text-xs font-semibold px-4">
-              <IconCalendarTime className="h-4 w-4 text-blue-600" />
+              <IconCalendarTime className="h-4 w-4 text-muted-foreground" />
               Customer Receivables (AR Khata)
               {arReport && (
                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 font-mono">
@@ -334,7 +334,7 @@ export default function KhataAgingPage() {
               )}
             </TabsTrigger>
             <TabsTrigger value="payables" className="gap-2 text-xs font-semibold px-4">
-              <IconBuildingStore className="h-4 w-4 text-purple-600" />
+              <IconBuildingStore className="h-4 w-4 text-muted-foreground" />
               Supplier Payables (AP Khata)
               {apReport && (
                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 font-mono">
@@ -353,10 +353,10 @@ export default function KhataAgingPage() {
           <Card className="shadow-xs print:border-gray-400 print:shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Receivables</CardTitle>
-              <IconCalendarTime className="h-4 w-4 text-blue-600" />
+              <IconCalendarTime className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-blue-600 dark:text-blue-400 print:text-black">
+              <div className="text-xl font-bold text-foreground print:text-black">
                 PKR {formatPKR(arReport.summary.total_receivables)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -369,10 +369,10 @@ export default function KhataAgingPage() {
           <Card className="shadow-xs print:border-gray-400 print:shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Current (0 - 30d)</CardTitle>
-              <IconCalendarTime className="h-4 w-4 text-emerald-600" />
+              <IconCalendarTime className="h-4 w-4 text-[#2CA01C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">
+              <div className="text-xl font-bold text-[#2CA01C] print:text-black">
                 PKR {formatPKR(arReport.summary.total_current)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -417,10 +417,10 @@ export default function KhataAgingPage() {
           <Card className="shadow-xs print:border-gray-400 print:shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">High Risk (&gt;90d)</CardTitle>
-              <IconCalendarTime className="h-4 w-4 text-amber-600" />
+              <IconCalendarTime className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-amber-600 dark:text-amber-400 print:text-black">
+              <div className="text-xl font-bold text-foreground print:text-black">
                 PKR {formatPKR(arReport.summary.total_overdue_90_plus)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -453,10 +453,10 @@ export default function KhataAgingPage() {
           <Card className="shadow-xs print:border-gray-400 print:shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Current (0 - 30d)</CardTitle>
-              <IconBuildingStore className="h-4 w-4 text-emerald-600" />
+              <IconBuildingStore className="h-4 w-4 text-[#2CA01C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">
+              <div className="text-xl font-bold text-[#2CA01C] print:text-black">
                 PKR {formatPKR(apReport.summary.total_current)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -485,10 +485,10 @@ export default function KhataAgingPage() {
           <Card className="shadow-xs print:border-gray-400 print:shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Days Payable Out (DPO)</CardTitle>
-              <IconBuildingStore className="h-4 w-4 text-blue-600" />
+              <IconBuildingStore className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold text-blue-600 dark:text-blue-400 print:text-black">
+              <div className="text-xl font-bold text-foreground print:text-black">
                 {apReport.summary.days_payable_outstanding} Days
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -565,7 +565,7 @@ export default function KhataAgingPage() {
                 <TableHead className="text-right w-[120px] font-semibold print:text-black print:font-bold">
                   Total Khata
                 </TableHead>
-                <TableHead className="text-right w-[110px] font-semibold text-emerald-700 print:text-black">
+                <TableHead className="text-right w-[110px] font-semibold text-[#2CA01C] print:text-black">
                   Current (0-30d)
                 </TableHead>
                 <TableHead className="text-right w-[100px] font-semibold print:text-black">
@@ -636,12 +636,12 @@ export default function KhataAgingPage() {
                       </TableCell>
 
                       {/* Total Balance */}
-                      <TableCell className="text-right font-mono font-bold text-sm text-blue-700 dark:text-blue-300 print:text-black">
+                      <TableCell className="text-right font-mono font-bold text-sm text-foreground print:text-black">
                         {formatPKR(c.total_receivable)}
                       </TableCell>
 
                       {/* Current */}
-                      <TableCell className="text-right font-mono text-xs text-emerald-700 print:text-black">
+                      <TableCell className="text-right font-mono text-xs text-[#2CA01C] print:text-black">
                         {c.aging.current > 0 ? formatPKR(c.aging.current) : "-"}
                       </TableCell>
 
@@ -707,7 +707,7 @@ export default function KhataAgingPage() {
                                 : "Permission required: accounting:aging:statement"
                             }
                           >
-                            <IconFileText className="h-3.5 w-3.5 text-blue-600" />
+                            <IconFileText className="h-3.5 w-3.5 text-muted-foreground" />
                             Khata
                           </Button>
 
@@ -715,7 +715,7 @@ export default function KhataAgingPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2 text-xs text-emerald-700 hover:text-emerald-800 gap-1"
+                            className="h-7 px-2 text-xs text-[#2CA01C] hover:text-emerald-800 gap-1"
                             disabled={!canWhatsApp}
                             onClick={() =>
                               handleSendWhatsAppReminder(
@@ -732,7 +732,7 @@ export default function KhataAgingPage() {
                                 : "Permission required: accounting:aging:whatsapp"
                             }
                           >
-                            <IconBrandWhatsapp className="h-3.5 w-3.5 text-emerald-600" />
+                            <IconBrandWhatsapp className="h-3.5 w-3.5 text-[#2CA01C]" />
                           </Button>
 
                           {/* Credit Freeze toggle */}
@@ -797,12 +797,12 @@ export default function KhataAgingPage() {
                     </TableCell>
 
                     {/* Total Balance */}
-                    <TableCell className="text-right font-mono font-bold text-sm text-purple-700 dark:text-purple-300 print:text-black">
+                    <TableCell className="text-right font-mono font-bold text-sm text-foreground print:text-black">
                       {formatPKR(s.total_payable)}
                     </TableCell>
 
                     {/* Current */}
-                    <TableCell className="text-right font-mono text-xs text-emerald-700 print:text-black">
+                    <TableCell className="text-right font-mono text-xs text-[#2CA01C] print:text-black">
                       {s.aging.current > 0 ? formatPKR(s.aging.current) : "-"}
                     </TableCell>
 
@@ -867,14 +867,14 @@ export default function KhataAgingPage() {
                               : "Permission required: accounting:aging:statement"
                           }
                         >
-                          <IconFileText className="h-3.5 w-3.5 text-purple-600" />
+                          <IconFileText className="h-3.5 w-3.5 text-muted-foreground" />
                           Ledger
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 px-2 text-xs text-emerald-700 hover:text-emerald-800 gap-1"
+                          className="h-7 px-2 text-xs text-[#2CA01C] hover:text-emerald-800 gap-1"
                           disabled={!canWhatsApp}
                           onClick={() =>
                             handleSendWhatsAppReminder(
@@ -891,7 +891,7 @@ export default function KhataAgingPage() {
                               : "Permission required: accounting:aging:whatsapp"
                           }
                         >
-                          <IconBrandWhatsapp className="h-3.5 w-3.5 text-emerald-600" />
+                          <IconBrandWhatsapp className="h-3.5 w-3.5 text-[#2CA01C]" />
                         </Button>
                       </div>
                     </TableCell>
@@ -907,10 +907,10 @@ export default function KhataAgingPage() {
                   <TableCell colSpan={2} className="print:text-black font-bold">
                     TOTAL RECEIVABLES ({arReport.customers.length} Accounts)
                   </TableCell>
-                  <TableCell className="text-right font-mono text-blue-700 font-bold print:text-black whitespace-nowrap">
+                  <TableCell className="text-right font-mono text-foreground font-bold print:text-black whitespace-nowrap">
                     PKR {formatPKR(arReport.summary.total_receivables)}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-emerald-700 font-bold print:text-black whitespace-nowrap">
+                  <TableCell className="text-right font-mono text-[#2CA01C] font-bold print:text-black whitespace-nowrap">
                     PKR {formatPKR(arReport.summary.total_current)}
                   </TableCell>
                   <TableCell className="text-right font-mono text-amber-700 font-bold print:text-black whitespace-nowrap">
@@ -932,7 +932,7 @@ export default function KhataAgingPage() {
                   <TableCell className="text-right font-mono text-purple-700 font-bold print:text-black whitespace-nowrap">
                     PKR {formatPKR(apReport.summary.total_payables)}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-emerald-700 font-bold print:text-black whitespace-nowrap">
+                  <TableCell className="text-right font-mono text-[#2CA01C] font-bold print:text-black whitespace-nowrap">
                     PKR {formatPKR(apReport.summary.total_current)}
                   </TableCell>
                   <TableCell colSpan={4} className="text-right font-mono text-rose-700 font-bold print:text-black whitespace-nowrap">
@@ -1037,7 +1037,7 @@ export default function KhataAgingPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="gap-1.5 h-8 text-xs text-emerald-700 shadow-sm"
+                      className="gap-1.5 h-8 text-xs text-[#2CA01C] shadow-sm"
                       disabled={!canWhatsApp}
                       onClick={() => {
                         const bal =
@@ -1048,7 +1048,7 @@ export default function KhataAgingPage() {
                       }}
                       title={canWhatsApp ? "Send WhatsApp Statement" : "Permission required: accounting:aging:whatsapp"}
                     >
-                      <IconBrandWhatsapp className="h-3.5 w-3.5 text-emerald-600" />
+                      <IconBrandWhatsapp className="h-3.5 w-3.5 text-[#2CA01C]" />
                       WhatsApp
                     </Button>
                   </div>
@@ -1064,14 +1064,14 @@ export default function KhataAgingPage() {
                   </div>
                   <div className="border rounded-lg p-2.5 bg-muted/20">
                     <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Total Invoiced (Dr)</span>
-                    <span className="font-mono text-sm font-bold text-blue-600">PKR {formatPKR(customerLedger.summary.total_debit)}</span>
+                    <span className="font-mono text-sm font-bold text-muted-foreground">PKR {formatPKR(customerLedger.summary.total_debit)}</span>
                   </div>
                   <div className="border rounded-lg p-2.5 bg-muted/20">
                     <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Total Recovered (Cr)</span>
-                    <span className="font-mono text-sm font-bold text-emerald-600">PKR {formatPKR(customerLedger.summary.total_credit)}</span>
+                    <span className="font-mono text-sm font-bold text-[#2CA01C]">PKR {formatPKR(customerLedger.summary.total_credit)}</span>
                   </div>
                   <div className="border rounded-lg p-2.5 bg-blue-50/50 dark:bg-blue-950/20 border-blue-200">
-                    <span className="text-[10px] text-blue-700 dark:text-blue-300 uppercase font-semibold block">Net Payable Balance</span>
+                    <span className="text-[10px] text-foreground uppercase font-semibold block">Net Payable Balance</span>
                     <span className="font-mono text-base font-black text-blue-800 dark:text-blue-200">
                       PKR {formatPKR(customerLedger.summary.closing_balance)}
                     </span>
@@ -1087,14 +1087,14 @@ export default function KhataAgingPage() {
                   </div>
                   <div className="border rounded-lg p-2.5 bg-muted/20">
                     <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Total Purchases (Cr)</span>
-                    <span className="font-mono text-sm font-bold text-purple-600">PKR {formatPKR(supplierLedger.summary.total_purchases)}</span>
+                    <span className="font-mono text-sm font-bold text-muted-foreground">PKR {formatPKR(supplierLedger.summary.total_purchases)}</span>
                   </div>
                   <div className="border rounded-lg p-2.5 bg-muted/20">
                     <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Total Paid (Dr)</span>
-                    <span className="font-mono text-sm font-bold text-emerald-600">PKR {formatPKR(supplierLedger.summary.total_paid)}</span>
+                    <span className="font-mono text-sm font-bold text-[#2CA01C]">PKR {formatPKR(supplierLedger.summary.total_paid)}</span>
                   </div>
                   <div className="border rounded-lg p-2.5 bg-purple-50/50 dark:bg-purple-950/20 border-purple-200">
-                    <span className="text-[10px] text-purple-700 dark:text-purple-300 uppercase font-semibold block">Net Balance Due</span>
+                    <span className="text-[10px] text-foreground uppercase font-semibold block">Net Balance Due</span>
                     <span className="font-mono text-base font-black text-purple-800 dark:text-purple-200">
                       PKR {formatPKR(supplierLedger.summary.closing_balance)}
                     </span>
@@ -1139,7 +1139,7 @@ export default function KhataAgingPage() {
                             <TableCell className="font-mono text-muted-foreground print:text-black">
                               {new Date(entry.date).toLocaleDateString()}
                             </TableCell>
-                            <TableCell className="font-mono font-semibold text-blue-600 print:text-black">
+                            <TableCell className="font-mono font-semibold text-muted-foreground print:text-black">
                               {entry.reference}
                             </TableCell>
                             <TableCell className="font-medium whitespace-normal">
@@ -1150,7 +1150,7 @@ export default function KhataAgingPage() {
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-mono font-semibold text-emerald-600 print:text-black">
+                            <TableCell className="text-right font-mono font-semibold text-[#2CA01C] print:text-black">
                               {entry.debit > 0 ? formatPKR(entry.debit) : "-"}
                             </TableCell>
                             <TableCell className="text-right font-mono font-semibold text-rose-600 print:text-black">
@@ -1178,7 +1178,7 @@ export default function KhataAgingPage() {
                             <TableCell className="font-mono text-muted-foreground print:text-black">
                               {new Date(entry.date).toLocaleDateString()}
                             </TableCell>
-                            <TableCell className="font-mono font-semibold text-purple-600 print:text-black">
+                            <TableCell className="font-mono font-semibold text-muted-foreground print:text-black">
                               {entry.reference}
                             </TableCell>
                             <TableCell className="font-medium whitespace-normal">
@@ -1189,7 +1189,7 @@ export default function KhataAgingPage() {
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell className="text-right font-mono font-semibold text-emerald-600 print:text-black">
+                            <TableCell className="text-right font-mono font-semibold text-[#2CA01C] print:text-black">
                               {entry.debit > 0 ? formatPKR(entry.debit) : "-"}
                             </TableCell>
                             <TableCell className="text-right font-mono font-semibold text-rose-600 print:text-black">

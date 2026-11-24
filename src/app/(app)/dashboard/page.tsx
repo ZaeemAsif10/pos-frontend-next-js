@@ -248,35 +248,35 @@ export default function DashboardPage() {
           </Button>
 
           {/* Quick Actions */}
-          <Button asChild size="sm" className="h-10 text-xs font-bold px-4 shadow-sm">
+          <Button asChild size="sm" className="h-10 text-xs font-bold px-4 shadow-xs bg-[#2CA01C] hover:bg-[#248417] text-white">
             <Link href="/pos">
-              POS
+              Open POS Counter
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* 4 PRIMARY EXECUTIVE KPI TILES */}
+      {/* 4 PRIMARY EXECUTIVE KPI TILES (QuickBooks Style Solid Cards) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Tile 1: Today's Sales */}
-        <Card className="relative overflow-hidden border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-card to-card">
+        <Card className="border-t-4 border-t-[#2CA01C] border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Today&apos;s POS Sales
               </span>
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <div className="p-2 rounded-md bg-[#2CA01C]/10 text-[#2CA01C]">
                 <IconReceiptTax className="h-5 w-5" />
               </div>
             </div>
             <div>
-              <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-emerald-700 dark:text-emerald-400">
+              <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-[#0B2265] dark:text-white">
                 Rs {salesSummary?.today_sales?.toLocaleString() || "0"}
               </p>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <IconTrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                <IconTrendingUp className="h-3.5 w-3.5 text-[#2CA01C]" />
                 <span>
-                  <b>{salesSummary?.today_invoices_count || 0}</b> sales recorded today
+                  <b className="text-slate-800 dark:text-slate-200">{salesSummary?.today_invoices_count || 0}</b> sales recorded today
                 </span>
               </p>
             </div>
@@ -284,21 +284,21 @@ export default function DashboardPage() {
         </Card>
 
         {/* Tile 2: Cash Collected */}
-        <Card className="relative overflow-hidden border-sky-500/20 bg-gradient-to-br from-sky-500/5 via-card to-card">
+        <Card className="border-t-4 border-t-sky-600 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Cash Drawer Tender
               </span>
-              <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+              <div className="p-2 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400">
                 <IconCash className="h-5 w-5" />
               </div>
             </div>
             <div>
-              <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-sky-700 dark:text-sky-400">
+              <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-white">
                 Rs {salesSummary?.today_cash_collected?.toLocaleString() || "0"}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Net cash tender in active shift register
               </p>
             </div>
@@ -306,13 +306,13 @@ export default function DashboardPage() {
         </Card>
 
         {/* Tile 3: Market Receivables / Khata */}
-        <Card className="relative overflow-hidden border-amber-500/20 bg-gradient-to-br from-amber-500/5 via-card to-card">
+        <Card className="border-t-4 border-t-amber-500 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Market Receivables
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Customer Receivables (Khata)
               </span>
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <div className="p-2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
                 <IconUsers className="h-5 w-5" />
               </div>
             </div>
@@ -320,39 +320,39 @@ export default function DashboardPage() {
               <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-amber-700 dark:text-amber-400">
                 Rs {customerStats?.total_receivables?.toLocaleString() || "0"}
               </p>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center justify-between">
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
                 <span>{customerStats?.total_customers || 0} customer accounts</span>
                 {customerStats && customerStats.overdue_accounts > 0 && (
-                  <Badge variant="destructive" className="text-[10px] py-0 px-1.5">
+                  <Badge variant="destructive" className="text-[10px] py-0 px-1.5 font-bold">
                     {customerStats.overdue_accounts} Overdue
                   </Badge>
                 )}
-              </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Tile 4: Inventory Valuation */}
-        <Card className="relative overflow-hidden border-indigo-500/20 bg-gradient-to-br from-indigo-500/5 via-card to-card">
+        <Card className="border-t-4 border-t-[#0B2265] dark:border-t-indigo-400 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Inventory Valuation
               </span>
-              <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              <div className="p-2 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                 <IconPackages className="h-5 w-5" />
               </div>
             </div>
             <div>
-              <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-indigo-700 dark:text-indigo-400">
+              <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-white">
                 Rs {productStats?.total_inventory_value?.toLocaleString() || "0"}
               </p>
-              <div className="text-xs text-muted-foreground mt-1 flex items-center justify-between">
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
                 <span>{productStats?.total_products || 0} active SKUs</span>
                 {productStats && productStats.low_stock_count > 0 && (
                   <Badge
                     variant="outline"
-                    className="text-[10px] py-0 px-1.5 border-amber-500/30 text-amber-600 bg-amber-500/10"
+                    className="text-[10px] py-0 px-1.5 border-amber-500/30 text-amber-600 bg-amber-500/10 font-bold"
                   >
                     {productStats.low_stock_count} Low Stock
                   </Badge>
@@ -423,9 +423,8 @@ export default function DashboardPage() {
                   />
                   <Bar
                     dataKey="amount"
-                    fill="currentColor"
-                    radius={[6, 6, 0, 0]}
-                    className="fill-primary"
+                    fill="#2CA01C"
+                    radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -474,13 +473,13 @@ export default function DashboardPage() {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="flex items-center gap-1 font-medium">
-                    <span className="size-2 rounded-full bg-emerald-500" /> Cash Tender
+                    <span className="size-2 rounded-full bg-[#2CA01C]" /> Cash Tender
                   </span>
                   <span className="font-mono font-bold">{paymentBreakdown.cashPct}%</span>
                 </div>
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-500"
+                    className="h-full bg-[#2CA01C] transition-all duration-500"
                     style={{ width: `${paymentBreakdown.cashPct}%` }}
                   />
                 </div>
@@ -489,13 +488,13 @@ export default function DashboardPage() {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="flex items-center gap-1 font-medium">
-                    <span className="size-2 rounded-full bg-sky-500" /> Credit / Khata
+                    <span className="size-2 rounded-full bg-amber-500" /> Credit / Khata
                   </span>
                   <span className="font-mono font-bold">{paymentBreakdown.creditPct}%</span>
                 </div>
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-sky-500 transition-all duration-500"
+                    className="h-full bg-amber-500 transition-all duration-500"
                     style={{ width: `${paymentBreakdown.creditPct}%` }}
                   />
                 </div>
@@ -504,13 +503,13 @@ export default function DashboardPage() {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="flex items-center gap-1 font-medium">
-                    <span className="size-2 rounded-full bg-violet-500" /> Card / POS
+                    <span className="size-2 rounded-full bg-slate-700 dark:bg-slate-300" /> Card / POS
                   </span>
                   <span className="font-mono font-bold">{paymentBreakdown.cardPct}%</span>
                 </div>
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-violet-500 transition-all duration-500"
+                    className="h-full bg-slate-700 dark:bg-slate-300 transition-all duration-500"
                     style={{ width: `${paymentBreakdown.cardPct}%` }}
                   />
                 </div>
@@ -579,9 +578,9 @@ export default function DashboardPage() {
                           variant="outline"
                           className={cn(
                             "text-[10px] capitalize",
-                            inv.payment_method === "cash" && "border-emerald-500/30 text-emerald-600 bg-emerald-500/5",
-                            inv.payment_method === "credit" && "border-sky-500/30 text-sky-600 bg-sky-500/5",
-                            inv.payment_method === "card" && "border-violet-500/30 text-violet-600 bg-violet-500/5"
+                            inv.payment_method === "cash" && "border-[#2CA01C]/30 text-[#2CA01C] bg-[#2CA01C]/5",
+                            inv.payment_method === "credit" && "border-amber-500/30 text-amber-700 bg-amber-500/5",
+                            inv.payment_method === "card" && "border-slate-300 text-slate-700 bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:bg-slate-800"
                           )}
                         >
                           {inv.payment_method}

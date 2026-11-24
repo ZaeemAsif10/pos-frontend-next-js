@@ -630,7 +630,7 @@ export default function PurchaseReturnsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
-                        <IconBuildingWarehouse className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                        <IconBuildingWarehouse className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span className="font-medium">{r.branch_name || "Main Warehouse"}</span>
                       </div>
                     </TableCell>
@@ -649,7 +649,7 @@ export default function PurchaseReturnsPage() {
                         </Badge>
                       ) : (
                         <div>
-                          <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/20 capitalize">
+                          <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 capitalize">
                             {r.refund_method} Refund
                           </Badge>
                           {r.refund_account_name && (
@@ -757,7 +757,7 @@ export default function PurchaseReturnsPage() {
 
                 <div className="space-y-1 sm:col-span-2">
                   <Label className="text-xs font-semibold flex items-center gap-1">
-                    <IconBuildingWarehouse className="h-3.5 w-3.5 text-blue-600" />
+                    <IconBuildingWarehouse className="h-3.5 w-3.5 text-muted-foreground" />
                     Source Warehouse / Godown (Stock Outward) <span className="text-destructive">*</span>
                   </Label>
                   <Select
@@ -1152,7 +1152,7 @@ export default function PurchaseReturnsPage() {
                 </div>
                 <div>
                   <span className="text-muted-foreground block">Source Warehouse:</span>
-                  <span className="font-semibold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                  <span className="font-semibold text-sm text-foreground flex items-center gap-1">
                     <IconBuildingWarehouse className="h-3.5 w-3.5" />
                     {viewingReturn.branch_name}
                   </span>

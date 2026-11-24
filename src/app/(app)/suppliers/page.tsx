@@ -413,10 +413,10 @@ export default function SuppliersPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Bank Accounts Linked</CardTitle>
-            <IconBuildingBank className="h-4 w-4 text-blue-600" />
+            <IconBuildingBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold text-foreground">
               {stats.bank_accounts_count}
             </div>
             <p className="text-xs text-muted-foreground">Ready for EFT & bank payout</p>
@@ -545,10 +545,10 @@ export default function SuppliersPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setLedgerSupplier(s)}
-                  className="h-8 px-2.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 border-indigo-500/30 hover:bg-indigo-500/15 hover:border-indigo-500/50 transition-all gap-1.5 shadow-2xs"
+                  className="h-8 px-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-1.5 shadow-2xs"
                   title="Supplier Ledger Statement"
                 >
-                  <IconFileText className="h-3.5 w-3.5 text-indigo-500" />
+                  <IconFileText className="h-3.5 w-3.5 text-muted-foreground" />
                   Ledger
                 </Button>
                 <DropdownMenu>
@@ -559,7 +559,7 @@ export default function SuppliersPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setLedgerSupplier(s)}>
-                      <IconFileText className="mr-2 h-4 w-4 text-indigo-500" />
+                      <IconFileText className="mr-2 h-4 w-4 text-muted-foreground" />
                       View Ledger
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setPaymentSupplier(s)}>

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/command";
 import { NotificationsMenu } from "@/components/navbar/notifications-menu";
 import { UserMenu } from "@/components/navbar/user-menu";
+import { QuickCreateMenu } from "@/components/quick-create-menu";
 
 const CRUMB_LABELS: Record<string, string> = {
   hr: "HR",
@@ -131,6 +132,8 @@ export function AppNavbar() {
         >
           <IconSearch className="size-5" />
         </Button>
+
+        <QuickCreateMenu variant="navbar" />
 
         <NotificationsMenu />
         <LanguageToggle />

@@ -859,7 +859,7 @@ export default function PurchasesPage() {
             </Button>
           )}
           {canCreate && (
-            <Button size="sm" onClick={openCreateModal} className="h-9 gap-1.5">
+            <Button size="sm" onClick={openCreateModal} className="h-9 gap-1.5 bg-[#2CA01C] hover:bg-[#248417] text-white font-semibold">
               <IconPlus className="h-4 w-4" />
               New Purchase Bill
             </Button>
@@ -869,49 +869,49 @@ export default function PurchasesPage() {
 
       {/* KPI Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-t-4 border-t-[#2CA01C]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Purchases Volume</CardTitle>
-            <IconReceipt className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Purchases Volume</CardTitle>
+            <IconReceipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold font-mono text-foreground">
               PKR {stats.total_purchases_amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground">{stats.total_purchases_count} Total Invoices</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-4 border-t-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Outstanding Payables</CardTitle>
-            <IconWallet className="h-4 w-4 text-rose-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Outstanding Payables</CardTitle>
+            <IconWallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+            <div className="text-2xl font-bold font-mono text-amber-700 dark:text-amber-400">
               PKR {stats.total_unpaid_payables.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground">Unsettled vendor dues</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-4 border-t-slate-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Purchases</CardTitle>
-            <IconCalendarEvent className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Purchases</CardTitle>
+            <IconCalendarEvent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold font-mono text-foreground">
               PKR {stats.monthly_purchases_amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground">Inward this month</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-4 border-t-slate-800 dark:border-t-slate-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registered Suppliers / Vendors</CardTitle>
-            <IconTruckDelivery className="h-4 w-4 text-emerald-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Registered Suppliers / Vendors</CardTitle>
+            <IconTruckDelivery className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="text-2xl font-bold font-mono text-foreground">
               {suppliers.length}
             </div>
             <p className="text-xs text-muted-foreground">Active supply partners</p>
@@ -2181,7 +2181,7 @@ export default function PurchasesPage() {
 
       {/* INVOICE PAYMENT & PENDING DOUBLE-ENTRY REPORT MODAL */}
       <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
-        <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-6xl md:max-w-7xl w-[96vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between pr-6">
               <div>
@@ -2227,22 +2227,22 @@ export default function PurchasesPage() {
                         Across {activePurchases.length} purchase bills
                       </span>
                     </div>
-                    <div className="rounded-lg border bg-emerald-500/5 border-emerald-500/20 p-3">
-                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <span className="text-[11px] text-muted-foreground font-semibold uppercase">
                         Total Paid (Cr. Cash / Bank Account)
                       </span>
-                      <div className="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      <div className="text-lg font-bold font-mono text-foreground mt-0.5">
                         PKR {totPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </div>
                       <span className="text-[10px] text-muted-foreground">
                         Settled from selected accounts
                       </span>
                     </div>
-                    <div className="rounded-lg border bg-rose-500/5 border-rose-500/20 p-3">
-                      <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold uppercase">
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <span className="text-[11px] text-muted-foreground font-semibold uppercase">
                         Total Pending (Cr. Supplier Payable 2010)
                       </span>
-                      <div className="text-lg font-bold font-mono text-rose-600 dark:text-rose-400 mt-0.5">
+                      <div className="text-lg font-bold font-mono text-foreground mt-0.5">
                         PKR {totPending.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </div>
                       <span className="text-[10px] text-muted-foreground">
@@ -2251,19 +2251,19 @@ export default function PurchasesPage() {
                     </div>
                   </div>
 
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border rounded-lg overflow-x-auto">
                     <Table>
                       <TableHeader className="bg-muted/50">
                         <TableRow className="text-xs">
-                          <TableHead>Invoice #</TableHead>
-                          <TableHead>Date</TableHead>
+                          <TableHead className="whitespace-nowrap">Invoice #</TableHead>
+                          <TableHead className="whitespace-nowrap">Date</TableHead>
                           <TableHead>Supplier</TableHead>
-                          <TableHead>Paid From Account</TableHead>
-                          <TableHead>Double-Entry JV</TableHead>
-                          <TableHead className="text-right">Total Bill</TableHead>
-                          <TableHead className="text-right">Paid Amount</TableHead>
-                          <TableHead className="text-right">Pending Balance</TableHead>
-                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="whitespace-nowrap">Paid From Account</TableHead>
+                          <TableHead className="whitespace-nowrap">Double-Entry JV</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Total Bill</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Paid Amount</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Pending Balance</TableHead>
+                          <TableHead className="text-center whitespace-nowrap">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2279,15 +2279,15 @@ export default function PurchasesPage() {
                             const isPaid = Number(p.balance_due) <= 0 && Number(p.paid_amount) > 0;
                             return (
                               <TableRow key={p.id} className="text-xs">
-                                <TableCell className="font-mono font-semibold">
+                                <TableCell className="font-mono font-semibold whitespace-nowrap">
                                   <div>{p.invoice_number}</div>
                                   {p.supplier_bill_no && (
                                     <span className="text-[10px] text-muted-foreground">Ref: {p.supplier_bill_no}</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">{p.purchase_date}</TableCell>
-                                <TableCell className="font-medium">{p.supplier_name}</TableCell>
-                                <TableCell>
+                                <TableCell className="text-muted-foreground whitespace-nowrap">{p.purchase_date}</TableCell>
+                                <TableCell className="font-medium whitespace-nowrap">{p.supplier_name}</TableCell>
+                                <TableCell className="whitespace-nowrap">
                                   {p.paid_from_account_name && Number(p.paid_amount) > 0 ? (
                                     <Badge variant="outline" className="font-mono text-[10px]">
                                       {p.paid_from_account_code} - {p.paid_from_account_name}
@@ -2298,28 +2298,22 @@ export default function PurchasesPage() {
                                     <span className="text-muted-foreground text-[11px]">— (On Credit)</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="font-mono text-[11px] text-primary">
+                                <TableCell className="font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                                   {p.journal_entry_number || "Auto-Posted"}
                                 </TableCell>
-                                <TableCell className="text-right font-mono font-semibold">
+                                <TableCell className="text-right font-mono font-semibold whitespace-nowrap">
                                   PKR {Number(p.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </TableCell>
-                                <TableCell className="text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                                <TableCell className="text-right font-mono font-semibold text-foreground whitespace-nowrap">
                                   PKR {Number(p.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </TableCell>
-                                <TableCell className="text-right font-mono font-bold text-rose-600 dark:text-rose-400">
+                                <TableCell className="text-right font-mono font-semibold text-foreground whitespace-nowrap">
                                   PKR {Number(p.balance_due).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </TableCell>
-                                <TableCell className="text-center">
+                                <TableCell className="text-center whitespace-nowrap">
                                   <Badge
                                     variant="outline"
-                                    className={`text-[10px] capitalize ${
-                                      isPaid
-                                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                        : isPartial
-                                        ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                        : "bg-rose-500/10 text-rose-600 border-rose-500/20"
-                                    }`}
+                                    className="text-[10px] capitalize bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 font-medium"
                                   >
                                     {isPaid ? "Paid" : isPartial ? "Partial" : "Unpaid"}
                                   </Badge>
@@ -2333,13 +2327,13 @@ export default function PurchasesPage() {
                             <TableCell colSpan={5} className="text-right uppercase tracking-wider">
                               Grand Totals:
                             </TableCell>
-                            <TableCell className="text-right font-mono">
+                            <TableCell className="text-right font-mono text-foreground whitespace-nowrap">
                               PKR {totInvoiced.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-emerald-600 dark:text-emerald-400">
+                            <TableCell className="text-right font-mono text-foreground whitespace-nowrap">
                               PKR {totPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-rose-600 dark:text-rose-400">
+                            <TableCell className="text-right font-mono text-foreground whitespace-nowrap">
                               PKR {totPending.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </TableCell>
                             <TableCell />

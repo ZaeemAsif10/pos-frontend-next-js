@@ -347,15 +347,15 @@ export default function ExpensesPage() {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Today's Expenses */}
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-rose-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("Today's Expenses", "آج کے اخراجات")}
             </CardTitle>
-            <IconClock className="h-4 w-4 text-rose-600" />
+            <IconClock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+            <div className="text-2xl font-bold font-mono text-foreground">
               {formatPKR(summary?.today_total || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -365,15 +365,15 @@ export default function ExpensesPage() {
         </Card>
 
         {/* This Month's Expenses */}
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("This Month", "اس ماہ کا خرچ")}
             </CardTitle>
-            <IconCalendar className="h-4 w-4 text-amber-600" />
+            <IconCalendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+            <div className="text-2xl font-bold font-mono text-foreground">
               {formatPKR(summary?.month_total || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -383,15 +383,15 @@ export default function ExpensesPage() {
         </Card>
 
         {/* Paid via Cash Drawer */}
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-[#2CA01C]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("Cash Drawer", "کاؤنٹر دراز سے ادا")}
             </CardTitle>
-            <IconCash className="h-4 w-4 text-emerald-600" />
+            <IconCash className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="text-2xl font-bold font-mono text-foreground">
               {formatPKR(summary?.cash_total || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -401,15 +401,15 @@ export default function ExpensesPage() {
         </Card>
 
         {/* Paid via Bank / Digital */}
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-slate-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("Bank & Digital", "بینک / آن لائن")}
             </CardTitle>
-            <IconBuildingBank className="h-4 w-4 text-blue-600" />
+            <IconBuildingBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold font-mono text-foreground">
               {formatPKR(summary?.bank_total || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -745,7 +745,7 @@ export default function ExpensesPage() {
                         {/* Linked JV */}
                         <TableCell className="text-center font-mono text-[11px] whitespace-nowrap">
                           {ev.journal_entry_number ? (
-                            <Badge variant="outline" className="border-purple-300 text-purple-700 dark:border-purple-800 dark:text-purple-300">
+                            <Badge variant="outline" className="border-slate-200 text-slate-700 bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:bg-slate-800">
                               {ev.journal_entry_number}
                             </Badge>
                           ) : (
@@ -1019,7 +1019,7 @@ export default function ExpensesPage() {
             <div className="mt-4 p-3 bg-muted/40 border rounded-lg text-xs space-y-2">
               <div className="font-semibold text-foreground flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <IconNotes className="h-3.5 w-3.5 text-purple-600" />
+                  <IconNotes className="h-3.5 w-3.5 text-muted-foreground" />
                   {t("Auto-Posting Double-Entry Voucher Preview", "ڈبل انٹری واؤچر کا پیش منظر")}
                 </span>
                 <Badge variant="outline" className="border-emerald-500 text-emerald-600 dark:text-emerald-400 text-[10px]">

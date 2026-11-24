@@ -656,12 +656,12 @@ export default function ProductsPage() {
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Total Products
               </span>
-              <div className="text-2xl font-bold tracking-tight">
+              <div className="text-2xl font-bold tracking-tight text-foreground">
                 {stats.total_products.toLocaleString()}
               </div>
               <p className="text-[11px] text-muted-foreground">Master catalogue items</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <div className="h-11 w-11 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-center">
               <IconBox className="h-6 w-6" />
             </div>
           </CardContent>
@@ -671,15 +671,15 @@ export default function ProductsPage() {
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-[#2CA01C] uppercase tracking-wider">
                 Active Products
               </span>
-              <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+              <div className="text-2xl font-bold tracking-tight text-[#2CA01C]">
                 {(products.filter((p) => p.is_active !== false).length || stats.total_products).toLocaleString()}
               </div>
               <p className="text-[11px] text-muted-foreground">Enabled for procurement &amp; POS</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="h-11 w-11 rounded-xl bg-[#2CA01C]/10 text-[#2CA01C] flex items-center justify-center">
               <IconCheck className="h-6 w-6" />
             </div>
           </CardContent>
@@ -689,15 +689,15 @@ export default function ProductsPage() {
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Product Categories
               </span>
-              <div className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold tracking-tight text-foreground">
                 {categories.length.toLocaleString()}
               </div>
               <p className="text-[11px] text-muted-foreground">Organized catalogue groups</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="h-11 w-11 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-center">
               <IconTag className="h-6 w-6" />
             </div>
           </CardContent>
@@ -707,15 +707,15 @@ export default function ProductsPage() {
         <Card className="border-border/60 shadow-xs">
           <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Registered Brands
               </span>
-              <div className="text-2xl font-bold tracking-tight text-violet-600 dark:text-violet-400">
+              <div className="text-2xl font-bold tracking-tight text-foreground">
                 {brands.length.toLocaleString()}
               </div>
               <p className="text-[11px] text-muted-foreground">Linked brands &amp; principals</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+            <div className="h-11 w-11 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-center">
               <IconBuildingFactory2 className="h-6 w-6" />
             </div>
           </CardContent>
@@ -1247,17 +1247,17 @@ export default function ProductsPage() {
 
           <form onSubmit={handleSaveProduct} className="space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto p-1 bg-muted/60 rounded-xl gap-1">
-                <TabsTrigger value="general" className="py-2 text-xs sm:text-sm font-medium">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
+                <TabsTrigger value="general">
                   1. General Info
                 </TabsTrigger>
-                <TabsTrigger value="pricing" className="py-2 text-xs sm:text-sm font-medium">
+                <TabsTrigger value="pricing">
                   2. Pricing & Taxes
                 </TabsTrigger>
-                <TabsTrigger value="uom" className="py-2 text-xs sm:text-sm font-medium">
+                <TabsTrigger value="uom">
                   3. Multi-UOM
                 </TabsTrigger>
-                <TabsTrigger value="stock" className="py-2 text-xs sm:text-sm font-medium">
+                <TabsTrigger value="stock">
                   4. Branch Stock
                 </TabsTrigger>
               </TabsList>
@@ -1500,7 +1500,7 @@ export default function ProductsPage() {
                           type="file"
                           accept="image/*"
                           onChange={handleImageFileChange}
-                          className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:cursor-pointer"
+                          className="text-xs file:mr-2.5 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#2CA01C] file:text-white hover:file:bg-[#248417] hover:file:cursor-pointer"
                         />
                         <p className="text-[11px] text-muted-foreground">
                           Upload PNG, JPG, or SVG packaging image. Automatically uploaded to polymorphic attachments.
@@ -1956,11 +1956,11 @@ export default function ProductsPage() {
             onValueChange={(val) => setCategoryModalTab(val as "list" | "create")}
             className="w-full pt-1"
           >
-            <TabsList className="grid grid-cols-2 w-full h-9 bg-muted/60">
-              <TabsTrigger value="list" className="text-xs">
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="list">
                 Category Directory ({categories.length})
               </TabsTrigger>
-              <TabsTrigger value="create" className="text-xs">
+              <TabsTrigger value="create">
                 + Add New Category
               </TabsTrigger>
             </TabsList>
@@ -2177,11 +2177,11 @@ export default function ProductsPage() {
             onValueChange={(val) => setBrandModalTab(val as "list" | "create")}
             className="w-full pt-1"
           >
-            <TabsList className="grid grid-cols-2 w-full h-9 bg-muted/60">
-              <TabsTrigger value="list" className="text-xs">
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="list">
                 Brand Directory ({brands.length})
               </TabsTrigger>
-              <TabsTrigger value="create" className="text-xs">
+              <TabsTrigger value="create">
                 + Add New Brand
               </TabsTrigger>
             </TabsList>

@@ -104,7 +104,11 @@ export function ThemeConfigProvider({
       root.style.setProperty("--sidebar-primary", accent.primary);
       root.style.setProperty("--sidebar-ring", accent.primary);
     } else {
-      props.forEach((p) => root.style.removeProperty(p));
+      root.style.setProperty("--primary", "#2ca01c");
+      root.style.setProperty("--primary-foreground", "#ffffff");
+      root.style.setProperty("--ring", "#2ca01c");
+      root.style.setProperty("--sidebar-primary", "#2ca01c");
+      root.style.setProperty("--sidebar-ring", "#2ca01c");
     }
 
     root.style.setProperty("--radius", `${config.radius}rem`);

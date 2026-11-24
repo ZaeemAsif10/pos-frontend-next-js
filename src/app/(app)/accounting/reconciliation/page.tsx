@@ -300,7 +300,7 @@ function BankReconciliationContent() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">Bank Reconciliation (BRS)</h1>
-            <Badge variant="outline" className="border-blue-500/40 text-blue-600 bg-blue-500/10 font-medium text-xs">
+            <Badge variant="outline" className="border-slate-200 text-slate-700 bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:bg-slate-800 font-medium text-xs">
               IFRS / GAAP Compliant
             </Badge>
           </div>
@@ -350,11 +350,11 @@ function BankReconciliationContent() {
           <Card key={acc.id} className="shadow-xs print:shadow-none print:border-gray-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{acc.name}</CardTitle>
-              <IconBuildingBank className="h-4 w-4 text-blue-600 print:text-black" />
+              <IconBuildingBank className="h-4 w-4 text-foreground print:text-black" />
             </CardHeader>
             <CardContent className="flex items-end justify-between">
               <div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 print:text-black">
+                <div className="text-2xl font-bold text-foreground print:text-black">
                   PKR {formatPKR(acc.current_balance)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 font-mono">
@@ -438,7 +438,7 @@ function BankReconciliationContent() {
                     className="hover:bg-muted/40 transition-colors cursor-pointer print:border-b print:border-gray-300"
                     onClick={() => openBrsWorkspace(rec.id)}
                   >
-                    <TableCell className="font-mono text-xs font-bold text-blue-600 print:text-black">
+                    <TableCell className="font-mono text-xs font-bold text-foreground print:text-black">
                       {rec.reconciliation_number}
                     </TableCell>
                     <TableCell className="text-sm font-medium print:text-black">
@@ -523,7 +523,7 @@ function BankReconciliationContent() {
         <DialogContent className="sm:max-w-xl max-w-[95vw] w-full">
           <DialogHeader>
             <div className="flex items-center gap-2 pr-6">
-              <IconBuildingBank className="h-5 w-5 text-blue-600" />
+              <IconBuildingBank className="h-5 w-5 text-muted-foreground" />
               <DialogTitle className="text-lg">Start New Bank Reconciliation (BRS)</DialogTitle>
             </div>
             <DialogDescription className="text-xs">
@@ -613,7 +613,7 @@ function BankReconciliationContent() {
             <Button
               onClick={handleCreateSession}
               disabled={creating || !selectedAccountId || !stmtEndingBalance}
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+              className="bg-[#2CA01C] hover:bg-[#248417] text-white gap-1.5"
             >
               <IconCheck className="h-4 w-4" />
               {creating ? "Starting..." : "Begin Matching"}
@@ -635,7 +635,7 @@ function BankReconciliationContent() {
         <DialogContent className="sm:max-w-5xl max-w-[96vw] w-full max-h-[92vh] overflow-y-auto print:static print:transform-none print:w-full print:max-w-none print:h-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print:m-0 print:ring-0 print:bg-white">
           {detailLoading || !brsDetail ? (
             <div className="py-16 flex flex-col items-center justify-center text-muted-foreground gap-2">
-              <IconRefresh className="h-7 w-7 animate-spin text-blue-600" />
+              <IconRefresh className="h-7 w-7 animate-spin text-muted-foreground" />
               <span className="text-sm font-medium">Loading bank reconciliation workspace...</span>
             </div>
           ) : (
@@ -689,7 +689,7 @@ function BankReconciliationContent() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b pb-3 pr-6">
                   <div>
                     <div className="flex items-center gap-2">
-                      <IconBuildingBank className="h-5 w-5 text-blue-600" />
+                      <IconBuildingBank className="h-5 w-5 text-muted-foreground" />
                       <DialogTitle className="text-xl">
                         {brsDetail.reconciliation.reconciliation_number}
                       </DialogTitle>
@@ -725,11 +725,11 @@ function BankReconciliationContent() {
 
               {/* 4 Summary KPI Metric Cards (Screen Only) */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 print:hidden">
-                <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 p-3 rounded-lg">
-                  <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">
+                <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 rounded-lg">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Statement Balance
                   </span>
-                  <span className="font-mono text-base font-bold text-blue-800 dark:text-blue-200">
+                  <span className="font-mono text-base font-bold text-foreground">
                     PKR {formatPKR(brsDetail.reconciliation.statement_ending_balance)}
                   </span>
                 </div>
@@ -743,11 +743,11 @@ function BankReconciliationContent() {
                   </span>
                 </div>
 
-                <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900 p-3 rounded-lg">
-                  <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">
+                <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 rounded-lg">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Cleared Net Amount
                   </span>
-                  <span className="font-mono text-base font-bold text-purple-800 dark:text-purple-200">
+                  <span className="font-mono text-base font-bold text-foreground">
                     PKR {formatPKR(brsDetail.reconciliation.cleared_deposits - brsDetail.reconciliation.cleared_payments)}
                   </span>
                 </div>
@@ -895,7 +895,7 @@ function BankReconciliationContent() {
                             <TableCell className="font-mono text-muted-foreground print:text-black print:whitespace-nowrap">
                               {tx.entry_date}
                             </TableCell>
-                            <TableCell className="font-mono font-semibold text-blue-600 print:text-black truncate print:whitespace-normal print:overflow-visible">
+                            <TableCell className="font-mono font-semibold text-foreground print:text-black truncate print:whitespace-normal print:overflow-visible">
                               <Link
                                 href={`/accounting/journal?search=${tx.entry_number}`}
                                 target="_blank"

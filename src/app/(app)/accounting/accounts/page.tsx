@@ -270,65 +270,65 @@ export default function ChartOfAccountsPage() {
 
       {/* 5 KPI Category Balance Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-[#2CA01C]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">1000 • Assets</CardTitle>
-            <IconHierarchy className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">1000 • Assets</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-xl font-bold font-mono text-foreground">
               PKR {totAssets.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Cash, Bank, Debtors, Stock</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">2000 • Liabilities</CardTitle>
-            <IconHierarchy className="h-4 w-4 text-amber-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">2000 • Liabilities</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-amber-600 dark:text-amber-400">
+            <div className="text-xl font-bold font-mono text-foreground">
               PKR {totLiabilities.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Suppliers, Tax Payables</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-slate-700 dark:border-t-slate-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">3000 • Equity</CardTitle>
-            <IconHierarchy className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">3000 • Equity</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-foreground">
+            <div className="text-xl font-bold font-mono text-foreground">
               PKR {totEquity.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Capital &amp; Retained Earnings</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-[#2CA01C]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">4000 • Revenue</CardTitle>
-            <IconHierarchy className="h-4 w-4 text-emerald-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">4000 • Revenue</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="text-xl font-bold font-mono text-[#2CA01C]">
               PKR {totRevenue.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Gross Sales &amp; Income</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-t-4 border-t-slate-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">5000/6000 • Expenses</CardTitle>
-            <IconHierarchy className="h-4 w-4 text-rose-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">5000/6000 • Expenses</CardTitle>
+            <IconHierarchy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-rose-600 dark:text-rose-400">
+            <div className="text-xl font-bold font-mono text-foreground">
               PKR {totExpenses.toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">COGS &amp; Operating Expenses</p>
@@ -428,17 +428,7 @@ export default function ChartOfAccountsPage() {
                       <TableCell className="text-xs uppercase font-medium">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] ${
-                            acc.account_type === "asset"
-                              ? "bg-blue-500/10 text-blue-600 border-blue-200"
-                              : acc.account_type === "liability"
-                              ? "bg-amber-500/10 text-amber-600 border-amber-200"
-                              : acc.account_type === "revenue"
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-200"
-                              : acc.account_type === "expense"
-                              ? "bg-rose-500/10 text-rose-600 border-rose-200"
-                              : "bg-purple-500/10 text-purple-600 border-purple-200"
-                          }`}
+                          className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                         >
                           {acc.account_type}
                         </Badge>

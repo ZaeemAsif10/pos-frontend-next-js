@@ -16,7 +16,7 @@ export type ThemeConfig = {
 };
 
 export const defaultConfig: ThemeConfig = {
-  accent: "neutral",
+  accent: "green",
   radius: 0.65,
   font: "geist",
   sidebarVariant: "floating",
@@ -33,10 +33,10 @@ export type Accent = {
 };
 
 export const accents: Accent[] = [
-  { key: "neutral", label: "Neutral", swatch: "oklch(0.45 0 0)", primary: null, fg: "oklch(0.985 0 0)" },
+  { key: "neutral", label: "QuickBooks Green", swatch: "#2ca01c", primary: "#2ca01c", fg: "#ffffff" },
+  { key: "green", label: "QuickBooks Green", swatch: "#2ca01c", primary: "#2ca01c", fg: "#ffffff" },
   { key: "blue", label: "Blue", swatch: "oklch(0.6 0.2 264)", primary: "oklch(0.58 0.22 264)", fg: "oklch(0.985 0 0)" },
   { key: "violet", label: "Violet", swatch: "oklch(0.61 0.22 292)", primary: "oklch(0.61 0.22 292)", fg: "oklch(0.985 0 0)" },
-  { key: "green", label: "Green", swatch: "oklch(0.62 0.17 152)", primary: "oklch(0.58 0.16 152)", fg: "oklch(0.985 0 0)" },
   { key: "teal", label: "Teal", swatch: "oklch(0.64 0.12 195)", primary: "oklch(0.58 0.11 195)", fg: "oklch(0.985 0 0)" },
   { key: "amber", label: "Amber", swatch: "oklch(0.77 0.16 70)", primary: "oklch(0.77 0.15 70)", fg: "oklch(0.245 0.03 70)" },
   { key: "orange", label: "Orange", swatch: "oklch(0.67 0.2 42)", primary: "oklch(0.64 0.2 42)", fg: "oklch(0.985 0 0)" },

@@ -265,9 +265,9 @@ export default function PaymentStatusesPage() {
       case "amber":
         return <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">{name}</Badge>;
       case "blue":
-        return <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">{name}</Badge>;
+        return <Badge className="bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">{name}</Badge>;
       case "violet":
-        return <Badge className="bg-violet-500/15 text-violet-600 border-violet-500/30">{name}</Badge>;
+        return <Badge className="bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">{name}</Badge>;
       default:
         return <Badge variant="outline">{name}</Badge>;
     }

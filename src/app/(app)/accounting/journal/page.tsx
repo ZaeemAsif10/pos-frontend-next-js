@@ -254,7 +254,7 @@ export default function JournalEntriesPage() {
               type="button"
               size="sm"
               onClick={openNewJVModal}
-              className="h-9 gap-1.5"
+              className="h-9 gap-1.5 bg-[#2CA01C] hover:bg-[#248417] text-white font-semibold"
             >
               <IconPlus className="h-4 w-4" />
               <span>Manual JV</span>
@@ -264,50 +264,50 @@ export default function JournalEntriesPage() {
 
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="shadow-xs">
+          <Card className="shadow-xs border-t-4 border-t-slate-800 dark:border-t-slate-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Vouchers Posted</CardTitle>
-              <IconNotes className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Vouchers Posted</CardTitle>
+              <IconNotes className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{total}</div>
+              <div className="text-2xl font-bold font-mono text-foreground">{total}</div>
               <p className="text-xs text-muted-foreground mt-1">Auto &amp; manual journal entries</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-xs">
+          <Card className="shadow-xs border-t-4 border-t-slate-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Debits (Dr)</CardTitle>
-              <IconCheck className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Debits (Dr)</CardTitle>
+              <IconCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold font-mono text-foreground">
                 PKR {entries.reduce((acc, jv) => acc + (jv.total_debit || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Current page debit volume</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-xs">
+          <Card className="shadow-xs border-t-4 border-t-slate-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Credits (Cr)</CardTitle>
-              <IconCheck className="h-4 w-4 text-emerald-600" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Credits (Cr)</CardTitle>
+              <IconCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="text-2xl font-bold font-mono text-foreground">
                 PKR {entries.reduce((acc, jv) => acc + (jv.total_credit || jv.total_debit || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Current page credit volume</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-xs">
+          <Card className="shadow-xs border-t-4 border-t-[#2CA01C]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Equilibrium Status</CardTitle>
-              <IconCheck className="h-4 w-4 text-emerald-600" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Equilibrium Status</CardTitle>
+              <IconCheck className="h-4 w-4 text-[#2CA01C]" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="text-lg font-bold text-[#2CA01C]">
                 Balanced (Dr = Cr)
               </div>
               <p className="text-xs text-muted-foreground mt-1">Strict double-entry verified</p>
@@ -437,36 +437,19 @@ export default function JournalEntriesPage() {
                     </TableCell>
 
                     <TableCell>
-                      {isSale && (
-                        <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-200">
-                          POS Sale
-                        </Badge>
-                      )}
-                      {isPur && (
-                        <Badge variant="outline" className="text-[10px] bg-indigo-500/10 text-indigo-600 border-indigo-200">
-                          Purchase (GRN)
-                        </Badge>
-                      )}
-                      {isCrv && (
-                        <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-200">
-                          Customer CRV
-                        </Badge>
-                      )}
-                      {isCpv && (
-                        <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-200">
-                          Supplier CPV
-                        </Badge>
-                      )}
-                      {isExp && (
-                        <Badge variant="outline" className="text-[10px] bg-rose-500/10 text-rose-600 border-rose-200">
-                          Expense (CPV)
-                        </Badge>
-                      )}
-                      {!isSale && !isPur && !isCrv && !isCpv && !isExp && (
-                        <Badge variant="outline" className="text-[10px] bg-purple-500/10 text-purple-600 border-purple-200">
-                          {jv.source_type.replace(/_/g, " ")}
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-[10px] capitalize bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                        {isSale
+                          ? "POS Sale"
+                          : isPur
+                          ? "Purchase (GRN)"
+                          : isCrv
+                          ? "Customer CRV"
+                          : isCpv
+                          ? "Supplier CPV"
+                          : isExp
+                          ? "Expense (CPV)"
+                          : jv.source_type.replace(/_/g, " ")}
+                      </Badge>
                     </TableCell>
 
                     <TableCell className="font-mono text-xs">

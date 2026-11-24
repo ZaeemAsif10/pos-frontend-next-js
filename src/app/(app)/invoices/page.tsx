@@ -305,7 +305,7 @@ export default function InvoicesPage() {
                 return (
                   <Badge
                     variant="outline"
-                    className="text-[10px] font-semibold uppercase px-1.5 py-0.5 bg-purple-500/10 text-purple-600 border-purple-500/20"
+                    className="text-[10px] font-semibold uppercase px-1.5 py-0.5 bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   >
                     Credit Note
                   </Badge>

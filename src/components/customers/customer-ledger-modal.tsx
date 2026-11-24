@@ -470,7 +470,7 @@ Thank you for your business!`;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-6">
+      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[95vw] max-h-[90vh] flex flex-col p-6">
         <DialogHeader className="pb-2 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -494,7 +494,7 @@ Thank you for your business!`;
             {onOpenReceivePayment && (
               <Button
                 size="sm"
-                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs font-semibold"
+                className="gap-1.5 bg-[#2CA01C] hover:bg-[#248417] text-white h-8 text-xs font-semibold"
                 onClick={() => {
                   onClose();
                   onOpenReceivePayment(customer);
@@ -576,7 +576,7 @@ Thank you for your business!`;
           <Card className="border bg-muted/30">
             <CardContent className="p-3">
               <div className="text-[11px] text-muted-foreground uppercase font-semibold flex items-center gap-1">
-                <IconArrowUpRight className="h-3.5 w-3.5 text-blue-500" />
+                <IconArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
                 Total Billed (Debits)
               </div>
               <div className="text-base font-bold font-mono mt-0.5 text-foreground">
@@ -588,21 +588,21 @@ Thank you for your business!`;
           <Card className="border bg-muted/30">
             <CardContent className="p-3">
               <div className="text-[11px] text-muted-foreground uppercase font-semibold flex items-center gap-1">
-                <IconArrowDownLeft className="h-3.5 w-3.5 text-emerald-500" />
+                <IconArrowDownLeft className="h-3.5 w-3.5 text-muted-foreground" />
                 Total Paid (Credits)
               </div>
-              <div className="text-base font-bold font-mono mt-0.5 text-emerald-600 dark:text-emerald-400">
+              <div className="text-base font-bold font-mono mt-0.5 text-foreground">
                 PKR {summary ? summary.total_credit.toLocaleString(undefined, { minimumFractionDigits: 0 }) : "0"}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border border-amber-500/30 bg-amber-500/5">
+          <Card className="border bg-muted/30">
             <CardContent className="p-3">
-              <div className="text-[11px] text-amber-700 dark:text-amber-400 uppercase font-semibold">
+              <div className="text-[11px] text-muted-foreground uppercase font-semibold">
                 Net Closing Baqaya
               </div>
-              <div className="text-base font-bold font-mono mt-0.5 text-amber-700 dark:text-amber-400">
+              <div className="text-base font-bold font-mono mt-0.5 text-foreground">
                 PKR {summary ? summary.closing_balance.toLocaleString(undefined, { minimumFractionDigits: 0 }) : "0"}
               </div>
             </CardContent>
@@ -648,10 +648,8 @@ Thank you for your business!`;
                       </TableCell>
                       <TableCell className="text-xs font-mono font-semibold">
                         <Badge
-                          variant={isInv ? "secondary" : "outline"}
-                          className={`text-[10px] font-mono ${
-                            !isInv ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400" : ""
-                          }`}
+                          variant="outline"
+                          className="text-[10px] font-mono text-muted-foreground bg-muted/50 border-border"
                         >
                           {entry.reference}
                         </Badge>
@@ -665,11 +663,11 @@ Thank you for your business!`;
                       <TableCell className="text-right text-xs font-mono font-medium">
                         {entry.debit > 0 ? `PKR ${entry.debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "-"}
                       </TableCell>
-                      <TableCell className="text-right text-xs font-mono font-medium text-emerald-600 dark:text-emerald-400">
+                      <TableCell className="text-right text-xs font-mono font-medium text-foreground">
                         {entry.credit > 0 ? `PKR ${entry.credit.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "-"}
                       </TableCell>
                       <TableCell className="text-right text-xs font-mono font-bold">
-                        PKR ${entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        PKR {entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </TableCell>
                     </TableRow>
                   );
@@ -719,7 +717,7 @@ Thank you for your business!`;
               size="sm"
               onClick={handleSendWhatsAppStatement}
               disabled={!ledger || initialLoading}
-              className="h-8 gap-1.5 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 text-xs"
+              className="h-8 gap-1.5 border-[#2CA01C]/40 text-[#2CA01C] hover:bg-[#2CA01C]/10 text-xs"
             >
               <IconBrandWhatsapp className="h-4 w-4" />
               WhatsApp Statement
@@ -737,7 +735,7 @@ Thank you for your business!`;
             </Button>
           </div>
 
-          <Button type="button" size="sm" onClick={onClose} className="h-8 text-xs">
+          <Button type="button" variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">
             Close
           </Button>
         </DialogFooter>

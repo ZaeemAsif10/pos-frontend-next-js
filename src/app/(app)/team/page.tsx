@@ -517,7 +517,7 @@ export default function TeamManagementPage() {
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Available Roles
               </span>
-              <span className="flex size-7 items-center justify-center rounded-md bg-blue-500/10 text-blue-600">
+              <span className="flex size-7 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <IconShieldLock className="size-4" />
               </span>
             </div>

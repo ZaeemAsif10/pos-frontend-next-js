@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { sidebarNavigation, type NavItem } from "@/config/sidebar";
 import { TeamSwitcher } from "@/components/sidebar/team-switcher";
 import { NavUser } from "@/components/sidebar/nav-user";
+import { QuickCreateMenu } from "@/components/quick-create-menu";
 import { useThemeConfig } from "@/components/theme-customizer";
 import {
   Collapsible,
@@ -109,8 +110,11 @@ export function AppSidebar() {
       collapsible={config.sidebarCollapsible}
       variant={config.sidebarVariant}
     >
-      <SidebarHeader>
+      <SidebarHeader className="gap-2.5 p-3">
         <TeamSwitcher />
+        <div className="px-1">
+          <QuickCreateMenu variant="sidebar" />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="overscroll-contain">
@@ -165,7 +169,7 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
               isActive={childActive}
               className={cn(
                 childActive &&
-                  "bg-zinc-950! text-white! font-semibold shadow-xs hover:bg-zinc-950! hover:text-white! [&_svg]:text-white! dark:bg-zinc-100! dark:text-zinc-950! dark:hover:bg-zinc-100! dark:hover:text-zinc-950! dark:[&_svg]:text-zinc-950!"
+                  "bg-[#2CA01C]! text-white! font-semibold shadow-xs hover:bg-[#248417]! hover:text-white! [&_svg]:text-white!"
               )}
             >
               {item.icon && <item.icon className="size-4" />}
@@ -196,7 +200,7 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
                       isActive={active}
                       className={cn(
                         active &&
-                          "bg-zinc-950! text-white! font-semibold shadow-xs hover:bg-zinc-950! hover:text-white! [&_svg]:text-white! dark:bg-zinc-100! dark:text-zinc-950! dark:hover:bg-zinc-100! dark:hover:text-zinc-950! dark:[&_svg]:text-zinc-950!"
+                          "bg-[#2CA01C]! text-white! font-semibold shadow-xs hover:bg-[#248417]! hover:text-white! [&_svg]:text-white!"
                       )}
                     >
                       <Link href={sub.url} onClick={closeMobile}>
@@ -225,7 +229,7 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
         isActive={active}
         className={cn(
           active &&
-            "bg-zinc-950! text-white! font-semibold shadow-xs hover:bg-zinc-950! hover:text-white! [&_svg]:text-white! dark:bg-zinc-100! dark:text-zinc-950! dark:hover:bg-zinc-100! dark:hover:text-zinc-950! dark:[&_svg]:text-zinc-950!"
+            "bg-[#2CA01C]! text-white! font-semibold shadow-xs hover:bg-[#248417]! hover:text-white! [&_svg]:text-white!"
         )}
       >
         <Link href={item.url ?? "#"} onClick={closeMobile}>

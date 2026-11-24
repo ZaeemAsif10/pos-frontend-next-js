@@ -125,6 +125,10 @@ function FinancialStatementsContent() {
   const [bsData, setBsData] = useState<BalanceSheetResponse | null>(null);
   const [bsLoading, setBsLoading] = useState(false);
 
+  // Active Preset Highlight States
+  const [activePnlPreset, setActivePnlPreset] = useState<string | null>("this-month");
+  const [activeBsPreset, setActiveBsPreset] = useState<string | null>("today");
+
   // Fiscal Year Closing State (Phase 7.2)
   const [closingDialogOpen, setClosingDialogOpen] = useState(false);
   const [closingDate, setClosingDate] = useState<string>(new Date().toISOString().split("T")[0]);
@@ -203,6 +207,7 @@ function FinancialStatementsContent() {
 
   // P&L Quick Presets
   const applyPnlPreset = (preset: "today" | "this-month" | "last-month" | "this-quarter" | "this-year") => {
+    setActivePnlPreset(preset);
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
@@ -242,6 +247,7 @@ function FinancialStatementsContent() {
 
   // Balance Sheet Quick Presets
   const applyBsPreset = (preset: "today" | "end-last-month" | "end-last-quarter" | "end-last-year") => {
+    setActiveBsPreset(preset);
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
@@ -550,7 +556,7 @@ function FinancialStatementsContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3 print:hidden">
           <TabsList className="grid grid-cols-2 w-full md:w-[420px]">
             <TabsTrigger value="pnl" className="gap-2">
-              <IconReportAnalytics className="h-4 w-4 text-blue-600" />
+              <IconReportAnalytics className="h-4 w-4 text-foreground" />
               <span>Profit & Loss</span>
             </TabsTrigger>
             <TabsTrigger value="balance-sheet" className="gap-2">
@@ -596,7 +602,10 @@ function FinancialStatementsContent() {
                   <Input
                     type="date"
                     value={pnlFromDate}
-                    onChange={(e) => setPnlFromDate(e.target.value)}
+                    onChange={(e) => {
+                      setPnlFromDate(e.target.value);
+                      setActivePnlPreset(null);
+                    }}
                     className="h-8 w-36 text-xs"
                   />
                 </div>
@@ -607,17 +616,21 @@ function FinancialStatementsContent() {
                   <Input
                     type="date"
                     value={pnlToDate}
-                    onChange={(e) => setPnlToDate(e.target.value)}
+                    onChange={(e) => {
+                      setPnlToDate(e.target.value);
+                      setActivePnlPreset(null);
+                    }}
                     className="h-8 w-36 text-xs"
                   />
                 </div>
                 <Button
                   size="sm"
-                  variant="secondary"
-                  className="h-8 text-xs font-medium"
+                  className="h-8 gap-1.5 text-xs font-medium"
                   onClick={fetchPnL}
+                  disabled={pnlLoading}
                 >
-                  Apply Filter
+                  <IconSearch className="h-3.5 w-3.5" />
+                  Search
                 </Button>
               </div>
 
@@ -626,46 +639,30 @@ function FinancialStatementsContent() {
                 <span className="text-xs text-muted-foreground mr-1">
                   Quick Periods:
                 </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyPnlPreset("today")}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyPnlPreset("this-month")}
-                >
-                  This Month
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyPnlPreset("last-month")}
-                >
-                  Last Month
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyPnlPreset("this-quarter")}
-                >
-                  This Quarter
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyPnlPreset("this-year")}
-                >
-                  This Year
-                </Button>
+                {[
+                  { id: "today", label: "Today" },
+                  { id: "this-month", label: "This Month" },
+                  { id: "last-month", label: "Last Month" },
+                  { id: "this-quarter", label: "This Quarter" },
+                  { id: "this-year", label: "This Year" },
+                ].map((p) => {
+                  const isActive = activePnlPreset === p.id;
+                  return (
+                    <Button
+                      key={p.id}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      className={`h-7 text-xs px-2.5 transition-all ${
+                        isActive
+                          ? "bg-[#2CA01C] text-white hover:bg-[#248417] border-[#2CA01C] font-semibold shadow-xs"
+                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() => applyPnlPreset(p.id as any)}
+                    >
+                      {p.label}
+                    </Button>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -677,16 +674,16 @@ function FinancialStatementsContent() {
               <Card className="shadow-xs">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Revenue</CardTitle>
-                  <IconReceipt2 className="h-4 w-4 text-blue-600" />
+                  <IconReceipt2 className="h-4 w-4 text-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-2xl font-bold text-foreground">
                     PKR {formatPKR(pnlData.net_revenue)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 flex items-center justify-between">
                     <span>Gross: PKR {formatPKR(pnlData.gross_sales)}</span>
                     {pnlData.sales_discounts > 0 && (
-                      <span className="text-amber-600">
+                      <span className="text-foreground">
                         -Discounts: {formatPKR(pnlData.sales_discounts)}
                       </span>
                     )}
@@ -698,10 +695,10 @@ function FinancialStatementsContent() {
               <Card className="shadow-xs">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Cost of Goods Sold (COGS)</CardTitle>
-                  <IconCoin className="h-4 w-4 text-amber-600" />
+                  <IconCoin className="h-4 w-4 text-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  <div className="text-2xl font-bold text-foreground">
                     PKR {formatPKR(pnlData.total_cogs)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -785,8 +782,8 @@ function FinancialStatementsContent() {
                 </TableHeader>
                 <TableBody>
                   {/* --- 1. OPERATING REVENUE SECTION --- */}
-                  <TableRow className="bg-blue-50/60 dark:bg-blue-950/20 font-bold border-t-2 border-b">
-                    <TableCell colSpan={5} className="text-blue-900 dark:text-blue-200 uppercase text-xs tracking-wider">
+                  <TableRow className="bg-slate-50 dark:bg-slate-800/60 font-bold border-t-2 border-b">
+                    <TableCell colSpan={5} className="text-slate-900 dark:text-slate-100 uppercase text-xs tracking-wider">
                       1. Operating Revenue
                     </TableCell>
                   </TableRow>
@@ -839,10 +836,10 @@ function FinancialStatementsContent() {
                       <TableCell colSpan={2} className="text-right text-xs uppercase tracking-wider">
                         Net Operating Revenue Subtotal
                       </TableCell>
-                      <TableCell className="text-right font-mono text-sm text-blue-600 font-bold">
+                      <TableCell className="text-right font-mono text-sm text-foreground font-bold">
                         PKR {formatPKR(pnlData.net_revenue)}
                       </TableCell>
-                      <TableCell className="text-right font-mono text-xs text-blue-600 font-bold">
+                      <TableCell className="text-right font-mono text-xs text-foreground font-bold">
                         100.0%
                       </TableCell>
                       <TableCell className="print:hidden"></TableCell>
@@ -850,8 +847,8 @@ function FinancialStatementsContent() {
                   )}
 
                   {/* --- 2. COGS SECTION --- */}
-                  <TableRow className="bg-amber-50/60 dark:bg-amber-950/20 font-bold border-t-2 border-b">
-                    <TableCell colSpan={5} className="text-amber-900 dark:text-amber-200 uppercase text-xs tracking-wider">
+                  <TableRow className="bg-slate-50 dark:bg-slate-800/60 font-bold border-t-2 border-b">
+                    <TableCell colSpan={5} className="text-slate-900 dark:text-slate-100 uppercase text-xs tracking-wider">
                       2. Cost of Goods Sold
                     </TableCell>
                   </TableRow>
@@ -869,7 +866,7 @@ function FinancialStatementsContent() {
                         <TableCell className="text-sm font-medium">
                           {l.account_name}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-sm font-semibold text-amber-700 dark:text-amber-400">
+                        <TableCell className="text-right font-mono text-sm font-semibold text-foreground">
                           {formatPKR(l.amount)}
                         </TableCell>
                         <TableCell className="text-right font-mono text-xs text-muted-foreground">
@@ -904,10 +901,10 @@ function FinancialStatementsContent() {
                       <TableCell colSpan={2} className="text-right text-xs uppercase tracking-wider">
                         Total Cost of Goods Sold Subtotal
                       </TableCell>
-                      <TableCell className="text-right font-mono text-sm text-amber-600 font-bold">
+                      <TableCell className="text-right font-mono text-sm text-foreground font-bold">
                         PKR {formatPKR(pnlData.total_cogs)}
                       </TableCell>
-                      <TableCell className="text-right font-mono text-xs text-amber-600 font-bold">
+                      <TableCell className="text-right font-mono text-xs text-foreground font-bold">
                         {pnlData.net_revenue > 0 ? `${((pnlData.total_cogs / pnlData.net_revenue) * 100).toFixed(1)}%` : "0.0%"}
                       </TableCell>
                       <TableCell className="print:hidden"></TableCell>
@@ -916,14 +913,14 @@ function FinancialStatementsContent() {
 
                   {/* === GROSS PROFIT HIGHLIGHT ROW === */}
                   {pnlData && (
-                    <TableRow className="bg-purple-100/70 dark:bg-purple-950/40 font-extrabold border-y-2 border-purple-300 dark:border-purple-800">
-                      <TableCell colSpan={2} className="text-right text-xs uppercase tracking-wider text-purple-950 dark:text-purple-200">
+                    <TableRow className="bg-slate-100 dark:bg-slate-800 font-extrabold border-y-2 border-slate-300 dark:border-slate-700">
+                      <TableCell colSpan={2} className="text-right text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100">
                         === GROSS PROFIT ===
                       </TableCell>
-                      <TableCell className="text-right font-mono text-base text-purple-700 dark:text-purple-300 font-extrabold">
+                      <TableCell className="text-right font-mono text-base text-slate-900 dark:text-slate-100 font-extrabold">
                         PKR {formatPKR(pnlData.gross_profit)}
                       </TableCell>
-                      <TableCell className="text-right font-mono text-xs text-purple-700 dark:text-purple-300 font-bold">
+                      <TableCell className="text-right font-mono text-xs text-slate-900 dark:text-slate-100 font-bold">
                         {pnlData.gross_profit_margin_pct}%
                       </TableCell>
                       <TableCell className="print:hidden"></TableCell>
@@ -931,8 +928,8 @@ function FinancialStatementsContent() {
                   )}
 
                   {/* --- 3. OPERATING EXPENSES SECTION --- */}
-                  <TableRow className="bg-rose-50/60 dark:bg-rose-950/20 font-bold border-t-2 border-b">
-                    <TableCell colSpan={5} className="text-rose-900 dark:text-rose-200 uppercase text-xs tracking-wider">
+                  <TableRow className="bg-slate-50 dark:bg-slate-800/60 font-bold border-t-2 border-b">
+                    <TableCell colSpan={5} className="text-slate-900 dark:text-slate-100 uppercase text-xs tracking-wider">
                       3. Operating & Administrative Expenses
                     </TableCell>
                   </TableRow>
@@ -950,7 +947,7 @@ function FinancialStatementsContent() {
                         <TableCell className="text-sm font-medium">
                           {l.account_name}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-sm font-semibold text-rose-700 dark:text-rose-400">
+                        <TableCell className="text-right font-mono text-sm font-semibold text-foreground">
                           {formatPKR(l.amount)}
                         </TableCell>
                         <TableCell className="text-right font-mono text-xs text-muted-foreground">
@@ -1041,17 +1038,21 @@ function FinancialStatementsContent() {
                   <Input
                     type="date"
                     value={bsAsOfDate}
-                    onChange={(e) => setBsAsOfDate(e.target.value)}
+                    onChange={(e) => {
+                      setBsAsOfDate(e.target.value);
+                      setActiveBsPreset(null);
+                    }}
                     className="h-8 w-40 text-xs"
                   />
                 </div>
                 <Button
                   size="sm"
-                  variant="secondary"
-                  className="h-8 text-xs font-medium"
+                  className="h-8 gap-1.5 text-xs font-medium"
                   onClick={fetchBalanceSheet}
+                  disabled={bsLoading}
                 >
-                  Apply Filter
+                  <IconSearch className="h-3.5 w-3.5" />
+                  Search
                 </Button>
               </div>
 
@@ -1060,38 +1061,29 @@ function FinancialStatementsContent() {
                 <span className="text-xs text-muted-foreground mr-1">
                   Quick Dates:
                 </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyBsPreset("today")}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyBsPreset("end-last-month")}
-                >
-                  End Last Month
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyBsPreset("end-last-quarter")}
-                >
-                  End Last Quarter
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-2"
-                  onClick={() => applyBsPreset("end-last-year")}
-                >
-                  End Last Year
-                </Button>
+                {[
+                  { id: "today", label: "Today" },
+                  { id: "end-last-month", label: "End Last Month" },
+                  { id: "end-last-quarter", label: "End Last Quarter" },
+                  { id: "end-last-year", label: "End Last Year" },
+                ].map((p) => {
+                  const isActive = activeBsPreset === p.id;
+                  return (
+                    <Button
+                      key={p.id}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      className={`h-7 text-xs px-2.5 transition-all ${
+                        isActive
+                          ? "bg-[#2CA01C] text-white hover:bg-[#248417] border-[#2CA01C] font-semibold shadow-xs"
+                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() => applyBsPreset(p.id as any)}
+                    >
+                      {p.label}
+                    </Button>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -1103,10 +1095,10 @@ function FinancialStatementsContent() {
               <Card className="shadow-xs">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-                  <IconReceipt2 className="h-4 w-4 text-blue-600" />
+                  <IconReceipt2 className="h-4 w-4 text-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-2xl font-bold text-foreground">
                     PKR {formatPKR(bsData.total_assets)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1119,10 +1111,10 @@ function FinancialStatementsContent() {
               <Card className="shadow-xs">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
-                  <IconCoin className="h-4 w-4 text-amber-600" />
+                  <IconCoin className="h-4 w-4 text-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  <div className="text-2xl font-bold text-foreground">
                     PKR {formatPKR(bsData.total_liabilities)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1178,12 +1170,12 @@ function FinancialStatementsContent() {
             {/* LEFT COLUMN: ASSETS */}
             <Card className="border shadow-sm overflow-hidden flex flex-col justify-between">
               <div>
-                <CardHeader className="bg-blue-50/50 dark:bg-blue-950/20 border-b py-3 px-4">
+                <CardHeader className="bg-slate-50 dark:bg-slate-800/60 border-b py-3 px-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-bold text-blue-900 dark:text-blue-200">
+                    <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100">
                       1. ASSETS
                     </CardTitle>
-                    <Badge variant="outline" className="border-blue-400 text-blue-600 font-mono text-xs">
+                    <Badge variant="outline" className="border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300 font-mono text-xs">
                       PKR {formatPKR(bsData?.total_assets || 0)}
                     </Badge>
                   </div>
@@ -1247,7 +1239,7 @@ function FinancialStatementsContent() {
                         <TableCell colSpan={2} className="text-right text-xs">
                           Subtotal Current Assets:
                         </TableCell>
-                        <TableCell className="text-right font-mono text-xs font-bold text-blue-600">
+                        <TableCell className="text-right font-mono text-xs font-bold text-foreground">
                           PKR {formatPKR(bsData?.total_current_assets || 0)}
                         </TableCell>
                         <TableCell className="print:hidden"></TableCell>
@@ -1301,7 +1293,7 @@ function FinancialStatementsContent() {
                         <TableCell colSpan={2} className="text-right text-xs">
                           Subtotal Non-Current Assets:
                         </TableCell>
-                        <TableCell className="text-right font-mono text-xs font-bold text-blue-600">
+                        <TableCell className="text-right font-mono text-xs font-bold text-foreground">
                           PKR {formatPKR(bsData?.total_non_current_assets || 0)}
                         </TableCell>
                         <TableCell className="print:hidden"></TableCell>
@@ -1312,11 +1304,11 @@ function FinancialStatementsContent() {
               </div>
 
               {/* TOTAL ASSETS GRAND SUMMARY */}
-              <div className="bg-blue-100/70 dark:bg-blue-950/40 border-t-2 border-blue-400 p-4 flex items-center justify-between">
-                <span className="font-extrabold text-sm uppercase tracking-wider text-blue-950 dark:text-blue-100">
+              <div className="bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-300 dark:border-slate-700 p-4 flex items-center justify-between">
+                <span className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   TOTAL ASSETS
                 </span>
-                <span className="font-mono text-lg font-black text-blue-700 dark:text-blue-300">
+                <span className="font-mono text-lg font-black text-slate-900 dark:text-slate-100">
                   PKR {formatPKR(bsData?.total_assets || 0)}
                 </span>
               </div>
@@ -1325,12 +1317,12 @@ function FinancialStatementsContent() {
             {/* RIGHT COLUMN: LIABILITIES & EQUITY */}
             <Card className="border shadow-sm overflow-hidden flex flex-col justify-between">
               <div>
-                <CardHeader className="bg-purple-50/50 dark:bg-purple-950/20 border-b py-3 px-4">
+                <CardHeader className="bg-slate-50 dark:bg-slate-800/60 border-b py-3 px-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-bold text-purple-900 dark:text-purple-200">
+                    <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100">
                       2 & 3. LIABILITIES & EQUITY
                     </CardTitle>
-                    <Badge variant="outline" className="border-purple-400 text-purple-600 font-mono text-xs">
+                    <Badge variant="outline" className="border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300 font-mono text-xs">
                       PKR {formatPKR(bsData?.total_liabilities_and_equity || 0)}
                     </Badge>
                   </div>
@@ -1347,8 +1339,8 @@ function FinancialStatementsContent() {
                     </TableHeader>
                     <TableBody>
                       {/* --- LIABILITIES SECTION --- */}
-                      <TableRow className="bg-amber-50/40 dark:bg-amber-950/20 font-bold border-b">
-                        <TableCell colSpan={4} className="text-xs uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                      <TableRow className="bg-slate-50 dark:bg-slate-800/60 font-bold border-b">
+                        <TableCell colSpan={4} className="text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100">
                           Current Liabilities
                         </TableCell>
                       </TableRow>
@@ -1394,15 +1386,15 @@ function FinancialStatementsContent() {
                         <TableCell colSpan={2} className="text-right text-xs">
                           Subtotal Liabilities:
                         </TableCell>
-                        <TableCell className="text-right font-mono text-xs font-bold text-amber-600">
+                        <TableCell className="text-right font-mono text-xs font-bold text-foreground">
                           PKR {formatPKR(bsData?.total_liabilities || 0)}
                         </TableCell>
                         <TableCell className="print:hidden"></TableCell>
                       </TableRow>
 
                       {/* --- EQUITY SECTION --- */}
-                      <TableRow className="bg-purple-50/40 dark:bg-purple-950/20 font-bold border-b">
-                        <TableCell colSpan={4} className="text-xs uppercase tracking-wider text-purple-900 dark:text-purple-200">
+                      <TableRow className="bg-slate-50 dark:bg-slate-800/60 font-bold border-b">
+                        <TableCell colSpan={4} className="text-xs uppercase tracking-wider text-slate-900 dark:text-slate-100">
                           Owner's Equity & Reserves
                         </TableCell>
                       </TableRow>
@@ -1455,7 +1447,7 @@ function FinancialStatementsContent() {
                         <TableCell colSpan={2} className="text-right text-xs">
                           Subtotal Equity:
                         </TableCell>
-                        <TableCell className="text-right font-mono text-xs font-bold text-purple-600">
+                        <TableCell className="text-right font-mono text-xs font-bold text-foreground">
                           PKR {formatPKR(bsData?.total_equity || 0)}
                         </TableCell>
                         <TableCell className="print:hidden"></TableCell>
@@ -1466,11 +1458,11 @@ function FinancialStatementsContent() {
               </div>
 
               {/* TOTAL LIABILITIES & EQUITY GRAND SUMMARY */}
-              <div className="bg-purple-100/70 dark:bg-purple-950/40 border-t-2 border-purple-400 p-4 flex items-center justify-between">
-                <span className="font-extrabold text-sm uppercase tracking-wider text-purple-950 dark:text-purple-100">
+              <div className="bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-300 dark:border-slate-700 p-4 flex items-center justify-between">
+                <span className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   TOTAL LIABILITIES & EQUITY
                 </span>
-                <span className="font-mono text-lg font-black text-purple-700 dark:text-purple-300">
+                <span className="font-mono text-lg font-black text-slate-900 dark:text-slate-100">
                   PKR {formatPKR(bsData?.total_liabilities_and_equity || 0)}
                 </span>
               </div>
@@ -1505,7 +1497,7 @@ function FinancialStatementsContent() {
         <DialogContent className="sm:max-w-4xl max-w-[95vw] w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2 pr-6">
-              <IconLock className="h-5 w-5 text-purple-600 flex-shrink-0" />
+              <IconLock className="h-5 w-5 text-foreground flex-shrink-0" />
               <DialogTitle className="text-xl">Fiscal Year-End Closing (IFRS / GAAP)</DialogTitle>
             </div>
             <DialogDescription>
@@ -1542,7 +1534,7 @@ function FinancialStatementsContent() {
 
             {previewLoading ? (
               <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <IconRefresh className="h-6 w-6 animate-spin text-purple-600" />
+                <IconRefresh className="h-6 w-6 animate-spin text-foreground" />
                 <span className="text-sm">Calculating temporary accounts and closing preview...</span>
               </div>
             ) : closingPreview ? (
@@ -1550,7 +1542,7 @@ function FinancialStatementsContent() {
                 {/* Warning if already closed */}
                 {closingPreview.already_closed && (
                   <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 rounded-lg flex items-center gap-2.5 text-amber-800 dark:text-amber-200 text-sm">
-                    <IconAlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-600" />
+                    <IconAlertTriangle className="h-5 w-5 flex-shrink-0 text-foreground" />
                     <div>
                       <span className="font-semibold">Fiscal Year Already Closed: </span>
                       {closingPreview.message}
@@ -1570,7 +1562,7 @@ function FinancialStatementsContent() {
                   </div>
 
                   <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 p-3 rounded-lg">
-                    <span className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
+                    <span className="text-[11px] font-semibold text-foreground uppercase tracking-wider block">
                       Expenses to Close
                     </span>
                     <span className="font-mono text-base font-bold text-rose-800 dark:text-rose-200">
@@ -1580,7 +1572,7 @@ function FinancialStatementsContent() {
 
                   <div className={`p-3 rounded-lg border ${
                     closingPreview.net_profit >= 0
-                      ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900"
+                      ? "bg-slate-50 dark:bg-slate-800/60 border-blue-200 dark:border-blue-900"
                       : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900"
                   }`}>
                     <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">
@@ -1593,11 +1585,11 @@ function FinancialStatementsContent() {
                     </span>
                   </div>
 
-                  <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900 p-3 rounded-lg">
-                    <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">
+                  <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-foreground uppercase tracking-wider block">
                       Projected Retained Earnings
                     </span>
-                    <span className="font-mono text-base font-bold text-purple-800 dark:text-purple-200">
+                    <span className="font-mono text-base font-bold text-foreground">
                       PKR {formatPKR(closingPreview.retained_earnings_after)}
                     </span>
                   </div>
@@ -1640,7 +1632,7 @@ function FinancialStatementsContent() {
                               <TableCell className="text-right font-mono font-semibold">
                                 PKR {formatPKR(l.current_balance)}
                               </TableCell>
-                              <TableCell className="text-right font-mono font-bold text-purple-700 dark:text-purple-300">
+                              <TableCell className="text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                                 {l.closing_action}
                               </TableCell>
                             </TableRow>
@@ -1657,7 +1649,7 @@ function FinancialStatementsContent() {
                     Destination Equity Head: <strong>{closingPreview.retained_earnings_account_name} ({closingPreview.retained_earnings_account_code})</strong>
                   </span>
                   <span>
-                    Current Balance: <strong className="font-mono">PKR {formatPKR(closingPreview.retained_earnings_before)}</strong> → Projected: <strong className="font-mono text-purple-600">PKR {formatPKR(closingPreview.retained_earnings_after)}</strong>
+                    Current Balance: <strong className="font-mono">PKR {formatPKR(closingPreview.retained_earnings_before)}</strong> → Projected: <strong className="font-mono text-foreground">PKR {formatPKR(closingPreview.retained_earnings_after)}</strong>
                   </span>
                 </div>
               </div>
@@ -1675,7 +1667,7 @@ function FinancialStatementsContent() {
             <Button
               onClick={handleExecuteClosing}
               disabled={!closingPreview?.can_close || executingClose || previewLoading}
-              className="bg-purple-700 hover:bg-purple-800 text-white gap-1.5"
+              className="bg-[#2CA01C] hover:bg-[#248417] text-white gap-1.5"
             >
               <IconLock className={`h-4 w-4 ${executingClose ? "animate-spin" : ""}`} />
               {executingClose ? "Posting Closing Voucher..." : "Execute Year-End Closing"}

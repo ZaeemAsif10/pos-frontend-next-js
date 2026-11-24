@@ -156,34 +156,20 @@ export default function DayBookPage() {
 
   // Entry Type Badge
   const getEntryTypeBadge = (type: DayBookEntryItem["entry_type"]) => {
-    switch (type) {
-      case "sale":
-        return (
-          <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium">
-            POS Sale
-          </Badge>
-        );
-      case "customer_payment":
-        return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-medium">
-            Customer Receipt (CRV)
-          </Badge>
-        );
-      case "supplier_payment":
-        return (
-          <Badge variant="outline" className="border-amber-400 text-amber-700 dark:border-amber-700 dark:text-amber-400 font-medium">
-            Supplier Payment (CPV)
-          </Badge>
-        );
-      case "expense":
-        return (
-          <Badge variant="outline" className="border-rose-400 bg-rose-50 text-rose-700 dark:bg-rose-950 dark:border-rose-700 dark:text-rose-400 font-medium">
-            Expense Voucher
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{type}</Badge>;
-    }
+    const labels: Record<string, string> = {
+      sale: "POS Sale",
+      customer_payment: "Customer Receipt (CRV)",
+      supplier_payment: "Supplier Payment (CPV)",
+      expense: "Expense Voucher",
+    };
+    return (
+      <Badge
+        variant="outline"
+        className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 font-medium"
+      >
+        {labels[type] || type}
+      </Badge>
+    );
   };
 
   // Payment Method Badge
@@ -191,31 +177,31 @@ export default function DayBookPage() {
     switch (method.toLowerCase()) {
       case "cash":
         return (
-          <span className="inline-flex items-center gap-1 font-mono text-xs text-emerald-700 dark:text-emerald-400">
-            <IconCash className="h-3 w-3" /> Cash
+          <span className="inline-flex items-center gap-1 font-mono text-xs text-foreground">
+            <IconCash className="h-3.5 w-3.5 text-muted-foreground" /> Cash
           </span>
         );
       case "bank_transfer":
       case "bank":
         return (
-          <span className="inline-flex items-center gap-1 font-mono text-xs text-blue-700 dark:text-blue-400">
-            <IconBuildingBank className="h-3 w-3" /> Bank
+          <span className="inline-flex items-center gap-1 font-mono text-xs text-foreground">
+            <IconBuildingBank className="h-3.5 w-3.5 text-muted-foreground" /> Bank
           </span>
         );
       case "raast":
         return (
-          <span className="inline-flex items-center gap-1 font-mono text-xs text-amber-700 dark:text-amber-400">
-            <IconCoins className="h-3 w-3" /> Raast
+          <span className="inline-flex items-center gap-1 font-mono text-xs text-foreground">
+            <IconCoins className="h-3.5 w-3.5 text-muted-foreground" /> Raast
           </span>
         );
       case "card":
         return (
-          <span className="inline-flex items-center gap-1 font-mono text-xs text-purple-700 dark:text-purple-400">
-            <IconCreditCard className="h-3 w-3" /> Card
+          <span className="inline-flex items-center gap-1 font-mono text-xs text-foreground">
+            <IconCreditCard className="h-3.5 w-3.5 text-muted-foreground" /> Card
           </span>
         );
       default:
-        return <span className="font-mono text-xs capitalize">{method}</span>;
+        return <span className="font-mono text-xs capitalize text-foreground">{method}</span>;
     }
   };
 
@@ -492,10 +478,10 @@ export default function DayBookPage() {
               <CardTitle className="text-sm font-medium">
                 {t("Closing Cash In Drawer", "دراز میں موجود کیش")}
               </CardTitle>
-              <IconCash className="h-4 w-4 text-blue-600" />
+              <IconCash className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold text-foreground">
                 {formatPKR(daybookData.summary.closing_cash)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -514,31 +500,31 @@ export default function DayBookPage() {
               <div className="font-semibold text-muted-foreground uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                 <IconReceipt2 className="h-4 w-4" /> Channel Breakdown:
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-100/60 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 font-mono">
-                  <span className="font-medium">Cash:</span>
-                  <span>{formatPKR(daybookData.payment_methods.cash)}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+                  <span className="text-muted-foreground font-medium">Cash:</span>
+                  <span className="font-semibold">{formatPKR(daybookData.payment_methods.cash)}</span>
                 </div>
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-100/60 text-blue-900 dark:bg-blue-950/40 dark:text-blue-300 font-mono">
-                  <span className="font-medium">Bank:</span>
-                  <span>{formatPKR(daybookData.payment_methods.bank_transfer)}</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+                  <span className="text-muted-foreground font-medium">Bank:</span>
+                  <span className="font-semibold">{formatPKR(daybookData.payment_methods.bank_transfer)}</span>
                 </div>
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-100/60 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300 font-mono">
-                  <span className="font-medium">Raast:</span>
-                  <span>{formatPKR(daybookData.payment_methods.raast)}</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+                  <span className="text-muted-foreground font-medium">Raast:</span>
+                  <span className="font-semibold">{formatPKR(daybookData.payment_methods.raast)}</span>
                 </div>
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-100/60 text-purple-900 dark:bg-purple-950/40 dark:text-purple-300 font-mono">
-                  <span className="font-medium">Card:</span>
-                  <span>{formatPKR(daybookData.payment_methods.card)}</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+                  <span className="text-muted-foreground font-medium">Card:</span>
+                  <span className="font-semibold">{formatPKR(daybookData.payment_methods.card)}</span>
                 </div>
                 {daybookData.payment_methods.cheque > 0 && (
-                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-mono">
-                    <span className="font-medium">Cheque:</span>
-                    <span>{formatPKR(daybookData.payment_methods.cheque)}</span>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+                    <span className="text-muted-foreground font-medium">Cheque:</span>
+                    <span className="font-semibold">{formatPKR(daybookData.payment_methods.cheque)}</span>
                   </div>
                 )}
-                <div className="border-l pl-3 font-semibold font-mono">
-                  <span className="text-muted-foreground mr-1">Turnover:</span>
+                <div className="border-l pl-3 font-semibold font-mono flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Turnover:</span>
                   <span className="text-foreground">{formatPKR(daybookData.summary.total_turnover)}</span>
                 </div>
               </div>
@@ -673,7 +659,7 @@ export default function DayBookPage() {
               </div>
               <div className="border-l pl-4">
                 <span className="text-muted-foreground mr-1.5 font-normal">Till Closing:</span>
-                <span className="font-mono text-primary font-extrabold text-sm">
+                <span className="font-mono text-foreground font-bold text-sm">
                   {formatPKR(daybookData.summary.closing_cash)}
                 </span>
               </div>

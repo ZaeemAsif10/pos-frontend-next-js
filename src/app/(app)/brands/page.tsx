@@ -343,7 +343,7 @@ export default function BrandsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Domestic (Pakistan)
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-center">
               <IconWorld className="h-4 w-4" />
             </div>
           </CardHeader>
@@ -358,7 +358,7 @@ export default function BrandsPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Linked Products
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 flex items-center justify-center">
               <IconLayersLinked className="h-4 w-4" />
             </div>
           </CardHeader>

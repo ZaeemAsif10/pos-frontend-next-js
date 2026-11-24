@@ -33,7 +33,7 @@ export function TeamSwitcher() {
           size="lg"
           className="select-none cursor-default hover:bg-sidebar-accent/50 transition-colors"
         >
-          <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+          <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-[#2CA01C] text-white shadow-xs">
             {isSuper && !tenant ? (
               <IconSparkles className="size-5" />
             ) : (

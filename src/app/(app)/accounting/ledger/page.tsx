@@ -210,37 +210,33 @@ function LedgerContent() {
   };
 
   const getAccountTypeBadge = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "asset":
-        return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">Asset</Badge>;
-      case "liability":
-        return <Badge variant="secondary" className="bg-amber-600 text-white hover:bg-amber-700">Liability</Badge>;
-      case "equity":
-        return <Badge variant="outline" className="border-purple-500 text-purple-600">Equity</Badge>;
-      case "revenue":
-        return <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700">Revenue</Badge>;
-      case "expense":
-        return <Badge variant="default" className="bg-rose-600 text-white hover:bg-rose-700">Expense</Badge>;
-      default:
-        return <Badge variant="outline">{type}</Badge>;
-    }
+    const label = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    return (
+      <Badge
+        variant="outline"
+        className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+      >
+        {label}
+      </Badge>
+    );
   };
 
   const getSourceTypeBadge = (source: string) => {
-    switch (source) {
-      case "pos_sale":
-        return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">POS Sale</Badge>;
-      case "purchase_invoice":
-        return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">Purchase (GRN)</Badge>;
-      case "customer_payment":
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">Customer Receipt (CRV)</Badge>;
-      case "supplier_payment":
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Supplier Payment (CPV)</Badge>;
-      case "manual_jv":
-        return <Badge variant="outline" className="border-purple-300 text-purple-700 dark:border-purple-800 dark:text-purple-300">Manual JV</Badge>;
-      default:
-        return <Badge variant="outline">{source}</Badge>;
-    }
+    const labels: Record<string, string> = {
+      pos_sale: "POS Sale",
+      purchase_invoice: "Purchase (GRN)",
+      customer_payment: "Customer Receipt (CRV)",
+      supplier_payment: "Supplier Payment (CPV)",
+      manual_jv: "Manual JV",
+    };
+    return (
+      <Badge
+        variant="outline"
+        className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+      >
+        {labels[source] || source.replace(/_/g, " ")}
+      </Badge>
+    );
   };
 
   const printReport = () => {
@@ -361,13 +357,13 @@ function LedgerContent() {
           {/* Trial Balance KPI Summary Cards */}
           {tbData && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden">
-              <Card className="shadow-xs">
+              <Card className="shadow-xs border-t-4 border-t-slate-400">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
-                  <IconTrendingUp className="h-4 w-4 text-blue-600" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Debits</CardTitle>
+                  <IconTrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-2xl font-bold font-mono text-foreground">
                     {formatPKR(tbData.total_debits)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -376,13 +372,13 @@ function LedgerContent() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-xs">
+              <Card className="shadow-xs border-t-4 border-t-slate-400">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-                  <IconTrendingDown className="h-4 w-4 text-amber-600" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Credits</CardTitle>
+                  <IconTrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  <div className="text-2xl font-bold font-mono text-foreground">
                     {formatPKR(tbData.total_credits)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -391,11 +387,11 @@ function LedgerContent() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-xs">
+              <Card className="shadow-xs border-t-4 border-t-[#2CA01C]">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Equilibrium Status</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Equilibrium Status</CardTitle>
                   {tbData.is_balanced ? (
-                    <IconCheck className="h-4 w-4 text-emerald-600" />
+                    <IconCheck className="h-4 w-4 text-[#2CA01C]" />
                   ) : (
                     <IconAlertTriangle className="h-4 w-4 text-rose-600" />
                   )}
@@ -477,7 +473,7 @@ function LedgerContent() {
                         </TableCell>
                         <TableCell className="text-right font-mono font-medium">
                           {item.debit_balance > 0 ? (
-                            <span className="text-blue-700 dark:text-blue-400">
+                            <span className="text-foreground">
                               {formatPKR(item.debit_balance)}
                             </span>
                           ) : (
@@ -486,7 +482,7 @@ function LedgerContent() {
                         </TableCell>
                         <TableCell className="text-right font-mono font-medium">
                           {item.credit_balance > 0 ? (
-                            <span className="text-amber-700 dark:text-amber-400">
+                            <span className="text-foreground">
                               {formatPKR(item.credit_balance)}
                             </span>
                           ) : (
@@ -518,13 +514,13 @@ function LedgerContent() {
                 <div className="flex items-center gap-8">
                   <div className="text-right">
                     <span className="text-xs text-muted-foreground mr-2">Total Debits:</span>
-                    <span className="font-mono text-blue-700 dark:text-blue-400">
+                    <span className="font-mono text-foreground">
                       {formatPKR(tbData.total_debits)}
                     </span>
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-muted-foreground mr-2">Total Credits:</span>
-                    <span className="font-mono text-amber-700 dark:text-amber-400">
+                    <span className="font-mono text-foreground">
                       {formatPKR(tbData.total_credits)}
                     </span>
                   </div>
@@ -617,8 +613,12 @@ function LedgerContent() {
                   size="sm"
                   className="h-9 gap-1.5"
                 >
-                  <IconRefresh className={`h-4 w-4 ${glLoading ? "animate-spin" : ""}`} />
-                  View Statement
+                  {glLoading ? (
+                    <IconRefresh className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <IconSearch className="h-4 w-4" />
+                  )}
+                  Search
                 </Button>
               </div>
             </CardContent>
@@ -655,9 +655,9 @@ function LedgerContent() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {glReport.opening_balance >= 0 ? (
-                        <span className="text-blue-600 font-medium">Debit (Dr)</span>
+                        <span className="text-foreground font-medium">Debit (Dr)</span>
                       ) : (
-                        <span className="text-amber-600 font-medium">Credit (Cr)</span>
+                        <span className="text-foreground font-medium">Credit (Cr)</span>
                       )}
                     </p>
                   </CardContent>
@@ -667,10 +667,10 @@ function LedgerContent() {
                 <Card className="shadow-xs">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
-                    <IconTrendingUp className="h-4 w-4 text-blue-600" />
+                    <IconTrendingUp className="h-4 w-4 text-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    <div className="text-2xl font-bold text-foreground">
                       {formatPKR(glReport.total_debit)}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -683,10 +683,10 @@ function LedgerContent() {
                 <Card className="shadow-xs">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-                    <IconTrendingDown className="h-4 w-4 text-amber-600" />
+                    <IconTrendingDown className="h-4 w-4 text-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    <div className="text-2xl font-bold text-foreground">
                       {formatPKR(glReport.total_credit)}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -798,7 +798,7 @@ function LedgerContent() {
                             </TableCell>
                             <TableCell className="text-right font-mono">
                               {ln.debit > 0 ? (
-                                <span className="text-blue-700 dark:text-blue-400 font-medium">
+                                <span className="text-foreground font-medium">
                                   {formatPKR(ln.debit)}
                                 </span>
                               ) : (
@@ -807,7 +807,7 @@ function LedgerContent() {
                             </TableCell>
                             <TableCell className="text-right font-mono">
                               {ln.credit > 0 ? (
-                                <span className="text-amber-700 dark:text-amber-400 font-medium">
+                                <span className="text-foreground font-medium">
                                   {formatPKR(ln.credit)}
                                 </span>
                               ) : (
@@ -830,10 +830,10 @@ function LedgerContent() {
                         <TableCell colSpan={4}>
                           Closing Balance as of {glToDate}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-blue-700 dark:text-blue-400">
+                        <TableCell className="text-right font-mono text-foreground">
                           {formatPKR(glReport.total_debit)}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-amber-700 dark:text-amber-400">
+                        <TableCell className="text-right font-mono text-foreground">
                           {formatPKR(glReport.total_credit)}
                         </TableCell>
                         <TableCell className="text-right font-mono text-primary text-sm">
@@ -856,7 +856,7 @@ function LedgerContent() {
                 <IconFileText className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50" />
                 <p className="font-medium">No Account Selected</p>
                 <p className="text-xs mt-1">
-                  Select an account above and click "View Statement" to generate its general ledger.
+                  Select an account above and click &quot;Search&quot; to generate its general ledger.
                 </p>
               </div>
             </Card>

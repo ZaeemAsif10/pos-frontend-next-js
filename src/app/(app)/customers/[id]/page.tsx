@@ -62,7 +62,7 @@ const statusStyles: Record<Customer["status"], string> = {
 const planStyles: Record<Customer["plan"], string> = {
   Free: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
   Pro: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  Enterprise: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  Enterprise: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
 };
 
 const orderStatusStyles: Record<Order["status"], string> = {
