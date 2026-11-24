@@ -344,7 +344,9 @@ export default function POSPage() {
           })
       );
     } catch (err: any) {
-      toast.error("Failed to load inventory products: " + err.message);
+      toast.error("Failed to load inventory products: " + err.message, {
+        id: "pos-inventory-load-error",
+      });
     } finally {
       setIsLoadingProducts(false);
     }
