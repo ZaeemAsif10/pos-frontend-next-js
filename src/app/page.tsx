@@ -730,10 +730,10 @@ export default function LandingHomePage() {
         </div>
       </section>
 
-      {/* 3. Corporate Navy Anchor Strip with Staggered Scroll Reveal */}
-      <section className="bg-[#0B2265] text-white border-b border-[#0B2265]">
+      {/* 3. End-to-End Trade Workflow Strip */}
+      <section className="bg-[#F3F8F2] dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 lg:divide-x lg:divide-white/15">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 lg:divide-x lg:divide-slate-200 dark:lg:divide-slate-800">
             {[
               {
                 step: "Step 1: Procurement",
@@ -763,9 +763,9 @@ export default function LandingHomePage() {
                   idx === 0 ? "lg:pr-6" : idx === 3 ? "lg:pl-6" : "lg:px-6"
                 )}
               >
-                <div className="text-xs font-semibold text-[#5EE04C]">{pillar.step}</div>
-                <h2 className="text-base font-bold mt-1">{pillar.title}</h2>
-                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">{pillar.desc}</p>
+                <div className="text-xs font-bold text-[#2CA01C]">{pillar.step}</div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white mt-1">{pillar.title}</h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">{pillar.desc}</p>
               </ScrollReveal>
             ))}
           </div>
@@ -1573,12 +1573,12 @@ export default function LandingHomePage() {
       </section>
 
       {/* 8. Final Conversion Band */}
-      <section className="bg-[#0B2265] text-white py-16">
+      <section className="bg-[#F3F8F2] dark:bg-slate-900 border-t border-[#2CA01C]/15 py-16">
         <ScrollReveal className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
             Ready to bring your shop, godown, and accounts into one workspace?
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
+          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
             Built for high-volume retail and wholesale markets across Lahore, Karachi, Rawalpindi, Faisalabad, and Peshawar.
           </p>
           <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -1597,7 +1597,7 @@ export default function LandingHomePage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto h-12 px-7 text-base font-semibold bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white transition-all duration-200 hover:-translate-y-0.5"
+                className="w-full sm:w-auto h-12 px-7 text-base font-semibold bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 hover:-translate-y-0.5"
               >
                 <Link href="/login">Sign In to Existing Account</Link>
               </Button>

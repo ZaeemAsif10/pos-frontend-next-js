@@ -238,6 +238,7 @@ export default function TeamManagementPage() {
       errs.role_id = "Please select a staff role.";
     }
 
+    /* Temporarily disabled: Max Discount % validation
     if (
       addForm.max_discount_pct === undefined ||
       addForm.max_discount_pct < 0 ||
@@ -245,6 +246,7 @@ export default function TeamManagementPage() {
     ) {
       errs.max_discount_pct = "Discount limit must be between 0% and 100%.";
     }
+    */
 
     setAddErrors(errs);
     return Object.keys(errs).length === 0;
@@ -292,6 +294,7 @@ export default function TeamManagementPage() {
       errs.full_name = "Full name must be at least 2 characters.";
     }
 
+    /* Temporarily disabled: Max Discount % validation
     if (
       editForm.max_discount_pct === undefined ||
       editForm.max_discount_pct < 0 ||
@@ -299,6 +302,7 @@ export default function TeamManagementPage() {
     ) {
       errs.max_discount_pct = "Discount limit must be between 0% and 100%.";
     }
+    */
 
     if (editForm.password && editForm.password.length < 6) {
       errs.password = "New password must be at least 6 characters.";
@@ -675,7 +679,7 @@ export default function TeamManagementPage() {
                   <TableHead className="w-[280px]">Staff Member</TableHead>
                   <TableHead>Assigned Role</TableHead>
                   <TableHead>Contact Information</TableHead>
-                  <TableHead className="text-center">Max Discount</TableHead>
+                  {/* <TableHead className="text-center">Max Discount</TableHead> */}
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -744,7 +748,7 @@ export default function TeamManagementPage() {
                       </div>
                     </TableCell>
 
-                    {/* Discount Threshold */}
+                    {/* Discount Threshold (temporarily hidden)
                     <TableCell className="text-center">
                       {member.is_owner ? (
                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
@@ -756,6 +760,7 @@ export default function TeamManagementPage() {
                         </span>
                       )}
                     </TableCell>
+                    */}
 
                     {/* Status Toggle */}
                     <TableCell className="text-center">
@@ -910,6 +915,7 @@ export default function TeamManagementPage() {
                           </span>
                         </div>
                       )}
+                      {/* Temporarily hidden: Max Discount
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1.5">
                           <IconPercentage className="size-3.5 text-muted-foreground/70" /> Max
@@ -919,6 +925,7 @@ export default function TeamManagementPage() {
                           {member.is_owner ? "Full" : `${member.max_discount_pct}%`}
                         </span>
                       </div>
+                      */}
                       <div className="flex items-center justify-between">
                         <span>Status</span>
                         <Badge
@@ -1095,8 +1102,8 @@ export default function TeamManagementPage() {
               )}
             </div>
 
-            {/* Role & Discount Grid */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Role Select */}
+            <div className="grid grid-cols-1 gap-3">
               {/* Role Select */}
               <div className="space-y-1.5">
                 <Label htmlFor="staff_role">
@@ -1140,7 +1147,7 @@ export default function TeamManagementPage() {
                 )}
               </div>
 
-              {/* Max Discount */}
+              {/* Max Discount (temporarily hidden)
               <div className="space-y-1.5">
                 <Label htmlFor="staff_discount">
                   Max Discount % <span className="text-muted-foreground font-normal">(Optional, 0-100)</span>
@@ -1176,6 +1183,7 @@ export default function TeamManagementPage() {
                   </p>
                 )}
               </div>
+              */}
             </div>
 
             <DialogFooter className="pt-2">
@@ -1284,7 +1292,7 @@ export default function TeamManagementPage() {
                 )}
               </div>
 
-              {/* Max Discount % */}
+              {/* Max Discount % (temporarily hidden)
               <div className="space-y-1.5">
                 <Label htmlFor="edit_staff_discount">
                   Max Allowable Discount (%) <span className="text-muted-foreground font-normal">(Optional)</span>
@@ -1315,6 +1323,7 @@ export default function TeamManagementPage() {
                   </p>
                 )}
               </div>
+              */}
 
               {/* Reset Password */}
               <div className="space-y-1.5">
