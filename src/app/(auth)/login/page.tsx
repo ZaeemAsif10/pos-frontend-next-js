@@ -8,7 +8,6 @@ import {
   IconLoader2,
   IconEye,
   IconEyeOff,
-  IconShieldCheck,
   IconAlertCircle,
   IconLock,
   IconMail,
@@ -137,31 +136,12 @@ function LoginForm() {
     }
   };
 
-  const autofillSuperAdmin = () => {
-    setIdentifier("superadmin@gmail.com");
-    setPassword("12345678");
-    setErrorMessage(null);
-    toast.info("Super Admin credentials autofilled", {
-      description: "Ready to sign in directly without OTP.",
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Welcome back
-          </h1>
-          <button
-            type="button"
-            onClick={autofillSuperAdmin}
-            className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
-          >
-            <IconShieldCheck className="size-3.5" />
-            Super Admin Demo
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Welcome back
+        </h1>
         <p className="text-sm text-muted-foreground">
           Enter your email or phone to access your business workspace.
         </p>
